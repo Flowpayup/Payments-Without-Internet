@@ -6,6 +6,15 @@ plugins {
     id 'com.google.devtools.ksp'
 }
 
+// Release signing is read from keystore.properties (gitignored). Copy
+// keystore.properties.example to keystore.properties and fill it in to produce
+// a signed release build; without it, release builds are left unsigned.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace 'com.flowpay.app'
     compileSdk 35
@@ -27,8 +36,24 @@ android {
         arg("room.schemaLocation", "$projectDir/schemas")
     }
 
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // Sign with the release key when keystore.properties is present;
+            // otherwise the release build is left unsigned.
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -108,7 +133,7 @@ dependencies {
     ksp 'androidx.room:room-compiler:2.6.1'
 
     // Material Design
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.cardview:cardview:1.0.0'
 
     testImplementation 'junit:junit:4.13.2'
