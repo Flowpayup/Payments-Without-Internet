@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/background_primary">
+    
+    <!-- Header -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Permission Setup"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:gravity="center"
+        android:layout_marginBottom="32dp" />
+    
+    <!-- Permission Icon -->
+    <ImageView
+        android:id="@+id/ivPermissionIcon"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="24dp"
+        android:src="@drawable/ic_shield"
+        android:contentDescription="Permission icon" />
+    
+    <!-- Permission Title -->
+    <TextView
+        android:id="@+id/tvPermissionTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Permission Required"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+    
+    <!-- Permission Description -->
+    <TextView
+        android:id="@+id/tvPermissionDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="This permission is required for the app to function properly."
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp"
+        android:layout_marginBottom="24dp" />
+    
+    <!-- Permission Steps -->
+    <TextView
+        android:id="@+id/tvPermissionSteps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="1. Step one\n2. Step two\n3. Step three"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        android:background="@drawable/helper_text_background"
+        android:padding="16dp"
+        android:lineSpacingExtra="2dp"
+        android:layout_marginBottom="32dp" />
+    
+    <!-- Buttons Container -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="32dp">
+        
+        <!-- Grant Permission Button -->
+        <Button
+            android:id="@+id/btnGrantPermission"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Grant Permission"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:background="@drawable/button_rounded"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="12dp"
+            android:elevation="4dp" />
+        
+        <!-- Button Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            
+            <!-- Skip Button -->
+            <Button
+                android:id="@+id/btnSkip"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Skip"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:background="@android:color/transparent"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone" />
+            
+            <!-- Next Button -->
+            <Button
+                android:id="@+id/btnNext"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Next"
+                android:textSize="14sp"
+                android:textColor="@color/accent_primary"
+                android:background="@android:color/transparent"
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
+            
+        </LinearLayout>
+        
+    </LinearLayout>
+    
+</LinearLayout>
+

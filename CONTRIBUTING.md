@@ -1,0 +1,96 @@
+# Contributing to Flowpay
+
+Thanks for your interest in contributing. This guide covers everything you need to get a development build running and to submit a change.
+
+## Prerequisites
+
+- **JDK 17** (Temurin recommended — matches CI)
+- **Android SDK** with `compileSdk = 35`, `minSdk = 29`
+- **Android Studio Hedgehog (2023.1.1) or later** for the IDE experience
+- A device or emulator running **Android 10 (API 29)** or higher
+
+## First-time setup
+
+```bash
+git clone <repo-url>
+cd Flowpay_MVP_Final
+```
+
+Create `local.properties` at the repo root (it is gitignored):
+
+```properties
+sdk.dir=/absolute/path/to/your/Android/sdk
+```
+
+That single line is all the local configuration the build needs.
+
+## Build & run
+
+```bash
+./gradlew assembleDebug              # build a debug APK
+./gradlew installDebug               # install on a connected device/emulator
+./gradlew test                       # run JVM unit tests
+./gradlew :app:lintDebug             # run lint (must pass)
+```
+
+JVM unit tests live in `app/src/test/` (`Upi123CallStringBuilderTest`, `PaymentSessionManagerTest`, `SmsParsingRegexTest`, `QRCodeParserTest`) and an instrumentation test in `app/src/androidTest/` (`MigrationTest`). CI runs `./gradlew test` on every push, so keep them green and add coverage for new logic where it makes sense.
+
+## Project layout
+
+```
+app/src/main/java/com/flowpay/app/
+├── MainActivity.kt                  # entry screen
+├── SetupActivity.kt                 # first-run setup
+├── TestConfigurationActivity.kt     # post-setup USSD/UPI test gate
+├── constants/                       # AppConstants, PermissionConstants
+├── data/                            # Room entities, repositories
+├── features/qr_scanner/             # QR scanner (CameraX + ML Kit)
+├── helpers/                         # business-logic helpers
+├── managers/                        # CallManager, PermissionManager, etc.
+├── receivers/                       # SMS BroadcastReceiver
+├── services/                        # call-overlay, notification listener
+├── ui/                              # Compose screens + theme
+└── utils/                           # small utilities
+```
+
+## Branching
+
+- `main` — protected; only PRs land here.
+- `feat/<short-name>` — new features
+- `fix/<short-name>` — bug fixes
+- `chore/<short-name>` — refactors, build/CI, deps
+
+## Pull requests
+
+Before opening a PR:
+
+1. `./gradlew assembleDebug` must succeed.
+2. `./gradlew :app:lintDebug` must pass (a baseline absorbs pre-existing issues; new issues will fail CI).
+3. If your change touches UI, attach a screenshot or short clip.
+4. Link any related issue (`Closes #123`).
+5. Keep the diff focused — one logical change per PR.
+
+CI runs on every push and PR. A green run is required before merge.
+
+## Code style
+
+- Kotlin official style (4-space indent, no wildcard imports).
+- An `.editorconfig` at the repo root captures the conventions; most IDEs respect it automatically.
+- No automated formatter is enforced yet — feel free to propose `ktlint` or `detekt` config if you want one.
+
+## About the lint baseline
+
+`app/lint-baseline.xml` freezes a set of pre-existing lint findings so CI passes today. They are real issues to address over time. The most prominent:
+
+- `CallManager.endCall` triggers a `MissingPermission` warning for `ANSWER_PHONE_CALLS`. Adding that permission is a behavioral change (extra runtime prompt) and is deferred.
+- Several `MissingSuperCall`, `UnspecifiedRegisterReceiverFlag`, `UseAppTint`, and `PermissionImpliesUnsupportedChromeOsHardware` items.
+
+Fixes are very welcome — please don't pile new items into the baseline.
+
+## Filing issues
+
+Use the templates under [.github/ISSUE_TEMPLATE](.github/ISSUE_TEMPLATE) when opening an issue. For security reports, see [SECURITY.md](SECURITY.md) — do not file public issues for vulnerabilities.
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the [Apache License 2.0](LICENSE).

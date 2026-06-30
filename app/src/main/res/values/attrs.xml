@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- FlowPay accent theme attributes for drawables/layouts -->
+    <attr name="flowpayColorPrimary" format="reference|color" />
+    <attr name="flowpayColorPrimaryDark" format="reference|color" />
+    <attr name="flowpayColorAccent" format="reference|color" />
+</resources>

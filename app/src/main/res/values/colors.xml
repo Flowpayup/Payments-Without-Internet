@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="flowpay_blue">#FF2196F3</color>
+    <color name="flowpay_blue_dark">#FF1976D2</color>
+    <color name="flowpay_green">#FF4CAF50</color>
+    <color name="flowpay_green_dark">#FF388E3C</color>
+    <color name="flowpay_orange">#FFFF9800</color>
+    <color name="flowpay_orange_dark">#FFF57C00</color>
+    
+    <!-- Setup Screen Colors -->
+    <color name="setup_input_background">#FF1A1A1A</color>
+    <color name="setup_input_border">#FF333333</color>
+    <color name="setup_text_secondary">#FF888888</color>
+    <color name="setup_text_tertiary">#FF4A4A4A</color>
+
+    <!-- Payment Success Colors -->
+    <color name="success_green">#FF4CAF50</color>
+    <color name="transaction_primary">#FF5E97D1</color>
+
+    <!-- QR Scanner Colors -->
+    <color name="primary">#FF2196F3</color>
+
+    <!-- Feedback Colors -->
+    <color name="error_red">#FFF44336</color>
+    <color name="warning_orange">#FFFF9800</color>
+    <color name="info_blue">#FF2196F3</color>
+
+    <!-- General UI Colors -->
+    <color name="background_primary">#FFFFFFFF</color>
+    <color name="background_secondary">#FFF5F5F5</color>
+    <color name="text_primary">#FF212121</color>
+    <color name="text_secondary">#FF666666</color>
+    <color name="accent_primary">#FF2196F3</color>
+</resources>

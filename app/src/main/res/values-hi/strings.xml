@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   Hindi strings for the payment-critical journey. Decorative/secondary
+   strings fall back to English until translated — every string a user must
+   understand to pay SAFELY is covered here.
+-->
+<resources>
+    <string name="app_name">Flowpay</string>
+
+    <!-- Home screen -->
+    <string name="home_tagline">बिना इंटरनेट भुगतान</string>
+    <string name="home_connected_bank">जुड़ा हुआ बैंक</string>
+    <string name="home_scan_qr">QR कोड स्कैन करें</string>
+    <string name="home_scan_opening">खुल रहा है…</string>
+    <string name="home_pay_contact">संपर्क को भुगतान करें</string>
+    <string name="home_recent_payments">हाल के भुगतान</string>
+
+    <!-- Live payment status banner -->
+    <string name="banner_in_progress_title">भुगतान जारी है</string>
+    <string name="banner_in_progress_detail">₹%1$s — कॉल पर दिए गए निर्देशों का पालन करें</string>
+    <string name="banner_waiting_title">बैंक की पुष्टि का इंतज़ार है</string>
+    <string name="banner_waiting_detail">₹%1$s का अनुरोध भेजा गया — बैंक का SMS आते ही परिणाम दिखेगा</string>
+    <string name="banner_success_title">भुगतान सफल</string>
+    <string name="banner_success_detail">आपके बैंक ने ₹%1$s की पुष्टि की</string>
+    <string name="banner_failed_title">भुगतान विफल</string>
+    <string name="banner_cancelled_title">भुगतान रद्द</string>
+    <string name="banner_timeout_title">कोई पुष्टि नहीं मिली</string>
+    <string name="banner_timeout_detail">अपने बैंक का SMS या स्टेटमेंट देखें — भुगतान हो भी सकता है</string>
+    <string name="banner_dismiss">भुगतान स्थिति हटाएँ</string>
+
+    <!-- Payment result dialogs -->
+    <string name="dialog_cancelled_title">लेन-देन रद्द</string>
+    <string name="dialog_cancelled_message">भुगतान पूरा होने से पहले कॉल समाप्त हो गई। कोई भुगतान नहीं हुआ।</string>
+    <string name="dialog_cancelled_by_user_message">लेन-देन रद्द कर दिया गया। कोई भुगतान नहीं हुआ।</string>
+    <string name="dialog_success_title">भुगतान सफल</string>
+    <string name="dialog_success_message">आपके बैंक ने भुगतान की पुष्टि की।</string>
+    <string name="dialog_failed_title">लेन-देन विफल</string>
+    <string name="dialog_failed_message">आपके बैंक ने भुगतान विफल बताया। कटी हुई राशि आमतौर पर अपने आप वापस आ जाती है — न आए तो बैंक से संपर्क करें।</string>
+    <string name="dialog_awaiting_title">अनुरोध भेजा गया</string>
+    <string name="dialog_awaiting_message">आपका भुगतान अनुरोध UPI सेवा को भेज दिया गया है।\n\nयदि आपका बैंक वापस कॉल करे, तो पुष्टि के लिए 1 दबाएँ और अपना UPI PIN डालें। बैंक का पुष्टि SMS आते ही Flowpay परिणाम दिखाएगा।</string>
+    <string name="dialog_unverified_title">कोई पुष्टि नहीं मिली</string>
+    <string name="dialog_unverified_message">Flowpay को आपके बैंक से पुष्टि SMS नहीं मिला। भुगतान फिर भी हुआ हो सकता है — दोबारा कोशिश करने से पहले बैंक स्टेटमेंट या SMS इनबॉक्स देखें।</string>
+    <string name="action_ok">ठीक है</string>
+    <string name="action_got_it">समझ गया</string>
+    <string name="action_great">बहुत बढ़िया!</string>
+
+    <!-- Transaction status explainers -->
+    <string name="status_explainer_pending">आपके बैंक के पुष्टि SMS का इंतज़ार है।</string>
+    <string name="status_explainer_unverified">पुष्टि SMS नहीं आया। भुगतान फिर भी हुआ हो सकता है — दोबारा कोशिश से पहले बैंक स्टेटमेंट या SMS इनबॉक्स देखें।</string>
+    <string name="status_explainer_cancelled">भुगतान पूरा होने से पहले रुक गया। पैसा नहीं कटना चाहिए।</string>
+    <string name="status_explainer_failed">आपके बैंक ने यह भुगतान विफल बताया। कटी राशि आमतौर पर अपने आप वापस आती है।</string>
+
+    <!-- Errors -->
+    <string name="invalid_phone_number">कृपया सही 10 अंकों का मोबाइल नंबर डालें</string>
+    <string name="invalid_amount">कृपया सही राशि डालें</string>
+    <string name="overlay_permission_required">भुगतान सुरक्षा के लिए ओवरले अनुमति आवश्यक है</string>
+    <string name="phone_permission_required">फ़ोन कॉल की अनुमति आवश्यक है</string>
+    <string name="camera_permission_required">QR स्कैन के लिए कैमरा अनुमति आवश्यक है</string>
+    <string name="invalid_qr_code">अमान्य UPI QR कोड</string>
+</resources>

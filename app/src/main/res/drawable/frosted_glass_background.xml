@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- White base with high opacity for blur effect -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F2FFFFFF" /> <!-- 95% white -->
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    
+    <!-- Subtle gradient for depth -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#0AFFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="90" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    
+    <!-- Soft border -->
+    <item>
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="1dp"
+                android:color="#33FFFFFF" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+</layer-list>

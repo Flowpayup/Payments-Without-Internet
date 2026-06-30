@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   Flowpay privacy rule: transaction history and payment-operation state
+   must never leave the device. android:allowBackup stays enabled so the
+   user's non-sensitive preferences (theme, selected bank id) survive a
+   reinstall, but the database and payment SharedPreferences are excluded
+   from Android Auto Backup.
+-->
+<full-backup-content>
+    <exclude domain="database" path="flowpay_database" />
+    <exclude domain="database" path="flowpay_database-shm" />
+    <exclude domain="database" path="flowpay_database-wal" />
+    <exclude domain="sharedpref" path="payment_operation.xml" />
+    <exclude domain="sharedpref" path="FlowPayPrefs.xml" />
+</full-backup-content>

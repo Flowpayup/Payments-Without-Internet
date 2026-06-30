@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <!-- Camera Preview -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/viewFinder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Scanner Frame: four rounded corner brackets -->
+    <FrameLayout
+        android:id="@+id/scannerOverlay"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:clipChildren="false"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.42">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="top|start"
+            android:rotation="0"
+            android:src="@drawable/qr_corner"
+            android:contentDescription="@null" />
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="top|end"
+            android:rotation="90"
+            android:src="@drawable/qr_corner"
+            android:contentDescription="@null" />
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="bottom|end"
+            android:rotation="180"
+            android:src="@drawable/qr_corner"
+            android:contentDescription="@null" />
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="bottom|start"
+            android:rotation="270"
+            android:src="@drawable/qr_corner"
+            android:contentDescription="@null" />
+
+        <!-- Kept for code refs; not shown in the minimal design -->
+        <View
+            android:id="@+id/scanLine"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_gravity="top"
+            android:layout_margin="12dp"
+            android:visibility="gone"
+            android:background="@drawable/scan_line_gradient" />
+
+    </FrameLayout>
+
+    <!-- Torch button (bottom center) -->
+    <LinearLayout
+        android:id="@+id/bottomActionBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="72dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Kept for code refs; not shown in the minimal design -->
+        <ImageButton
+            android:id="@+id/btnGallery"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:visibility="gone"
+            android:background="@drawable/bottom_action_button_bg"
+            android:src="@drawable/ic_photo_library"
+            android:contentDescription="@null"
+            app:tint="@color/white" />
+
+        <ImageButton
+            android:id="@+id/btnFlash"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/bottom_action_button_bg"
+            android:src="@drawable/ic_flash_off"
+            android:scaleType="centerInside"
+            android:padding="18dp"
+            android:contentDescription="Torch"
+            app:tint="@color/white" />
+
+    </LinearLayout>
+
+    <!-- Hidden: top bar (back + title) — kept for code refs -->
+    <FrameLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="52dp"
+        android:paddingBottom="12dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start|center_vertical"
+            android:background="@drawable/bottom_action_button_bg"
+            android:src="@drawable/ic_close"
+            android:scaleType="centerInside"
+            android:padding="10dp"
+            android:contentDescription="@null"
+            app:tint="@color/white" />
+
+    </FrameLayout>
+
+    <!-- Hidden: Instructions Box — shown on black screen after QR scan -->
+    <FrameLayout
+        android:id="@+id/instructionsBox"
+        android:layout_width="0dp"
+        android:layout_height="190dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/instructions_card_bg"
+        android:elevation="8dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/instructionsHeaderInitial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Follow These Steps"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:letterSpacing="-0.02"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false"
+            android:visibility="visible" />
+
+        <LinearLayout
+            android:id="@+id/instructionsExpanded"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="1. Paste the VPA from clipboard"
+                android:textSize="15sp" android:textColor="#333333"
+                android:lineSpacingExtra="2dp" android:layout_marginBottom="10dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="2. Enter the amount"
+                android:textSize="15sp" android:textColor="#333333"
+                android:lineSpacingExtra="2dp" android:layout_marginBottom="10dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="3. Press one to skip"
+                android:textSize="15sp" android:textColor="#333333"
+                android:lineSpacingExtra="2dp" android:layout_marginBottom="10dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="4. Enter your pin"
+                android:textSize="15sp" android:textColor="#333333"
+                android:lineSpacingExtra="2dp" android:layout_marginBottom="10dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="5. Press cancel to end session"
+                android:textSize="15sp" android:textColor="#333333"
+                android:lineSpacingExtra="2dp" />
+
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Hidden: Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Hidden: Status Text -->
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Hidden: Terminate Button -->
+    <ImageButton
+        android:id="@+id/btnTerminate"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/terminate_button_background"
+        android:src="@drawable/ic_close"
+        android:visibility="gone"
+        android:layout_marginBottom="48dp"
+        android:padding="12dp"
+        android:contentDescription="@null"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

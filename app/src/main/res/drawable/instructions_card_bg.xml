@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Shadow layer -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#20000000" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+    
+    <!-- Main card background with white/light gray gradient -->
+    <item
+        android:left="0dp"
+        android:right="0dp"
+        android:top="0dp"
+        android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:startColor="#FFFFFF"
+                android:centerColor="#F5F5F5"
+                android:endColor="#EEEEEE"
+                android:angle="135" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+    
+    <!-- Border layer with subtle gray -->
+    <item
+        android:left="0dp"
+        android:right="0dp"
+        android:top="0dp"
+        android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="1dp"
+                android:color="#E0E0E0" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+</layer-list>
+

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="190dp"
+    android:layout_marginHorizontal="24dp">
+    
+    <!-- Clean White Card Container -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/clean_card_background"
+        android:elevation="12dp">
+        
+        <!-- Message Container -->
+        <FrameLayout
+            android:id="@+id/messageContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:visibility="visible">
+            
+            <TextView
+                android:id="@+id/messageText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Follow the steps below"
+                android:textSize="18sp"
+                android:textColor="#1F1F1F"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.01" />
+        </FrameLayout>
+        
+        <!-- Steps Container -->
+        <LinearLayout
+            android:id="@+id/stepsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:visibility="gone">
+            
+            <!-- Step 1 -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                
+                <TextView
+                    android:id="@+id/step1Circle"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/step_circle_bg"
+                    android:gravity="center"
+                    android:text="1"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium" />
+                
+                <View
+                    android:id="@+id/line1"
+                    android:layout_width="2dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignLeft="@id/step1Circle"
+                    android:layout_marginLeft="11dp"
+                    android:layout_below="@id/step1Circle"
+                    android:background="#E8F5E9" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@id/step1Circle"
+                    android:layout_marginLeft="12dp"
+                    android:text="Paste payment address"
+                    android:textSize="14sp"
+                    android:textColor="#424242" />
+            </RelativeLayout>
+            
+            <!-- Step 2 -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                
+                <TextView
+                    android:id="@+id/step2Circle"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/step_circle_bg"
+                    android:gravity="center"
+                    android:text="2"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium" />
+                
+                <View
+                    android:id="@+id/line2"
+                    android:layout_width="2dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignLeft="@id/step2Circle"
+                    android:layout_marginLeft="11dp"
+                    android:layout_below="@id/step2Circle"
+                    android:background="#E8F5E9" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@id/step2Circle"
+                    android:layout_marginLeft="12dp"
+                    android:text="Enter amount"
+                    android:textSize="14sp"
+                    android:textColor="#424242" />
+            </RelativeLayout>
+            
+            <!-- Step 3 -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                
+                <TextView
+                    android:id="@+id/step3Circle"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/step_circle_bg"
+                    android:gravity="center"
+                    android:text="3"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium" />
+                
+                <View
+                    android:id="@+id/line3"
+                    android:layout_width="2dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignLeft="@id/step3Circle"
+                    android:layout_marginLeft="11dp"
+                    android:layout_below="@id/step3Circle"
+                    android:background="#E8F5E9" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@id/step3Circle"
+                    android:layout_marginLeft="12dp"
+                    android:text="Press 1 to skip"
+                    android:textSize="14sp"
+                    android:textColor="#424242" />
+            </RelativeLayout>
+            
+            <!-- Step 4 -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                
+                <TextView
+                    android:id="@+id/step4Circle"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/step_circle_bg"
+                    android:gravity="center"
+                    android:text="4"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium" />
+                
+                <View
+                    android:id="@+id/line4"
+                    android:layout_width="2dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignLeft="@id/step4Circle"
+                    android:layout_marginLeft="11dp"
+                    android:layout_below="@id/step4Circle"
+                    android:background="#E8F5E9" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@id/step4Circle"
+                    android:layout_marginLeft="12dp"
+                    android:text="Enter UPI PIN"
+                    android:textSize="14sp"
+                    android:textColor="#424242" />
+            </RelativeLayout>
+            
+            <!-- Step 5 -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+                
+                <TextView
+                    android:id="@+id/step5Circle"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/step_circle_bg"
+                    android:gravity="center"
+                    android:text="5"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@id/step5Circle"
+                    android:layout_marginLeft="12dp"
+                    android:text="Receive confirmation"
+                    android:textSize="14sp"
+                    android:textColor="#424242" />
+            </RelativeLayout>
+            
+        </LinearLayout>
+        
+    </FrameLayout>
+</FrameLayout>
