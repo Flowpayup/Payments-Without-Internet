@@ -18,7 +18,7 @@ Flowpay tackles a problem millions of people in India hit every day: UPI payment
 
 Flowpay wraps the two offline UPI rails that already exist on every Indian smartphone but are buried behind UX so poor that almost nobody uses them:
 
-- **`*99#` USSD flow** — dial the shortcode, navigate the menu, send money. Flowpay places the `*99#` call for the user and gives them a payment UI to start from, but it does **not** automate the menu walk or parse USSD responses — the in-app step-by-step USSD overlay was built and is currently disabled, so the user navigates the telco menu manually.
+- **`*99#` USSD flow** — dial the shortcode, navigate the menu, send money. Flowpay places the `*99#` call for the user and gives them a payment UI to start from. It does **not** automate the menu walk or parse USSD responses — the user navigates the telco menu manually.
 - **UPI 123Pay IVR flow** — the missed-call and call-based payment flow shipped in 2022 for feature phones. Flowpay invokes it from a smartphone with a thin wrapper around the call intent.
 - **QR scan + manual entry as fallbacks** — both feed the same `*99#` flow downstream.
 
@@ -108,6 +108,8 @@ That's it. The build is self-contained — every dependency comes from public Ma
 First launch routes through Setup → connectivity test → home screen. The connectivity test will dial `*99#` once to verify the menu walk works on your operator + SIM, which may incur a small charge depending on your plan (Jio and Airtel are usually free on most plans; some prepaid plans charge a few paise per session).
 
 If you want to skim the code without running it, the build also works without an Android device — `./gradlew assembleDebug` produces a working APK in `app/build/outputs/apk/debug/`.
+
+**Signed release build:** copy `keystore.properties.example` to `keystore.properties`, fill in your signing-key details, then run `./gradlew assembleRelease`. The `keystore.properties` file and any `*.jks`/`*.keystore` files are gitignored, so signing material is never committed. Without a keystore the release build still compiles, just unsigned.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions. See [SECURITY.md](SECURITY.md) for vulnerability disclosure.
 

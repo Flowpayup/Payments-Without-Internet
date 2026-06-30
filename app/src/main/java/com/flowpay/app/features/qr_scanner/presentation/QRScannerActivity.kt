@@ -436,20 +436,7 @@ class QRScannerActivity : ComponentActivity() {
                 // Continue anyway, this is not critical
             }
 
-            // 2. Show USSD overlay - DISABLED
-            // DISABLED: USSDOverlay functionality temporarily disabled
-            // try {
-            //     Log.d("QRScanner", "Starting USSD overlay service...")
-            //     updateBlackScreenStatus("Starting payment guidance...")
-            //     Log.d("QRScanner", "USSD overlay service started successfully")
-            //     updateBlackScreenStatus("Payment guidance ready")
-            // } catch (e: Exception) {
-            //     Log.e("QRScanner", "Failed to start USSD overlay: ${e.message}", e)
-            //     showError("Failed to start payment guidance: ${e.message}")
-            //     return
-            // }
-
-            // 3. Dial USSD code after a short delay to ensure overlay is ready (only once per flow)
+            // 2. Dial USSD code after a short delay (only once per flow)
             mainHandler.postDelayed({
                 try {
                     if (!isActivityAlive()) return@postDelayed
