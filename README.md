@@ -1,4 +1,4 @@
-# Flowpay
+# Flowpay - Payments without Internet
 
 *An Android app that brings UPI payments to users with no internet, using `*99#` USSD and UPI 123Pay (IVR) rails.*
 
