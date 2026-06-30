@@ -2,7 +2,7 @@
 
 *An Android app that brings UPI payments to users with no internet, using `*99#` USSD and UPI 123Pay (IVR) rails.*
 
-![Build](https://github.com/OWNER/REPO/actions/workflows/build.yml/badge.svg)
+![Build](https://github.com/Flowpayup/Flowpay_v1/actions/workflows/build.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
@@ -97,8 +97,8 @@ The pieces worth reading if you're poking around:
 ## Running it
 
 ```bash
-git clone https://github.com/OWNER/REPO.git
-cd REPO
+git clone https://github.com/Flowpayup/Flowpay_v1.git
+cd Flowpay_v1
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 ./gradlew installDebug
 ```
