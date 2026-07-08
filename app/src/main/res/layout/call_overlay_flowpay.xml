@@ -21,12 +21,12 @@
         android:clickable="true"
         android:focusable="true">
 
-        <!-- FlowPay Logo - Refined styling -->
+        <!-- Flowpay Logo - Refined styling -->
         <TextView
             android:id="@+id/flowPayLogo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="FlowPay"
+            android:text="Flowpay"
             android:textSize="20sp"
             android:textStyle="normal"
             android:fontFamily="sans-serif-medium"

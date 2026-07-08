@@ -98,6 +98,20 @@ sealed class PaymentState {
     ) : PaymentState()
     
     /**
+     * Terminal state when a bank SMS arrived during the payment but did not
+     * match what was sent (e.g. a different amount). The outcome is recorded
+     * but must be reviewed by the user against their bank statement.
+     * @param transactionId Unique transaction identifier
+     * @param phoneNumber The recipient's phone number
+     * @param amount The payment amount that was requested
+     */
+    data class NeedsReview(
+        val transactionId: String,
+        val phoneNumber: String,
+        val amount: String
+    ) : PaymentState()
+
+    /**
      * State when payment is cancelled by user
      * @param phoneNumber The recipient's phone number
      * @param amount The payment amount
@@ -214,7 +228,8 @@ sealed class PaymentState {
     /**
      * Checks if the payment is in a terminal state (Success, Failed, Cancelled)
      */
-    fun isTerminal(): Boolean = this is Success || this is Failed || this is Cancelled || 
+    fun isTerminal(): Boolean = this is Success || this is Failed || this is Cancelled ||
+                                this is NeedsReview ||
                                 this is QRPaymentSuccess || this is QRPaymentFailed
     
     /**
@@ -242,6 +257,7 @@ sealed class PaymentState {
         is WaitingForVerification -> this.transactionId
         is Success -> this.transactionId
         is Failed -> this.transactionId
+        is NeedsReview -> this.transactionId
         is Cancelled -> this.transactionId
         is Retrying -> this.transactionId
         is Timeout -> this.transactionId
@@ -262,6 +278,7 @@ sealed class PaymentState {
         is WaitingForVerification -> this.phoneNumber
         is Success -> this.phoneNumber
         is Failed -> this.phoneNumber
+        is NeedsReview -> this.phoneNumber
         is Cancelled -> this.phoneNumber
         is Retrying -> this.phoneNumber
         is Timeout -> this.phoneNumber
@@ -277,6 +294,7 @@ sealed class PaymentState {
         is WaitingForVerification -> this.amount
         is Success -> this.amount
         is Failed -> this.amount
+        is NeedsReview -> this.amount
         is Cancelled -> this.amount
         is Retrying -> this.amount
         is Timeout -> this.amount
@@ -304,7 +322,7 @@ sealed class PaymentState {
      * Gets the payment type
      */
     fun getPaymentType(): PaymentType? = when (this) {
-        is Initiating, is InProgress, is WaitingForVerification, is Success, is Failed, is Cancelled, is Retrying, is Timeout -> PaymentType.MANUAL_TRANSFER
+        is Initiating, is InProgress, is WaitingForVerification, is Success, is Failed, is NeedsReview, is Cancelled, is Retrying, is Timeout -> PaymentType.MANUAL_TRANSFER
         is QRPaymentInitiating, is QRPaymentInProgress, is QRPaymentWaitingForVerification, is QRPaymentSuccess, is QRPaymentFailed -> PaymentType.QR_SCANNING
         else -> null
     }
@@ -330,6 +348,7 @@ fun PaymentState.getDisplayMessage(): String = when (this) {
     is PaymentState.WaitingForVerification -> "Waiting for bank verification..."
     is PaymentState.Success -> "Payment successful!"
     is PaymentState.Failed -> "Payment failed: $error"
+    is PaymentState.NeedsReview -> "Payment needs review — check your bank statement"
     is PaymentState.Cancelled -> "Payment cancelled: $reason"
     is PaymentState.Retrying -> "Retrying payment (${retryCount}/${maxRetries})..."
     is PaymentState.Timeout -> "Payment timeout: ${timeoutType.name}"
@@ -347,6 +366,7 @@ fun PaymentState.getProgressPercentage(): Float = when (this) {
     is PaymentState.WaitingForVerification -> 0.7f
     is PaymentState.Success -> 1f
     is PaymentState.Failed -> 0f
+    is PaymentState.NeedsReview -> 1f
     is PaymentState.Cancelled -> 0f
     is PaymentState.Retrying -> 0.1f
     is PaymentState.Timeout -> 0f

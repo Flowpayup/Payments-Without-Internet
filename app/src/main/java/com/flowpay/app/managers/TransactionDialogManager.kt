@@ -97,7 +97,7 @@ class TransactionDialogManager(
      */
     fun showTransactionCompleted() {
         try {
-            // Create custom dialog with FlowPay design
+            // Create custom dialog with Flowpay design
             val dialogBuilder = AlertDialog.Builder(context)
             val inflater = LayoutInflater.from(context)
             val dialogView = inflater.inflate(R.layout.dialog_transaction_success, null)

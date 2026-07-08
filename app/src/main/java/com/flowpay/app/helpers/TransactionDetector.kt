@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Parcelable
 import android.util.Log
+import com.flowpay.app.data.TransactionStatus
 import kotlinx.parcelize.Parcelize
 import java.util.Locale
 
@@ -142,6 +143,95 @@ class TransactionDetector private constructor(context: Context) {
             "txn successful"
         )
 
+        // Failure indicators. Checked with absolute precedence: a bank SMS
+        // that matches the pipeline AND contains one of these is recorded as
+        // FAILED, never SUCCESS. Multi-word entries are matched as substrings
+        // of the lowercased body, same as SUCCESS_INDICATORS.
+        private val FAILURE_INDICATORS = listOf(
+            "failed",
+            "failure",
+            "declined",
+            "rejected",
+            "unsuccessful",
+            "not successful",
+            "could not be processed",
+            "cannot be processed",
+            "not processed",
+            "not completed",
+            "insufficient",
+            "reversed",
+            "not debited",
+            "txn expired",
+            "timed out"
+        )
+
+        /**
+         * True when the SMS body reports a failed/declined transaction.
+         * Kept in the companion (pure, Context-free) so JVM tests exercise
+         * the exact production logic.
+         */
+        internal fun detectsFailure(body: String): Boolean {
+            val bodyLower = body.lowercase(Locale.getDefault())
+            return FAILURE_INDICATORS.any { bodyLower.contains(it) }
+        }
+
+        /** ±1.0 tolerance absorbs decimal-formatting differences ("100" vs "100.00"). */
+        internal fun isAmountMatching(extracted: String, expected: String): Boolean {
+            val extractedNum = extracted.replace(",", "").toDoubleOrNull() ?: return false
+            val expectedNum = expected.replace(",", "").toDoubleOrNull() ?: return false
+            return kotlin.math.abs(extractedNum - expectedNum) < 1.0
+        }
+
+        internal fun detectBank(sender: String, body: String): String? {
+            val senderUpper = sender.uppercase(Locale.getDefault())
+            val bodyUpper = body.uppercase(Locale.getDefault())
+
+            // Check sender first
+            for ((keyword, bankName) in BANK_KEYWORDS) {
+                if (senderUpper.contains(keyword.uppercase())) {
+                    return bankName
+                }
+            }
+
+            // Check body for bank names
+            for ((keyword, bankName) in BANK_KEYWORDS) {
+                if (bodyUpper.contains(keyword.uppercase())) {
+                    return bankName
+                }
+            }
+
+            // Generic DLT-shaped sender fallback. Deliberately layered rather
+            // than strict: an all-caps 6-letter promo sender ("AMAZON") can
+            // still slip through here, but downstream defenses keep that
+            // non-catastrophic — a failure keyword records FAILED and an
+            // amount mismatch records NEEDS_REVIEW, never a silent SUCCESS.
+            // The old blanket `sender.length == 6` check was removed: it also
+            // admitted mixed/lowercase senders ("Amazon", "MyShop"), which
+            // are never DLT bank headers.
+            if (sender.matches(Regex("^[A-Z]{2}-[A-Z0-9]{6}(-[A-Z])?$")) ||
+                sender.matches(Regex("^[A-Z]{6}$")) ||
+                sender.matches(Regex("^[0-9]{6}$"))) {
+
+                // It's likely a bank shortcode, but we don't know which one
+                return "Bank"
+            }
+
+            return null
+        }
+
+        /**
+         * Cross-pipeline dedupe key. The notification listener sees a
+         * truncated EXTRA_TEXT while the broadcast receiver sees the full
+         * PDU body, so hashing the full body would give the two pipelines
+         * different keys for the same SMS. Normalising whitespace and
+         * capping at 120 chars (below any plausible notification truncation
+         * point) makes both keys converge.
+         */
+        internal fun claimKey(sender: String, body: String): String {
+            val normalisedBody = body.trim().replace(Regex("\\s+"), " ").take(120)
+            return "${sender.trim().uppercase(Locale.ROOT)}|$normalisedBody"
+        }
+
         // Amount patterns - multiple formats
         private val AMOUNT_PATTERNS = listOf(
             "(?:Rs\\.?|INR|₹)\\s*([0-9,]+(?:\\.[0-9]{1,2})?)",
@@ -162,7 +252,7 @@ class TransactionDetector private constructor(context: Context) {
 
     @Synchronized
     fun tryClaimSms(sender: String, body: String): Boolean {
-        val key = "${sender.trim().uppercase(Locale.ROOT)}|${body.trim()}".hashCode().toString()
+        val key = claimKey(sender, body).hashCode().toString()
         val now = System.currentTimeMillis()
         val lastClaim = recentSmsClaims[key]
         if (lastClaim != null && now - lastClaim < SMS_CLAIM_WINDOW_MILLIS) {
@@ -263,13 +353,16 @@ class TransactionDetector private constructor(context: Context) {
             return null
         }
 
-        // Step 4: Validate amount if expected (warn-only, as before —
-        // a mismatch is logged but the message is still accepted)
+        // Step 4: Compare against the expected amount (if any). The message
+        // is still accepted either way — permissive matching preserved — but
+        // a mismatch is no longer silently auto-confirmed: it is recorded as
+        // NEEDS_REVIEW so an unrelated debit SMS in the operation window
+        // (e.g. an auto-debit) can never masquerade as this payment.
         val expectedAmount = prefs.getString(KEY_EXPECTED_AMOUNT, null)
-        if (!expectedAmount.isNullOrEmpty()) {
-            if (!isAmountMatching(amount, expectedAmount)) {
-                Log.d(TAG, "Amount mismatch with expected value - accepting with warning")
-            }
+        val amountMatches =
+            expectedAmount.isNullOrEmpty() || isAmountMatching(amount, expectedAmount)
+        if (!amountMatches) {
+            Log.d(TAG, "Amount mismatch with expected value - marking NEEDS_REVIEW")
         }
 
         // Step 5: Generate transaction ID
@@ -280,15 +373,28 @@ class TransactionDetector private constructor(context: Context) {
         // Extract recipient/sender name and phone number
         val (recipientName, phoneNumber) = extractRecipientInfo(body, transactionType)
 
-        // Step 6: Mark operation complete
-        stopOperation()
+        // Derive the outcome from the SMS itself. A failure keyword wins
+        // over everything: banks send "Payment of Rs 500 failed" messages
+        // that would otherwise qualify via "payment of" + an amount.
+        val status = when {
+            detectsFailure(body) -> TransactionStatus.FAILED
+            !amountMatches -> TransactionStatus.NEEDS_REVIEW
+            else -> TransactionStatus.SUCCESS
+        }
+
+        // Step 6: Mark operation complete — unless this was an incoming
+        // CREDIT. A stray credit must not consume the operation window the
+        // real outgoing-debit confirmation may still need.
+        if (transactionType != "CREDIT") {
+            stopOperation()
+        }
 
         return SimpleTransaction(
             transactionId = transactionId,
             amount = amount,
-            status = "SUCCESS",
+            status = status,
             bankName = bankName,
-            smsExcerpt = buildExcerpt(amount, transactionType, bankName),
+            smsExcerpt = buildExcerpt(amount, transactionType, bankName, status),
             upiId = upiId,
             transactionType = transactionType,
             recipientName = recipientName,
@@ -300,44 +406,23 @@ class TransactionDetector private constructor(context: Context) {
      * Privacy-safe stored summary, built only from extracted fields so the
      * raw SMS body (account fragments, balances) never reaches the database.
      */
-    private fun buildExcerpt(amount: String, transactionType: String, bankName: String): String {
-        val verb = if (transactionType == "CREDIT") "credited" else "debited"
+    private fun buildExcerpt(
+        amount: String,
+        transactionType: String,
+        bankName: String,
+        status: String
+    ): String {
+        val verb = when {
+            status == TransactionStatus.FAILED -> "payment failed"
+            transactionType == "CREDIT" -> "credited"
+            else -> "debited"
+        }
         return buildString {
             append("₹").append(amount).append(" ").append(verb)
             if (bankName.isNotBlank()) append(" — ").append(bankName)
         }
     }
 
-    private fun detectBank(sender: String, body: String): String? {
-        val senderUpper = sender.uppercase(Locale.getDefault())
-        val bodyUpper = body.uppercase(Locale.getDefault())
-
-        // Check sender first
-        for ((keyword, bankName) in BANK_KEYWORDS) {
-            if (senderUpper.contains(keyword.uppercase())) {
-                return bankName
-            }
-        }
-
-        // Check body for bank names
-        for ((keyword, bankName) in BANK_KEYWORDS) {
-            if (bodyUpper.contains(keyword.uppercase())) {
-                return bankName
-            }
-        }
-
-        // Check for generic bank sender patterns
-        if (sender.matches(Regex("^[A-Z]{2}-[0-9]{6}$")) ||
-            sender.matches(Regex("^[A-Z]{6}$")) ||
-            sender.matches(Regex("^[0-9]{6}$")) ||
-            sender.length == 6) {
-
-            // It's likely a bank shortcode, but we don't know which one
-            return "Bank"
-        }
-
-        return null
-    }
 
     private fun isTransactionMessage(body: String): Boolean {
         val bodyLower = body.lowercase(Locale.getDefault())
@@ -347,6 +432,13 @@ class TransactionDetector private constructor(context: Context) {
             if (bodyLower.contains(indicator)) {
                 return true
             }
+        }
+
+        // Failure SMS qualify too (widening only): "Payment declined" with no
+        // success verb must still enter the pipeline so it can be recorded as
+        // FAILED instead of being silently dropped.
+        if (detectsFailure(body)) {
+            return true
         }
 
         // Also check for amount patterns as additional validation
@@ -374,13 +466,6 @@ class TransactionDetector private constructor(context: Context) {
         return null
     }
 
-    private fun isAmountMatching(extracted: String, expected: String): Boolean {
-        val extractedNum = extracted.replace(",", "").toDoubleOrNull() ?: return false
-        val expectedNum = expected.replace(",", "").toDoubleOrNull() ?: return false
-
-        // Allow small difference (for decimals)
-        return kotlin.math.abs(extractedNum - expectedNum) < 1.0
-    }
 
     private fun extractTransactionId(body: String): String? {
         val patterns = listOf(

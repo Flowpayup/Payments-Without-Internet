@@ -6,7 +6,7 @@ import android.content.Intent
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
-import com.flowpay.app.FlowPayApplication
+import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.managers.CallManager
 import com.flowpay.app.managers.PermissionManager
@@ -226,7 +226,7 @@ class MainActivityHelper(
 
         warnIfVoiceSimMismatch()
 
-        val sessionManager = FlowPayApplication.from(context)?.paymentSessionManager
+        val sessionManager = FlowpayApplication.from(context)?.paymentSessionManager
         if (sessionManager == null) {
             Log.e(TAG, "PaymentSessionManager unavailable")
             uiCallback.showToast("Payment could not be started. Please try again.")

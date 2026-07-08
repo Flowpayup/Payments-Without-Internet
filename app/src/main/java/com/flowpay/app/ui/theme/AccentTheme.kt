@@ -3,7 +3,7 @@ package com.flowpay.app.ui.theme
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-data class FlowPayAccentTheme(
+data class FlowpayAccentTheme(
     val primary: Color,
     val primaryDark: Color,
     val headerGradientStart: Color,
@@ -12,7 +12,7 @@ data class FlowPayAccentTheme(
     val accentLight: Color
 )
 
-val BlueAccentTheme = FlowPayAccentTheme(
+val BlueAccentTheme = FlowpayAccentTheme(
     primary = Color(0xFF5B8DEF),
     primaryDark = Color(0xFF1976D2),
     headerGradientStart = Color(0xFF7BA8F5),
@@ -21,4 +21,4 @@ val BlueAccentTheme = FlowPayAccentTheme(
     accentLight = Color(0xFF4A9EFF)
 )
 
-val LocalFlowPayAccentTheme = compositionLocalOf { BlueAccentTheme }
+val LocalFlowpayAccentTheme = compositionLocalOf { BlueAccentTheme }

@@ -85,6 +85,20 @@ class TestConfigurationHelper(
     }
 
     /**
+     * Releases everything with a lifecycle: pending Handler runnables and
+     * the CallManager's PhoneStateListener. Must be called from the host
+     * activity's onDestroy(), otherwise a listener registered for an
+     * in-flight test call outlives the screen.
+     */
+    fun cleanup() {
+        cancelUssdTimeout()
+        cancelUpi123ConfigDelay()
+        if (::callManager.isInitialized) {
+            callManager.cleanup()
+        }
+    }
+
+    /**
      * Handle permission results
      */
     fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
@@ -409,7 +423,7 @@ class TestConfigurationHelper(
         saveTestResults(ussdTestCompleted, upi123TestCompleted)
         
         // Mark test configuration as completed even when skipped
-        val sharedPreferences = context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         sharedPreferences.edit()
             .putBoolean("test_configuration_completed", true)
             .apply()
@@ -425,7 +439,7 @@ class TestConfigurationHelper(
         saveTestResults(ussdTestCompleted, upi123TestCompleted)
         
         // Mark test configuration as completed
-        val sharedPreferences = context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         sharedPreferences.edit()
             .putBoolean("test_configuration_completed", true)
             .apply()

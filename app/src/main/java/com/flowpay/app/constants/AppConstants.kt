@@ -51,7 +51,7 @@ object AppConstants {
     const val UPI123PAY_MAX_AMOUNT = 10000.0
     
     // SharedPreferences keys
-    const val PREFS_NAME = "FlowPayPrefs"
+    const val PREFS_NAME = "FlowpayPrefs"
     const val KEY_UPI_SERVICE_NUMBER = "upi_service_number"
     const val KEY_PENDING_OVERLAY = "pending_overlay"
     const val KEY_PENDING_PHONE = "pending_phone"

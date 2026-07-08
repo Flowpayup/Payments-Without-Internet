@@ -6,7 +6,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -37,12 +36,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.flowpay.app.FlowPayApplication
+import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.R
 import com.flowpay.app.SetupActivity
 import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.ui.theme.BlueAccentTheme
-import com.flowpay.app.ui.theme.LocalFlowPayAccentTheme
+import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 
 class SettingsActivity : ComponentActivity() {
 
@@ -54,12 +53,12 @@ class SettingsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val app = application as? FlowPayApplication
+        val app = application as? FlowpayApplication
         val settingsRepository = app?.settingsRepository ?: SettingsRepository(applicationContext)
-        setTheme(R.style.Theme_FlowPay)
+        setTheme(R.style.Theme_Flowpay)
         setContent {
-            CompositionLocalProvider(LocalFlowPayAccentTheme provides BlueAccentTheme) {
-                FlowPaySettingsTheme {
+            CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
+                FlowpaySettingsTheme {
                     SettingsScreen(
                         onBackPressed = { finish() },
                         settingsRepository = settingsRepository,
@@ -81,8 +80,8 @@ class SettingsActivity : ComponentActivity() {
 
 // Theme
 @Composable
-fun FlowPaySettingsTheme(content: @Composable () -> Unit) {
-    val accentTheme = LocalFlowPayAccentTheme.current
+fun FlowpaySettingsTheme(content: @Composable () -> Unit) {
+    val accentTheme = LocalFlowpayAccentTheme.current
     MaterialTheme(
         colorScheme = darkColorScheme(
             primary = accentTheme.primary,
@@ -196,7 +195,7 @@ fun SettingsScreen(
     refreshTrigger: MutableIntState = mutableIntStateOf(0)
 ) {
     val context = LocalContext.current
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
     val state = viewModel.state
 
     // Load settings from repository on first composition
@@ -213,7 +212,7 @@ fun SettingsScreen(
 
     // Get primary SIM name from shared prefs (reactive)
     var primarySimId by remember {
-        val prefs = context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         mutableStateOf(prefs.getString("selected_primary_sim", "") ?: "")
     }
     val primarySim = when (primarySimId) {
@@ -361,22 +360,6 @@ fun SettingsScreen(
                                 onRequestPermissions(arrayOf(Manifest.permission.READ_CONTACTS))
                             }
                         )
-                        GroupDivider()
-                        PermissionRow(
-                            icon = Icons.Default.Layers,
-                            title = "Overlay",
-                            subtitle = "USSD call screen",
-                            granted = state.permissions["overlay"] ?: false,
-                            onRequest = {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    val intent = Intent(
-                                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                        Uri.parse("package:${context.packageName}")
-                                    )
-                                    context.startActivity(intent)
-                                }
-                            }
-                        )
                     }
                 }
 
@@ -431,8 +414,8 @@ fun SettingsScreen(
                         upiServiceNumber = bank.upiNumber
                     )
                 )
-                // Also sync to FlowPayPrefs so the main screen picks it up
-                context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+                // Also sync to FlowpayPrefs so the main screen picks it up
+                context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
                     .edit().putString("selected_bank", bank.id).apply()
                 showBankPicker = false
             },
@@ -446,7 +429,7 @@ fun SettingsScreen(
             selectedSimId = primarySimId,
             onSimSelected = { simId ->
                 primarySimId = simId
-                context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+                context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
                     .edit().putString("selected_primary_sim", simId).apply()
                 showSimPicker = false
             },
@@ -475,7 +458,7 @@ fun SettingsScreen(
                 TextButton(onClick = {
                     showClearDataConfirm = false
                     settingsRepository?.clearAllData()
-                    context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+                    context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
                         .edit().clear().apply()
                     context.startActivity(
                         Intent(context, SetupActivity::class.java).apply {
@@ -539,7 +522,7 @@ private fun SettingsRow(
     destructive: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
     val iconColor = if (destructive) Color(0xFFF5576C) else accent.primary
     val iconBg = if (destructive) Color(0xFFF5576C).copy(alpha = 0.12f) else accent.primary.copy(alpha = 0.12f)
     val titleColor = if (destructive) Color(0xFFF5576C) else Color.White
@@ -615,7 +598,7 @@ private fun PermissionRow(
     granted: Boolean,
     onRequest: () -> Unit
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
 
     Row(
         modifier = Modifier
@@ -696,7 +679,7 @@ private fun ToggleRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
 
     Row(
         modifier = Modifier
@@ -758,7 +741,7 @@ private fun BankPickerDialog(
     onBankSelected: (Bank) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -835,7 +818,7 @@ private fun SimPickerDialog(
     onSimSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
     val sims = listOf(
         "jio" to "Jio",
         "airtel" to "Airtel",

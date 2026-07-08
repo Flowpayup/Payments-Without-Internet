@@ -12,27 +12,20 @@
 #   public *;
 #}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep line numbers so release crash traces map back through mapping.txt,
+# and hide the original source file name.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Gson deserializes TestResults by reflecting on its field names — the only
+# app class read/written via reflection. Everything else (Room, Parcelize,
+# Compose, manifest components) is covered by generated keeps or AGP's
+# default rules, so no blanket com.flowpay.app keeps are needed.
+-keep class com.flowpay.app.data.TestResults { <fields>; }
 
-# Keep FlowPay specific classes
--keep class com.flowpay.app.** { *; }
-
-# Keep data classes
--keep class * extends com.flowpay.app.data.** { *; }
--keep class * extends com.flowpay.app.models.** { *; }
-
-# Keep managers and services
--keep class com.flowpay.app.managers.** { *; }
--keep class com.flowpay.app.services.** { *; }
-
-# Keep UI components
--keep class com.flowpay.app.ui.** { *; }
+# SQLCipher's native side resolves these classes via JNI by name; the @aar
+# dependency ships no consumer rules.
+-keep class net.zetetic.database.** { *; }
 
 # Keep enum classes
 -keepclassmembers enum * {

@@ -11,7 +11,6 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- SMS detection via BroadcastReceiver. READ_SMS is deliberately NOT
          requested: the app never reads the SMS inbox, it only receives
          incoming messages while a payment operation is active. -->
@@ -30,7 +29,7 @@
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
-        android:name=".FlowPayApplication"
+        android:name=".FlowpayApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -39,21 +38,21 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:localeConfig="@xml/locales_config"
-        android:theme="@style/Theme.FlowPay"
+        android:theme="@style/Theme.Flowpay"
         tools:targetApi="31">
 
         <activity
             android:name=".SetupActivity"
             android:exported="false"
-            android:theme="@style/Theme.FlowPay" />
+            android:theme="@style/Theme.Flowpay" />
         <activity
             android:name=".TestConfigurationActivity"
             android:exported="false"
-            android:theme="@style/Theme.FlowPay" />
+            android:theme="@style/Theme.Flowpay" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.FlowPay.Splash"
+            android:theme="@style/Theme.Flowpay.Splash"
             android:label="">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -65,43 +64,22 @@
         <activity
             android:name=".features.qr_scanner.presentation.QRScannerActivity"
             android:exported="false"
-            android:theme="@style/Theme.FlowPay"
+            android:theme="@style/Theme.Flowpay"
             android:screenOrientation="portrait"
             android:showOnLockScreen="true"
             android:turnScreenOn="true" />
-        
-        <!-- Call Overlay Activity -->
-        <activity
-            android:name=".ui.activities.CallOverlayActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:excludeFromRecents="true"
-            android:launchMode="singleInstance"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
-        
-        <!-- Payment Processing Activity -->
-        <activity
-            android:name=".ui.activities.PaymentProcessingActivity"
-            android:theme="@style/Theme.FlowPay"
-            android:launchMode="singleTask" />
         
         <!-- Permission Guide Activity -->
         <activity
             android:name=".ui.activities.PermissionGuideActivity"
             android:exported="false"
-            android:theme="@style/Theme.FlowPay"
+            android:theme="@style/Theme.Flowpay"
             android:screenOrientation="portrait" />
-        
-        <!-- Transaction Success Activity -->
-        <activity
-            android:name=".ui.activities.TransactionSuccessActivity"
-            android:exported="false"
-            android:theme="@style/Theme.FlowPay"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTask" />
-        
+
         <!-- Payment Success Activity -->
         <activity
-            android:name=".ui.activities.PaymentSuccessActivity"
+            android:name=".ui.activities.PaymentResultActivity"
+            android:exported="false"
             android:theme="@style/PaymentSuccessTheme"
             android:screenOrientation="portrait"
             android:launchMode="singleTask" />
@@ -110,14 +88,14 @@
         <activity
             android:name=".ui.activities.TransactionHistoryActivity"
             android:exported="false"
-            android:theme="@style/Theme.FlowPay"
+            android:theme="@style/Theme.Flowpay"
             android:screenOrientation="portrait" />
         
         <!-- Settings Activity -->
         <activity
             android:name=".ui.activities.SettingsActivity"
             android:exported="false"
-            android:theme="@style/Theme.FlowPay"
+            android:theme="@style/Theme.Flowpay"
             android:label="Settings"
             android:parentActivityName=".MainActivity"
             android:screenOrientation="portrait">
@@ -134,7 +112,7 @@
 
         <!-- Notification Listener Service — opt-in fallback SMS detection -->
         <service
-            android:name=".services.FlowPayNotificationListener"
+            android:name=".services.FlowpayNotificationListener"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">

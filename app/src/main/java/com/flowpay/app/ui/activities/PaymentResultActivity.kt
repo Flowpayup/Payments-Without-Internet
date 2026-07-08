@@ -18,20 +18,23 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import com.flowpay.app.MainActivity
 import com.flowpay.app.R
+import com.flowpay.app.data.TransactionStatus
 import com.flowpay.app.helpers.TransactionDetector
 import com.flowpay.app.helpers.AudioStateManager
 import java.text.SimpleDateFormat
 import java.util.*
 
-class PaymentSuccessActivity : AppCompatActivity() {
+class PaymentResultActivity : AppCompatActivity() {
     
     private lateinit var tickImageView: ImageView
     private lateinit var statusText: TextView
+    private lateinit var statusExplainerText: TextView
     private lateinit var amountText: TextView
     private lateinit var detailsCard: CardView
     private lateinit var bankNameText: TextView
@@ -58,11 +61,17 @@ class PaymentSuccessActivity : AppCompatActivity() {
         initViews()
         loadTransactionData()
         startAnimations()
+
+        // Replaces the deprecated onBackPressed() override
+        onBackPressedDispatcher.addCallback(this) {
+            navigateToMain()
+        }
     }
     
     private fun initViews() {
         tickImageView = findViewById(R.id.iv_success_tick)
         statusText = findViewById(R.id.tv_status)
+        statusExplainerText = findViewById(R.id.tv_status_explainer)
         amountText = findViewById(R.id.tv_amount)
         detailsCard = findViewById(R.id.card_details)
         bankNameText = findViewById(R.id.tv_bank_name)
@@ -78,6 +87,7 @@ class PaymentSuccessActivity : AppCompatActivity() {
         // Initially hide views for animation
         tickImageView.alpha = 0f
         statusText.alpha = 0f
+        statusExplainerText.alpha = 0f
         amountText.alpha = 0f
         detailsCard.alpha = 0f
         doneButton.alpha = 0f
@@ -101,8 +111,28 @@ class PaymentSuccessActivity : AppCompatActivity() {
         // Get operation type from detector
         val detector = TransactionDetector.getInstance(this)
         val operationType = detector.getOperationType() ?: ""
-        
-        statusText.text = "Payment Successful"
+
+        // Render the outcome the bank actually reported — this screen is
+        // launched for every parsed confirmation, not only successes.
+        when (status) {
+            TransactionStatus.FAILED -> {
+                statusText.text = getString(R.string.payment_status_failed)
+                statusExplainerText.text = getString(R.string.status_explainer_failed)
+                statusExplainerText.visibility = View.VISIBLE
+                tickImageView.setImageResource(R.drawable.ic_error)
+                tickImageView.setColorFilter(ContextCompat.getColor(this, R.color.error_red))
+            }
+            TransactionStatus.NEEDS_REVIEW -> {
+                statusText.text = getString(R.string.payment_status_needs_review)
+                statusExplainerText.text = getString(R.string.status_explainer_needs_review)
+                statusExplainerText.visibility = View.VISIBLE
+                tickImageView.setImageResource(R.drawable.ic_error)
+                tickImageView.setColorFilter(ContextCompat.getColor(this, R.color.warning_orange))
+            }
+            else -> {
+                statusText.text = getString(R.string.payment_status_success)
+            }
+        }
         amountText.text = "₹${formatAmount(amount)}"
         
         // Handle recipient/sender display - UPDATED LOGIC
@@ -141,8 +171,14 @@ class PaymentSuccessActivity : AppCompatActivity() {
             upiIdLayout.visibility = View.GONE
         }
         
-        // Set transaction type indicator color - payment amount always green
-        amountText.setTextColor(ContextCompat.getColor(this, R.color.flowpay_green))
+        // Amount color tracks the outcome: green for success, red for
+        // failure, amber for an unmatched confirmation
+        val amountColor = when (status) {
+            TransactionStatus.FAILED -> R.color.error_red
+            TransactionStatus.NEEDS_REVIEW -> R.color.warning_orange
+            else -> R.color.flowpay_green
+        }
+        amountText.setTextColor(ContextCompat.getColor(this, amountColor))
     }
     
     private fun formatAmount(amount: String): String {
@@ -165,9 +201,13 @@ class PaymentSuccessActivity : AppCompatActivity() {
             animateTickMark()
         }, 300)
         
-        // Fade in status text
+        // Fade in status text (and its explainer line, when visible)
         Handler(Looper.getMainLooper()).postDelayed({
             statusText.animate()
+                .alpha(1f)
+                .setDuration(500)
+                .start()
+            statusExplainerText.animate()
                 .alpha(1f)
                 .setDuration(500)
                 .start()
@@ -256,18 +296,15 @@ class PaymentSuccessActivity : AppCompatActivity() {
     }
     
     private fun setupSystemUI() {
-        // Make status bar and navigation bar black
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.statusBarColor = Color.BLACK
-            window.navigationBarColor = Color.BLACK
-        }
-        
-        // For Android 8.0 and above, ensure navigation bar buttons are visible on black background
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val decorView = window.decorView
-            decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv() and decorView.systemUiVisibility
-        }
-        
+        // Make status bar and navigation bar black (minSdk 29 — no guard needed)
+        window.statusBarColor = Color.BLACK
+        window.navigationBarColor = Color.BLACK
+
+        // Black nav bar => light (white) buttons, via the compat controller
+        // instead of deprecated direct systemUiVisibility manipulation.
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView)
+            .isAppearanceLightNavigationBars = false
+
         // Hide status bar and navigation bar for immersive experience
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
@@ -276,6 +313,7 @@ class PaymentSuccessActivity : AppCompatActivity() {
                 it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         } else {
+            // API 29 has no WindowInsetsController — the legacy flags stay.
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                     or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -296,7 +334,7 @@ class PaymentSuccessActivity : AppCompatActivity() {
             // Give user 3 seconds to end the call themselves
             Handler(Looper.getMainLooper()).postDelayed({
                 if (AudioStateManager.isCallAudioMuted()) {
-                    Log.d("PaymentSuccessActivity", "Restoring audio after delay")
+                    Log.d("PaymentResultActivity", "Restoring audio after delay")
                     AudioStateManager.restoreCallAudio(this)
                 }
             }, 3000)
@@ -308,9 +346,5 @@ class PaymentSuccessActivity : AppCompatActivity() {
         if (hasFocus) {
             setupSystemUI()
         }
-    }
-    
-    override fun onBackPressed() {
-        navigateToMain()
     }
 }

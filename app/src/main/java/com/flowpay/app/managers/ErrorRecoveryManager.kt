@@ -325,9 +325,9 @@ class ErrorRecoveryManager(private val context: Context) {
      */
     fun getRecoverySuggestion(errorType: String): String {
         return when (errorType) {
-            ERROR_OVERLAY_PERMISSION -> "Grant overlay permission in Settings > Apps > FlowPay > Permissions"
-            ERROR_CALL_PERMISSION -> "Grant call permission in Settings > Apps > FlowPay > Permissions"
-            ERROR_SMS_PERMISSION -> "Grant SMS permission in Settings > Apps > FlowPay > Permissions"
+            ERROR_OVERLAY_PERMISSION -> "Grant overlay permission in Settings > Apps > Flowpay > Permissions"
+            ERROR_CALL_PERMISSION -> "Grant call permission in Settings > Apps > Flowpay > Permissions"
+            ERROR_SMS_PERMISSION -> "Grant SMS permission in Settings > Apps > Flowpay > Permissions"
             ERROR_USSD_DIAL_FAILED -> "Check network connection and try again"
             ERROR_OVERLAY_SERVICE_FAILED -> "Restart the app and try again"
             ERROR_SMS_DETECTION_FAILED -> "Check SMS permissions and try again"

@@ -51,7 +51,7 @@ data class Transaction(
             timestamp = timestamp,
             status = when (status.uppercase()) {
                 "SUCCESS", "SUCCESSFUL", "COMPLETED" -> PaymentStatus.COMPLETED
-                "PENDING", "UNVERIFIED" -> PaymentStatus.PENDING
+                "PENDING", "UNVERIFIED", "NEEDS_REVIEW" -> PaymentStatus.PENDING
                 "CANCELLED" -> PaymentStatus.CANCELLED
                 "FAILED", "DECLINED" -> PaymentStatus.FAILED
                 else -> PaymentStatus.PENDING

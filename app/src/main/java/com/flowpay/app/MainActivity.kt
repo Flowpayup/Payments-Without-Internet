@@ -109,8 +109,8 @@ import com.flowpay.app.ui.activities.SettingsActivity
 import com.flowpay.app.ui.activities.TransactionHistoryActivity
 import com.flowpay.app.ui.dialogs.ContactPickerDialog
 import com.flowpay.app.ui.theme.BlueAccentTheme
-import com.flowpay.app.ui.theme.FlowPayTheme
-import com.flowpay.app.ui.theme.LocalFlowPayAccentTheme
+import com.flowpay.app.ui.theme.FlowpayTheme
+import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.utils.findComponentActivity
 import com.flowpay.app.viewmodel.TransactionViewModel
 import java.text.NumberFormat
@@ -120,7 +120,7 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     companion object {
-        private const val TAG = "FlowPay"
+        private const val TAG = "Flowpay"
         const val QR_SCAN_REQUEST_CODE = 1001
 
         @Volatile
@@ -150,7 +150,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setTheme(R.style.Theme_FlowPay)
+        setTheme(R.style.Theme_Flowpay)
 
         // Black system bars from the first frame
         window.statusBarColor = android.graphics.Color.BLACK
@@ -208,8 +208,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            CompositionLocalProvider(LocalFlowPayAccentTheme provides BlueAccentTheme) {
-                FlowPayTheme {
+            CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
+                FlowpayTheme {
                     MainScreen(
                         onInitiateTransfer = { phoneNumber, amount ->
                             helper.initiateTransfer(phoneNumber, amount)
@@ -278,11 +278,12 @@ class MainActivity : ComponentActivity() {
     private fun enforceBlackStatusBar() {
         window.statusBarColor = android.graphics.Color.BLACK
         window.navigationBarColor = android.graphics.Color.BLACK
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            window.decorView.systemUiVisibility =
-                window.decorView.systemUiVisibility and
-                    android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
-        }
+        // Dark bars => light (white) icons. WindowInsetsControllerCompat
+        // routes through WindowInsetsController on API 30+ and the legacy
+        // systemUiVisibility flags on API 29, replacing the deprecated
+        // direct flag manipulation.
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView)
+            .isAppearanceLightStatusBars = false
     }
 
     override fun onStop() {
@@ -357,15 +358,15 @@ fun PaymentActionButtons(
                     .shadow(
                         elevation = 12.dp,
                         shape = CircleShape,
-                        ambientColor = LocalFlowPayAccentTheme.current.headerGradientStart.copy(alpha = 0.3f),
-                        spotColor = LocalFlowPayAccentTheme.current.headerGradientEnd.copy(alpha = 0.4f)
+                        ambientColor = LocalFlowpayAccentTheme.current.headerGradientStart.copy(alpha = 0.3f),
+                        spotColor = LocalFlowpayAccentTheme.current.headerGradientEnd.copy(alpha = 0.4f)
                     )
                     .scale(qrButtonScale)
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                LocalFlowPayAccentTheme.current.headerGradientStart,
-                                LocalFlowPayAccentTheme.current.headerGradientEnd
+                                LocalFlowpayAccentTheme.current.headerGradientStart,
+                                LocalFlowpayAccentTheme.current.headerGradientEnd
                             ),
                             start = Offset(0f, 0f),
                             end = Offset(1f, 1f)
@@ -452,15 +453,15 @@ fun PaymentActionButtons(
                     .shadow(
                         elevation = 12.dp,
                         shape = RoundedCornerShape(20.dp),
-                        ambientColor = LocalFlowPayAccentTheme.current.headerGradientStart.copy(alpha = 0.3f),
-                        spotColor = LocalFlowPayAccentTheme.current.headerGradientEnd.copy(alpha = 0.4f)
+                        ambientColor = LocalFlowpayAccentTheme.current.headerGradientStart.copy(alpha = 0.3f),
+                        spotColor = LocalFlowpayAccentTheme.current.headerGradientEnd.copy(alpha = 0.4f)
                     )
                     .scale(payButtonScale)
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                LocalFlowPayAccentTheme.current.headerGradientStart,
-                                LocalFlowPayAccentTheme.current.headerGradientEnd
+                                LocalFlowpayAccentTheme.current.headerGradientStart,
+                                LocalFlowpayAccentTheme.current.headerGradientEnd
                             ),
                             start = Offset(0f, 0f),
                             end = Offset(1f, 1f)
@@ -625,8 +626,8 @@ fun MainScreen(
                             .background(
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        LocalFlowPayAccentTheme.current.headerGradientStart,
-                                        LocalFlowPayAccentTheme.current.headerGradientEnd
+                                        LocalFlowpayAccentTheme.current.headerGradientStart,
+                                        LocalFlowpayAccentTheme.current.headerGradientEnd
                                     )
                                 ),
                                 shape = RoundedCornerShape(20.dp)
@@ -656,7 +657,7 @@ fun MainScreen(
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        text = "Offline UPI Payments",
+                                        text = "Payments Without Internet",
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Normal,
                                         color = Color.White.copy(alpha = 0.95f)
@@ -695,7 +696,7 @@ fun MainScreen(
                                     .fillMaxWidth()
                                     .height(80.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(LocalFlowPayAccentTheme.current.headerGradientEnd)
+                                    .background(LocalFlowpayAccentTheme.current.headerGradientEnd)
                                     .padding(horizontal = 18.dp, vertical = 14.dp)
                             ) {
                                 Row(
@@ -806,7 +807,7 @@ fun MainScreen(
                                         imageVector = Icons.Default.History,
                                         contentDescription = "History",
                                         modifier = Modifier.size(20.dp),
-                                        tint = LocalFlowPayAccentTheme.current.headerGradientStart
+                                        tint = LocalFlowpayAccentTheme.current.headerGradientStart
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -833,7 +834,7 @@ fun MainScreen(
                                 Text(
                                     text = "View All",
                                     fontSize = 12.sp,
-                                    color = LocalFlowPayAccentTheme.current.accent
+                                    color = LocalFlowpayAccentTheme.current.accent
                                 )
                             }
                         }
@@ -850,7 +851,7 @@ fun MainScreen(
                                 ) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(32.dp),
-                                        color = LocalFlowPayAccentTheme.current.headerGradientStart,
+                                        color = LocalFlowpayAccentTheme.current.headerGradientStart,
                                         strokeWidth = 3.dp
                                     )
                                     Spacer(modifier = Modifier.height(20.dp))
@@ -889,7 +890,7 @@ fun MainScreen(
                                             text = "Retry",
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Medium,
-                                            color = LocalFlowPayAccentTheme.current.headerGradientStart
+                                            color = LocalFlowpayAccentTheme.current.headerGradientStart
                                         )
                                     }
                                 }
@@ -1077,7 +1078,7 @@ fun TransactionItem(payment: PaymentDetails) {
                     text = formatAmount(payment.amount),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = LocalFlowPayAccentTheme.current.headerGradientStart,
+                    color = LocalFlowpayAccentTheme.current.headerGradientStart,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1086,7 +1087,7 @@ fun TransactionItem(payment: PaymentDetails) {
                     imageVector = Icons.Default.ArrowOutward,
                     contentDescription = "Outgoing",
                     modifier = Modifier.size(18.dp),
-                    tint = LocalFlowPayAccentTheme.current.headerGradientStart
+                    tint = LocalFlowpayAccentTheme.current.headerGradientStart
                 )
             }
         }
@@ -1126,7 +1127,7 @@ fun PayContactDialog(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = LocalFlowPayAccentTheme.current.accent.copy(alpha = 0.15f)
+                            containerColor = LocalFlowpayAccentTheme.current.accent.copy(alpha = 0.15f)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -1139,13 +1140,13 @@ fun PayContactDialog(
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                tint = LocalFlowPayAccentTheme.current.accent,
+                                tint = LocalFlowpayAccentTheme.current.accent,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Sending to: $name",
-                                color = LocalFlowPayAccentTheme.current.accent,
+                                color = LocalFlowpayAccentTheme.current.accent,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -1202,14 +1203,14 @@ fun PayContactDialog(
                             .padding(top = 8.dp)
                             .size(48.dp)
                             .background(
-                                color = LocalFlowPayAccentTheme.current.accent.copy(alpha = 0.2f),
+                                color = LocalFlowpayAccentTheme.current.accent.copy(alpha = 0.2f),
                                 shape = RoundedCornerShape(8.dp)
                             )
                     ) {
                         Icon(
                             imageVector = Icons.Default.PermContactCalendar,
                             contentDescription = "Select Contact",
-                            tint = LocalFlowPayAccentTheme.current.accent
+                            tint = LocalFlowpayAccentTheme.current.accent
                         )
                     }
                 }
@@ -1245,7 +1246,7 @@ fun PayContactDialog(
                 Text(
                     "Transfer",
                     color = if (phoneNumber.length == 10 && amount.isNotEmpty())
-                        LocalFlowPayAccentTheme.current.accent else Color(0xFF6A6A6A)
+                        LocalFlowpayAccentTheme.current.accent else Color(0xFF6A6A6A)
                 )
             }
         },
@@ -1312,7 +1313,7 @@ fun PermissionExplanationDialog(
             TextButton(
                 onClick = onConfirm,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = LocalFlowPayAccentTheme.current.accent
+                    contentColor = LocalFlowpayAccentTheme.current.accent
                 )
             ) {
                 Text(confirmButtonText)
@@ -1366,7 +1367,7 @@ fun CallDurationIssueDialog(onDismiss: () -> Unit) {
             TextButton(
                 onClick = onDismiss,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = LocalFlowPayAccentTheme.current.accentLight
+                    contentColor = LocalFlowpayAccentTheme.current.accentLight
                 )
             ) {
                 Text(text = "OK", fontSize = 16.sp, fontWeight = FontWeight.Medium)
@@ -1383,7 +1384,7 @@ fun CallSuccessDialog(onDismiss: () -> Unit) {
         title = {
             Text(
                 text = "Great!",
-                color = LocalFlowPayAccentTheme.current.accentLight,
+                color = LocalFlowpayAccentTheme.current.accentLight,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -1416,7 +1417,7 @@ fun CallSuccessDialog(onDismiss: () -> Unit) {
             TextButton(
                 onClick = onDismiss,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = LocalFlowPayAccentTheme.current.accentLight
+                    contentColor = LocalFlowpayAccentTheme.current.accentLight
                 )
             ) {
                 Text(text = "Got it", fontSize = 16.sp, fontWeight = FontWeight.Medium)

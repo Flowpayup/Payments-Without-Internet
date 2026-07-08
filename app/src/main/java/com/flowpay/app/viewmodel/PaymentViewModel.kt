@@ -2,7 +2,7 @@ package com.flowpay.app.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.flowpay.app.FlowPayApplication
+import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.states.PaymentState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class PaymentViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val sessionManager = (application as? FlowPayApplication)?.paymentSessionManager
+    private val sessionManager = (application as? FlowpayApplication)?.paymentSessionManager
 
     val paymentState: StateFlow<PaymentState> =
         sessionManager?.paymentState ?: MutableStateFlow(PaymentState.Idle)

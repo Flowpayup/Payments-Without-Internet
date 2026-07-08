@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.flowpay.app.ui.theme.LocalFlowPayAccentTheme
+import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 
 @Composable
 fun UssdProgressDialog(
@@ -94,7 +94,7 @@ private fun UssdProgressDialogContent(
                     modifier = Modifier
                         .size(80.dp)
                         .background(
-                            color = LocalFlowPayAccentTheme.current.accent.copy(alpha = alpha * 0.2f),
+                            color = LocalFlowpayAccentTheme.current.accent.copy(alpha = alpha * 0.2f),
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -102,7 +102,7 @@ private fun UssdProgressDialogContent(
                     Icon(
                         imageVector = PhoneIcon,
                         contentDescription = "USSD Setup",
-                        tint = LocalFlowPayAccentTheme.current.accent,
+                        tint = LocalFlowpayAccentTheme.current.accent,
                         modifier = Modifier.size(48.dp)
                     )
                 }
@@ -164,7 +164,7 @@ private fun UssdProgressDialogContent(
                                 .height(50.dp),
                             shape = RoundedCornerShape(15.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = LocalFlowPayAccentTheme.current.accent
+                                containerColor = LocalFlowpayAccentTheme.current.accent
                             )
                         ) {
                             Text(
@@ -181,7 +181,7 @@ private fun UssdProgressDialogContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp),
-                        color = LocalFlowPayAccentTheme.current.accent,
+                        color = LocalFlowpayAccentTheme.current.accent,
                         trackColor = Color(0xFF333333)
                     )
                     

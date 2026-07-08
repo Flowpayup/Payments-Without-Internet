@@ -15,7 +15,7 @@ class SetupHelper(
 ) {
     companion object {
         private const val TAG = "SetupHelper"
-        private const val PREFS = "FlowPayPrefs"
+        private const val PREFS = "FlowpayPrefs"
         private const val KEY_USER_REPORTED_USSD_NOT_WORKING = "user_reported_ussd_not_working"
 
         /** Jio (and similar) — primary SIM carrier does not support *99# for this flow. */
@@ -217,7 +217,7 @@ class SetupHelper(
      * Save setup data to SharedPreferences
      */
     fun saveSetupData(setupData: SetupData) {
-        val sharedPreferences = context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         sharedPreferences.edit()
             .putBoolean("setup_completed", true)
             .putString("selected_bank", setupData.selectedBank)
@@ -253,7 +253,7 @@ class SetupHelper(
      * Load existing setup data
      */
     fun loadSetupData(): SetupData? {
-        val sharedPreferences = context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         
         val selectedBank = sharedPreferences.getString("selected_bank", "")
         val selectedPrimarySim = sharedPreferences.getString("selected_primary_sim", "")
@@ -280,7 +280,7 @@ class SetupHelper(
      * Check if setup is already completed
      */
     fun isSetupCompleted(): Boolean {
-        val sharedPreferences = context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         return sharedPreferences.getBoolean("setup_completed", false)
     }
 
@@ -288,7 +288,7 @@ class SetupHelper(
      * Reset setup data
      */
     fun resetSetupData() {
-        val sharedPreferences = context.getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         sharedPreferences.edit()
             .putBoolean("setup_completed", false)
             .remove("selected_bank")

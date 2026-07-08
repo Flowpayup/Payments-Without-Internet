@@ -33,14 +33,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.flowpay.app.FlowPayApplication
+import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.ui.theme.BlueAccentTheme
-import com.flowpay.app.ui.theme.LocalFlowPayAccentTheme
+import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import com.flowpay.app.R
 import com.flowpay.app.data.Transaction
-import com.flowpay.app.ui.theme.FlowPayTheme
+import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.components.TransactionDetailDialog
 import com.flowpay.app.viewmodel.TransactionViewModel
 import java.text.NumberFormat
@@ -67,8 +67,9 @@ fun getStatusColor(status: String): Color {
     return when (status.uppercase()) {
         "SUCCESS", "SUCCESSFUL", "COMPLETED" -> Color(0xFF4CAF50)
         "PENDING" -> Color(0xFFFF9800)
-        "UNVERIFIED" -> Color(0xFFFFC107) // needs the user's attention: outcome unknown
-        "CANCELLED" -> Color(0xFF9E9E9E)  // nothing happened — neutral, not alarming red
+        "UNVERIFIED" -> Color(0xFFFFC107)   // needs the user's attention: outcome unknown
+        "NEEDS_REVIEW" -> Color(0xFFFF9800) // an SMS arrived but didn't match — verify it
+        "CANCELLED" -> Color(0xFF9E9E9E)    // nothing happened — neutral, not alarming red
         "FAILED", "DECLINED" -> Color(0xFFF44336)
         else -> Color(0xFF9E9E9E)
     }
@@ -78,6 +79,7 @@ fun getStatusColor(status: String): Color {
 fun getStatusExplainer(status: String): String? = when (status.uppercase()) {
     "PENDING" -> "Waiting for your bank's confirmation SMS."
     "UNVERIFIED" -> "No confirmation SMS arrived. The payment may still have gone through — check your bank statement or SMS inbox before retrying."
+    "NEEDS_REVIEW" -> "A bank SMS arrived during this payment but its amount didn't match. Check your bank statement before retrying."
     "CANCELLED" -> "The payment flow ended before completing. No money should have moved."
     "FAILED" -> "Your bank reported this payment as failed. Any debited amount is normally auto-reversed."
     else -> null
@@ -90,10 +92,10 @@ private fun isSameDay(c1: Calendar, c2: Calendar): Boolean =
 class TransactionHistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(R.style.Theme_FlowPay)
+        setTheme(R.style.Theme_Flowpay)
         setContent {
-            CompositionLocalProvider(LocalFlowPayAccentTheme provides BlueAccentTheme) {
-                FlowPayTheme {
+            CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
+                FlowpayTheme {
                     TransactionHistoryScreen(
                         onBackClick = { finish() }
                     )
@@ -157,7 +159,7 @@ fun TransactionHistoryScreen(
         grouped
     }
 
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -470,7 +472,7 @@ private fun TransactionHistoryItem(
     transaction: Transaction,
     onClick: () -> Unit
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
     val displayName = transaction.recipientName?.takeIf { it.isNotEmpty() }
         ?: transaction.phoneNumber?.takeIf { it.isNotEmpty() }
         ?: "Unknown"

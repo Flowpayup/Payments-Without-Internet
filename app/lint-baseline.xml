@@ -2,36 +2,24 @@
 <issues format="6" by="lint 8.7.2" type="baseline" client="gradle" dependencies="false" name="AGP (8.7.2)" variant="all" version="8.7.2">
 
     <issue
-        id="MissingPermission"
-        message="Missing permissions required by TelecomManager.endCall: android.permission.ANSWER_PHONE_CALLS"
-        errorLine1="                        val callTerminated = telecomManager.endCall()"
-        errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~">
+        id="ObsoleteLintCustomCheck"
+        message="Library lint checks out of date;&#xA;these checks **will be skipped**!&#xA;&#xA;Lint found an issue registry (`androidx.navigation.common.lint.NavigationCommonIssueRegistry`)&#xA;which was compiled against an older version of lint&#xA;than this one. This is usually fine, but not in this&#xA;case; some basic verification shows that the lint&#xA;check jar references (for example) the following API&#xA;which is no longer valid in this version of lint:&#xA;org.jetbrains.kotlin.analysis.api.lifetime.KaDefaultLifetimeTokenProvider#Companion&#xA;(Referenced from androidx/navigation/lint/UtilKt.class)&#xA;&#xA;Therefore, this lint check library is **not** included&#xA;in analysis. This affects the following lint checks:&#xA;`EmptyNavDeepLink`,`WrongStartDestinationType`,`MissingSerializableAnnotation`,`MissingKeepAnnotation`&#xA;&#xA;Recompile the checks against the latest version, or if&#xA;this is a check bundled with a third-party library, see&#xA;if there is a more recent version available.&#xA;&#xA;Version of Lint API this lint check is using is 14.&#xA;The Lint API version currently running is 16 (8.7+).">
         <location
-            file="src/main/java/com/flowpay/app/managers/CallManager.kt"
-            line="701"
-            column="46"/>
+            file="build/intermediates/lint-cache/lintReportDebug/migrated-jars/androidx.navigation.common.lint.NavigationCommonIssueRegistry-5daa12651be0734e..jar"/>
     </issue>
 
     <issue
-        id="MissingSuperCall"
-        message="Overriding method should call `super.onBackPressed`"
-        errorLine1="    override fun onBackPressed() {"
-        errorLine2="                 ~~~~~~~~~~~~~">
+        id="ObsoleteLintCustomCheck"
+        message="Library lint checks out of date;&#xA;these checks **will be skipped**!&#xA;&#xA;Lint found an issue registry (`androidx.navigation.compose.lint.NavigationComposeIssueRegistry`)&#xA;which was compiled against an older version of lint&#xA;than this one. This is usually fine, but not in this&#xA;case; some basic verification shows that the lint&#xA;check jar references (for example) the following API&#xA;which is no longer valid in this version of lint:&#xA;org.jetbrains.kotlin.analysis.api.lifetime.KaDefaultLifetimeTokenProvider#Companion&#xA;(Referenced from androidx/navigation/lint/UtilKt.class)&#xA;&#xA;Therefore, this lint check library is **not** included&#xA;in analysis. This affects the following lint checks:&#xA;`ComposableDestinationInComposeScope`&#xA;`ComposableNavGraphInComposeScope`&#xA;`UnrememberedGetBackStackEntry`&#xA;`WrongStartDestinationType`&#xA;`MissingKeepAnnotation`&#xA;`MissingSerializableAnnotation`&#xA;&#xA;Recompile the checks against the latest version, or if&#xA;this is a check bundled with a third-party library, see&#xA;if there is a more recent version available.&#xA;&#xA;Version of Lint API this lint check is using is 14.&#xA;The Lint API version currently running is 16 (8.7+).">
         <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentSuccessActivity.kt"
-            line="313"
-            column="18"/>
+            file="build/intermediates/lint-cache/lintReportDebug/migrated-jars/androidx.navigation.compose.lint.NavigationComposeIssueRegistry-598b224f0ce2f9f2..jar"/>
     </issue>
 
     <issue
-        id="MissingSuperCall"
-        message="Overriding method should call `super.onBackPressed`"
-        errorLine1="    override fun onBackPressed() {"
-        errorLine2="                 ~~~~~~~~~~~~~">
+        id="ObsoleteLintCustomCheck"
+        message="Library lint checks out of date;&#xA;these checks **will be skipped**!&#xA;&#xA;Lint found an issue registry (`androidx.navigation.runtime.lint.NavigationRuntimeIssueRegistry`)&#xA;which was compiled against an older version of lint&#xA;than this one. This is usually fine, but not in this&#xA;case; some basic verification shows that the lint&#xA;check jar references (for example) the following API&#xA;which is no longer valid in this version of lint:&#xA;org.jetbrains.kotlin.analysis.api.lifetime.KaDefaultLifetimeTokenProvider#Companion&#xA;(Referenced from androidx/navigation/lint/UtilKt.class)&#xA;&#xA;Therefore, this lint check library is **not** included&#xA;in analysis. This affects the following lint checks:&#xA;`DeepLinkInActivityDestination`,`WrongStartDestinationType`,`WrongNavigateRouteType`,`MissingKeepAnnotation`,`MissingSerializableAnnotation`&#xA;&#xA;Recompile the checks against the latest version, or if&#xA;this is a check bundled with a third-party library, see&#xA;if there is a more recent version available.&#xA;&#xA;Version of Lint API this lint check is using is 14.&#xA;The Lint API version currently running is 16 (8.7+).">
         <location
-            file="src/main/java/com/flowpay/app/ui/activities/TransactionSuccessActivity.kt"
-            line="117"
-            column="18"/>
+            file="build/intermediates/lint-cache/lintReportDebug/migrated-jars/androidx.navigation.runtime.lint.NavigationRuntimeIssueRegistry-a8fea42aedb9bdb3..jar"/>
     </issue>
 
     <issue
@@ -67,24 +55,13 @@
     </issue>
 
     <issue
-        id="InternalInsetResource"
-        message="Using internal inset dimension resource `status_bar_height` is not supported"
-        errorLine1="        val resourceId = resources.getIdentifier(&quot;status_bar_height&quot;, &quot;dimen&quot;, &quot;android&quot;)"
-        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        id="UnusedAttribute"
+        message="Attribute `localeConfig` is only used in API level 33 and higher (current min is 31)"
+        errorLine1="        android:localeConfig=&quot;@xml/locales_config&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/flowpay/app/services/USSDOverlayService.kt"
-            line="356"
-            column="26"/>
-    </issue>
-
-    <issue
-        id="OldTargetApi"
-        message="Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the `android.os.Build.VERSION_CODES` javadoc for details."
-        errorLine1="        targetSdk 35"
-        errorLine2="        ~~~~~~~~~~~~">
-        <location
-            file="build.gradle"
-            line="16"
+            file="src/main/AndroidManifest.xml"
+            line="40"
             column="9"/>
     </issue>
 
@@ -95,30 +72,8 @@
         errorLine2="                                                                          ~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="630"
+            line="728"
             column="75"/>
-    </issue>
-
-    <issue
-        id="InflateParams"
-        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
-        errorLine1="            overlayView = LayoutInflater.from(this).inflate(R.layout.ussd_overlay_redesigned, null)"
-        errorLine2="                                                                                              ~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/USSDOverlayService.kt"
-            line="143"
-            column="95"/>
-    </issue>
-
-    <issue
-        id="UnspecifiedRegisterReceiverFlag"
-        message="`stopOverlayReceiver` is missing `RECEIVER_EXPORTED` or `RECEIVER_NOT_EXPORTED` flag for unprotected broadcasts registered for STOP_OVERLAY"
-        errorLine1="            registerReceiver(stopOverlayReceiver, filter)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/CallOverlayActivity.kt"
-            line="58"
-            column="13"/>
     </issue>
 
     <issue
@@ -128,95 +83,73 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="251"
+            line="306"
             column="13"/>
     </issue>
 
     <issue
-        id="UnspecifiedRegisterReceiverFlag"
-        message="`receiver` is missing `RECEIVER_EXPORTED` or `RECEIVER_NOT_EXPORTED` flag for unprotected broadcasts registered for an IntentFilter that cannot be inspected by lint"
-        errorLine1="                    registerReceiver(receiver, filter)"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/MainActivity.kt"
-            line="345"
-            column="21"/>
-    </issue>
-
-    <issue
         id="GradleDependency"
-        message="A newer version of androidx.core:core-ktx than 1.12.0 is available: 1.18.0"
-        errorLine1="    implementation &apos;androidx.core:core-ktx:1.12.0&apos;"
+        message="A newer version of androidx.core:core-ktx than 1.13.1 is available: 1.19.0"
+        errorLine1="    implementation &apos;androidx.core:core-ktx:1.13.1&apos;"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="62"
+            line="99"
             column="20"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.7.0 is available: 2.10.0"
-        errorLine1="    implementation &apos;androidx.lifecycle:lifecycle-runtime-ktx:2.7.0&apos;"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.8.7 is available: 2.11.0"
+        errorLine1="    implementation &apos;androidx.lifecycle:lifecycle-runtime-ktx:2.8.7&apos;"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="63"
+            line="100"
             column="20"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.activity:activity-compose than 1.8.2 is available: 1.13.0"
-        errorLine1="    implementation &apos;androidx.activity:activity-compose:1.8.2&apos;"
+        message="A newer version of androidx.activity:activity-compose than 1.9.3 is available: 1.13.0"
+        errorLine1="    implementation &apos;androidx.activity:activity-compose:1.9.3&apos;"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="64"
+            line="101"
             column="20"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.compose:compose-bom than 2024.10.00 is available: 2026.05.01"
-        errorLine1="    implementation platform(&apos;androidx.compose:compose-bom:2024.10.00&apos;)"
+        message="A newer version of androidx.compose:compose-bom than 2025.05.00 is available: 2026.06.01"
+        errorLine1="    implementation platform(&apos;androidx.compose:compose-bom:2025.05.00&apos;)"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="65"
+            line="102"
             column="20"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.navigation:navigation-compose than 2.7.5 is available: 2.9.8"
-        errorLine1="    implementation &apos;androidx.navigation:navigation-compose:2.7.5&apos;"
+        message="A newer version of androidx.navigation:navigation-compose than 2.8.5 is available: 2.9.8"
+        errorLine1="    implementation &apos;androidx.navigation:navigation-compose:2.8.5&apos;"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="71"
+            line="108"
             column="20"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.7.0 is available: 2.10.0"
-        errorLine1="    implementation &apos;androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0&apos;"
+        message="A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.8.7 is available: 2.11.0"
+        errorLine1="    implementation &apos;androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7&apos;"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="72"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="GradleDependency"
-        message="A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-android than 1.7.3 is available: 1.8.1"
-        errorLine1="    implementation &apos;org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3&apos;"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle"
-            line="75"
+            line="109"
             column="20"/>
     </issue>
 
@@ -227,7 +160,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="81"
+            line="115"
             column="20"/>
     </issue>
 
@@ -238,51 +171,51 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="84"
+            line="118"
             column="20"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.camera:camera-camera2 than 1.3.1 is available: 1.6.1"
-        errorLine1="    implementation &apos;androidx.camera:camera-camera2:1.3.1&apos;"
+        message="A newer version of androidx.camera:camera-camera2 than 1.4.2 is available: 1.6.1"
+        errorLine1="    implementation &apos;androidx.camera:camera-camera2:1.4.2&apos;"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="87"
+            line="121"
             column="20"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.camera:camera-lifecycle than 1.3.1 is available: 1.6.1"
-        errorLine1="    implementation &apos;androidx.camera:camera-lifecycle:1.3.1&apos;"
+        message="A newer version of androidx.camera:camera-lifecycle than 1.4.2 is available: 1.6.1"
+        errorLine1="    implementation &apos;androidx.camera:camera-lifecycle:1.4.2&apos;"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="88"
+            line="122"
             column="20"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.camera:camera-view than 1.3.1 is available: 1.6.1"
-        errorLine1="    implementation &apos;androidx.camera:camera-view:1.3.1&apos;"
+        message="A newer version of androidx.camera:camera-view than 1.4.2 is available: 1.6.1"
+        errorLine1="    implementation &apos;androidx.camera:camera-view:1.4.2&apos;"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="89"
+            line="123"
             column="20"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.camera:camera-core than 1.3.1 is available: 1.6.1"
-        errorLine1="    implementation &apos;androidx.camera:camera-core:1.3.1&apos;"
+        message="A newer version of androidx.camera:camera-core than 1.4.2 is available: 1.6.1"
+        errorLine1="    implementation &apos;androidx.camera:camera-core:1.4.2&apos;"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="90"
+            line="124"
             column="20"/>
     </issue>
 
@@ -293,7 +226,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="97"
+            line="131"
             column="20"/>
     </issue>
 
@@ -304,7 +237,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="98"
+            line="132"
             column="20"/>
     </issue>
 
@@ -315,18 +248,29 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="99"
+            line="133"
             column="9"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of com.google.android.material:material than 1.9.0 is available: 1.14.0"
-        errorLine1="    implementation &apos;com.google.android.material:material:1.9.0&apos;"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="A newer version of androidx.sqlite:sqlite than 2.4.0 is available: 2.7.0"
+        errorLine1="    implementation &apos;androidx.sqlite:sqlite:2.4.0&apos;"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="102"
+            line="138"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of com.google.android.material:material than 1.12.0 is available: 1.14.0"
+        errorLine1="    implementation &apos;com.google.android.material:material:1.12.0&apos;"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle"
+            line="141"
             column="20"/>
     </issue>
 
@@ -337,7 +281,7 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="106"
+            line="148"
             column="31"/>
     </issue>
 
@@ -348,18 +292,29 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="107"
+            line="149"
             column="31"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.compose:compose-bom than 2023.10.01 is available: 2026.05.01"
-        errorLine1="    androidTestImplementation platform(&apos;androidx.compose:compose-bom:2023.10.01&apos;)"
+        message="A newer version of androidx.room:room-testing than 2.6.1 is available: 2.8.4"
+        errorLine1="    androidTestImplementation &apos;androidx.room:room-testing:2.6.1&apos;"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle"
+            line="150"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2025.05.00 is available: 2026.06.01"
+        errorLine1="    androidTestImplementation platform(&apos;androidx.compose:compose-bom:2025.05.00&apos;)"
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle"
-            line="108"
+            line="151"
             column="31"/>
     </issue>
 
@@ -370,7 +325,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="65"
+            line="68"
             column="13"/>
     </issue>
 
@@ -381,7 +336,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="88"
+            line="77"
             column="13"/>
     </issue>
 
@@ -392,18 +347,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="95"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="LockedOrientationActivity"
-        message="Expecting `android:screenOrientation=&quot;unspecified&quot;` or `&quot;fullSensor&quot;` for this activity so the user can use the application in any orientation and provide a great experience on Chrome OS devices"
-        errorLine1="            android:screenOrientation=&quot;portrait&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="102"
+            line="84"
             column="13"/>
     </issue>
 
@@ -414,7 +358,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="110"
+            line="92"
             column="13"/>
     </issue>
 
@@ -425,7 +369,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="119"
+            line="101"
             column="13"/>
     </issue>
 
@@ -436,7 +380,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="65"
+            line="68"
             column="13"/>
     </issue>
 
@@ -447,7 +391,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="88"
+            line="77"
             column="13"/>
     </issue>
 
@@ -458,18 +402,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="95"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="DiscouragedApi"
-        message="Should not restrict activity to fixed orientation. This may not be suitable for different form factors, causing the app to be letterboxed."
-        errorLine1="            android:screenOrientation=&quot;portrait&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="102"
+            line="84"
             column="13"/>
     </issue>
 
@@ -480,7 +413,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="110"
+            line="92"
             column="13"/>
     </issue>
 
@@ -491,19 +424,8 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="119"
+            line="101"
             column="13"/>
-    </issue>
-
-    <issue
-        id="DiscouragedApi"
-        message="Use of this function is discouraged because resource reflection makes it harder to perform build optimizations and compile-time verification of code. It is much more efficient to retrieve resources by identifier (e.g. `R.foo.bar`) than by name (e.g. `getIdentifier(&quot;bar&quot;, &quot;foo&quot;, null)`)."
-        errorLine1="        val resourceId = resources.getIdentifier(&quot;status_bar_height&quot;, &quot;dimen&quot;, &quot;android&quot;)"
-        errorLine2="                                   ~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/USSDOverlayService.kt"
-            line="356"
-            column="36"/>
     </issue>
 
     <issue
@@ -551,6 +473,567 @@
     </issue>
 
     <issue
+        id="MissingTranslation"
+        message="&quot;setup_flowpay&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;setup_flowpay&quot;>Setup Flowpay&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="5"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;configure_upi_payments&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;configure_upi_payments&quot;>Configure your UPI payments&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="6"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;mobile_number&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;mobile_number&quot;>Mobile Number&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="7"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;mobile_number_hint&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;mobile_number_hint&quot;>10-digit mobile number&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="8"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;bank_selection&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;bank_selection&quot;>Bank Selection&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="9"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;choose_primary_bank&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;choose_primary_bank&quot;>Choose your primary bank for UPI payments&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="10"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;select_bank&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;select_bank&quot;>Choose your bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="11"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;sim_card_selection&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;sim_card_selection&quot;>SIM Card Selection&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="12"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;configure_sim_cards&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;configure_sim_cards&quot;>Configure your SIM cards for USSD payments&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="13"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;primary_sim&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;primary_sim&quot;>Primary SIM&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="14"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;select_primary_sim&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;select_primary_sim&quot;>Select your primary SIM&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="15"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;enable_dual_sim&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;enable_dual_sim&quot;>Enable Dual SIM support&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="16"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;secondary_sim&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;secondary_sim&quot;>Secondary SIM&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="17"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;select_secondary_sim&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;select_secondary_sim&quot;>Select your secondary SIM&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="18"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;complete_setup&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;complete_setup&quot;>Complete Setup&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="19"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;disclaimer&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;disclaimer&quot;>Disclaimer&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="20"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;disclaimer_summary&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;disclaimer_summary&quot;>Flowpay only triggers your bank\&apos;s *99# / UPI 123 flow — tap to read the full disclaimer.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="21"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;disclaimer_text&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;disclaimer_text&quot;>Flowpay is an open-source app. It does not process payments itself — it only triggers your bank\&apos;s *99# (UPI 123) dialer flow on your behalf. All transactions happen between you, your bank, and your phone. Flowpay accepts no responsibility whatsoever for any transaction outcome. By accepting, you acknowledge this.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;sbi&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;sbi&quot;>State Bank of India&lt;/string>"
+        errorLine2="            ~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="25"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;hdfc&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;hdfc&quot;>HDFC Bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="26"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;icici&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;icici&quot;>ICICI Bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="27"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;axis&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;axis&quot;>Axis Bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="28"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;kotak&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;kotak&quot;>Kotak Mahindra Bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="29"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;pnb&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;pnb&quot;>Punjab National Bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="30"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;bob&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;bob&quot;>Bank of Baroda&lt;/string>"
+        errorLine2="            ~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="31"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;yes&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;yes&quot;>Yes Bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="32"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;idbi&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;idbi&quot;>IDBI Bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="33"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;canara&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;canara&quot;>Canara Bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="34"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;jio&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;jio&quot;>Jio (Reliance Jio)&lt;/string>"
+        errorLine2="            ~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="37"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;airtel&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;airtel&quot;>Airtel (Bharti Airtel)&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="38"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;vodafone&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;vodafone&quot;>Vodafone (Vodafone Idea)&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="39"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;bsnl&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;bsnl&quot;>BSNL (Bharat Sanchar Nigam Limited)&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="40"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;please_enter_mobile&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;please_enter_mobile&quot;>Please enter your mobile number&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="43"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;please_select_bank&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;please_select_bank&quot;>Please select your bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="44"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;please_select_primary_sim&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;please_select_primary_sim&quot;>Please select your primary SIM&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="45"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;please_select_secondary_sim&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;please_select_secondary_sim&quot;>Please select your secondary SIM&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="46"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;setup_completed&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;setup_completed&quot;>Flowpay setup completed successfully!&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="47"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;upi_payment_progress&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;upi_payment_progress&quot;>UPI Payment Progress&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="50"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;paste_vpa&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;paste_vpa&quot;>Paste the VPA&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="51"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;enter_amount&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;enter_amount&quot;>Enter amount you wish to pay&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="52"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;press_skip&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;press_skip&quot;>Press 1 to skip remarks&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="53"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;enter_pin&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;enter_pin&quot;>Enter your UPI PIN&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="54"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;waiting_confirmation&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;waiting_confirmation&quot;>Waiting for confirmation...&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="55"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;processing&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;processing&quot;>Processing...&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="56"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;check_sms_status&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;check_sms_status&quot;>Please check your SMS for status&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="57"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;permission_required&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;permission_required&quot;>Required permissions not granted&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="62"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;error_processing_qr&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;error_processing_qr&quot;>Error processing QR code&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="67"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;vpa_copied&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;vpa_copied&quot;>VPA copied to clipboard&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="70"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;payment_initiated&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;payment_initiated&quot;>Payment initiated successfully&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="71"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;call_connected&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;call_connected&quot;>UPI call connected&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="72"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingTranslation"
+        message="&quot;call_ended&quot; is not translated in &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;call_ended&quot;>UPI call ended&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="73"
+            column="13"/>
+    </issue>
+
+    <issue
         id="PermissionImpliesUnsupportedChromeOsHardware"
         message="Permission exists without corresponding hardware `&lt;uses-feature android:name=&quot;android.hardware.telephony&quot; required=&quot;false&quot;>` tag"
         errorLine1="    &lt;uses-permission android:name=&quot;android.permission.CALL_PHONE&quot; />"
@@ -568,18 +1051,7 @@
         errorLine2="     ~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="14"
-            column="6"/>
-    </issue>
-
-    <issue
-        id="PermissionImpliesUnsupportedChromeOsHardware"
-        message="Permission exists without corresponding hardware `&lt;uses-feature android:name=&quot;android.hardware.telephony&quot; required=&quot;false&quot;>` tag"
-        errorLine1="    &lt;uses-permission android:name=&quot;android.permission.READ_SMS&quot; />"
-        errorLine2="     ~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="15"
+            line="17"
             column="6"/>
     </issue>
 
@@ -597,44 +1069,11 @@
     <issue
         id="ObsoleteSdkInt"
         message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/managers/CallManager.kt"
-            line="697"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/CallOverlayActivity.kt"
-            line="85"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/CallOverlayActivity.kt"
-            line="103"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
         errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="321"
+            line="413"
             column="13"/>
     </issue>
 
@@ -645,7 +1084,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="338"
+            line="430"
             column="20"/>
     </issue>
 
@@ -656,7 +1095,7 @@
         errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="658"
+            line="756"
             column="28"/>
     </issue>
 
@@ -674,99 +1113,11 @@
     <issue
         id="ObsoleteSdkInt"
         message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/MainActivity.kt"
-            line="246"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/MainActivity.kt"
-            line="259"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/MainActivity.kt"
-            line="271"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
         errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/MainActivity.kt"
-            line="277"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/MainActivity.kt"
-            line="495"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M &amp;&amp;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/helpers/MainActivityHelper.kt"
             line="164"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &amp;&amp; !Settings.canDrawOverlays(context)) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/helpers/MainActivityHelper.kt"
-            line="348"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentSuccessActivity.kt"
-            line="260"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentSuccessActivity.kt"
-            line="266"
             column="13"/>
     </issue>
 
@@ -810,7 +1161,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/managers/PermissionManager.kt"
-            line="133"
+            line="136"
             column="13"/>
     </issue>
 
@@ -832,41 +1183,8 @@
         errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/ui/activities/SettingsActivity.kt"
-            line="347"
+            line="371"
             column="37"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/USSDOverlayService.kt"
-            line="45"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/USSDOverlayService.kt"
-            line="158"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/USSDOverlayService.kt"
-            line="178"
-            column="17"/>
     </issue>
 
     <issue
@@ -916,35 +1234,13 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="46"
+            line="56"
             column="9"/>
-    </issue>
-
-    <issue
-        id="StaticFieldLeak"
-        message="Do not place Android context classes in static fields (static reference to `TransactionDetector` which has field `context` pointing to `Context`); this is a memory leak"
-        errorLine1="        @Volatile"
-        errorLine2="        ^">
-        <location
-            file="src/main/java/com/flowpay/app/helpers/TransactionDetector.kt"
-            line="83"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
-        errorLine1="    var progress by remember { mutableStateOf(0f) }"
-        errorLine2="                               ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/CallOverlayActivity.kt"
-            line="155"
-            column="32"/>
     </issue>
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `@android:color/black` with a theme that also paints a background (inferred theme is `@style/Theme.FlowPay`)"
+        message="Possible overdraw: Root element paints background `@android:color/black` with a theme that also paints a background (inferred theme is `@style/Theme.Flowpay`)"
         errorLine1="    android:background=&quot;@android:color/black&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -955,7 +1251,7 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `#000000` with a theme that also paints a background (inferred theme is `@style/Theme_FlowPay`)"
+        message="Possible overdraw: Root element paints background `#000000` with a theme that also paints a background (inferred theme is `@style/Theme.Flowpay`)"
         errorLine1="    android:background=&quot;#000000&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -977,7 +1273,7 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `@color/background_primary` with a theme that also paints a background (inferred theme is `@style/Theme_FlowPay`)"
+        message="Possible overdraw: Root element paints background `@color/background_primary` with a theme that also paints a background (inferred theme is `@style/Theme_Flowpay`)"
         errorLine1="    android:background=&quot;@color/background_primary&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -988,7 +1284,7 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `@color/black` with a theme that also paints a background (inferred theme is `@style/Theme_FlowPay`)"
+        message="Possible overdraw: Root element paints background `@color/black` with a theme that also paints a background (inferred theme is `@style/Theme_Flowpay`)"
         errorLine1="    android:background=&quot;@color/black&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -999,7 +1295,7 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `@color/background_secondary` with a theme that also paints a background (inferred theme is `@style/Theme_FlowPay`)"
+        message="Possible overdraw: Root element paints background `@color/background_secondary` with a theme that also paints a background (inferred theme is `@style/Theme.Flowpay`)"
         errorLine1="    android:background=&quot;@color/background_secondary&quot;"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -1015,6 +1311,28 @@
         errorLine2="^">
         <location
             file="src/main/res/layout/activity_main.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.layout.activity_payment_processing` appears to be unused"
+        errorLine1="&lt;FrameLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/layout/activity_payment_processing.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.layout.activity_transaction_success` appears to be unused"
+        errorLine1="&lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/layout/activity_transaction_success.xml"
             line="2"
             column="1"/>
     </issue>
@@ -1037,6 +1355,28 @@
         errorLine2="^">
         <location
             file="src/main/res/drawable/blur_overlay.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.button_outline_primary` appears to be unused"
+        errorLine1="&lt;shape xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/button_outline_primary.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.button_primary` appears to be unused"
+        errorLine1="&lt;shape xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/button_primary.xml"
             line="2"
             column="1"/>
     </issue>
@@ -1070,6 +1410,17 @@
         errorLine2="^">
         <location
             file="src/main/res/drawable/circular_button_bg.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.clean_card_background` appears to be unused"
+        errorLine1="&lt;layer-list xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/clean_card_background.xml"
             line="2"
             column="1"/>
     </issue>
@@ -1137,17 +1488,6 @@
         <location
             file="src/main/res/values/colors.xml"
             line="14"
-            column="12"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.color.setup_text_secondary` appears to be unused"
-        errorLine1="    &lt;color name=&quot;setup_text_secondary&quot;>#FF888888&lt;/color>"
-        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/colors.xml"
-            line="15"
             column="12"/>
     </issue>
 
@@ -1291,17 +1631,6 @@
         <location
             file="src/main/res/drawable/ic_clock.xml"
             line="1"
-            column="1"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.drawable.ic_error` appears to be unused"
-        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
-        errorLine2="^">
-        <location
-            file="src/main/res/drawable/ic_error.xml"
-            line="2"
             column="1"/>
     </issue>
 
@@ -1571,6 +1900,17 @@
 
     <issue
         id="UnusedResources"
+        message="The resource `R.drawable.scanner_overlay` appears to be unused"
+        errorLine1="&lt;layer-list xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/scanner_overlay.xml"
+            line="4"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
         message="The resource `R.drawable.scanner_top_scrim_bg` appears to be unused"
         errorLine1="&lt;shape xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; android:shape=&quot;rectangle&quot;>"
         errorLine2="^">
@@ -1648,6 +1988,17 @@
 
     <issue
         id="UnusedResources"
+        message="The resource `R.drawable.step_circle_bg` appears to be unused"
+        errorLine1="&lt;shape xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/step_circle_bg.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
         message="The resource `R.drawable.step_completed` appears to be unused"
         errorLine1="&lt;layer-list xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
         errorLine2="^">
@@ -1681,111 +2032,12 @@
 
     <issue
         id="UnusedResources"
-        message="The resource `R.string.welcome_message` appears to be unused"
-        errorLine1="    &lt;string name=&quot;welcome_message&quot;>Welcome to Flowpay!&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="3"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.get_started` appears to be unused"
-        errorLine1="    &lt;string name=&quot;get_started&quot;>Get Started&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="4"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.sign_in` appears to be unused"
-        errorLine1="    &lt;string name=&quot;sign_in&quot;>Sign In&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="5"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.sign_up` appears to be unused"
-        errorLine1="    &lt;string name=&quot;sign_up&quot;>Sign Up&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="6"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.email` appears to be unused"
-        errorLine1="    &lt;string name=&quot;email&quot;>Email&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="7"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.password` appears to be unused"
-        errorLine1="    &lt;string name=&quot;password&quot;>Password&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="8"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.forgot_password` appears to be unused"
-        errorLine1="    &lt;string name=&quot;forgot_password&quot;>Forgot Password?&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="9"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.don_t_have_account` appears to be unused"
-        errorLine1="    &lt;string name=&quot;don_t_have_account&quot;>Don\&apos;t have an account?&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="10"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.already_have_account` appears to be unused"
-        errorLine1="    &lt;string name=&quot;already_have_account&quot;>Already have an account?&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="11"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
         message="The resource `R.string.mobile_number` appears to be unused"
         errorLine1="    &lt;string name=&quot;mobile_number&quot;>Mobile Number&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="16"
+            line="7"
             column="13"/>
     </issue>
 
@@ -1796,7 +2048,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="17"
+            line="8"
             column="13"/>
     </issue>
 
@@ -1807,7 +2059,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="20"
+            line="11"
             column="13"/>
     </issue>
 
@@ -1818,7 +2070,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="23"
+            line="14"
             column="13"/>
     </issue>
 
@@ -1829,7 +2081,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="24"
+            line="15"
             column="13"/>
     </issue>
 
@@ -1840,7 +2092,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="27"
+            line="18"
             column="13"/>
     </issue>
 
@@ -1851,7 +2103,7 @@
         errorLine2="            ~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="33"
+            line="25"
             column="13"/>
     </issue>
 
@@ -1862,7 +2114,7 @@
         errorLine2="            ~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="34"
+            line="26"
             column="13"/>
     </issue>
 
@@ -1873,7 +2125,7 @@
         errorLine2="            ~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="35"
+            line="27"
             column="13"/>
     </issue>
 
@@ -1884,7 +2136,7 @@
         errorLine2="            ~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="36"
+            line="28"
             column="13"/>
     </issue>
 
@@ -1895,7 +2147,7 @@
         errorLine2="            ~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="37"
+            line="29"
             column="13"/>
     </issue>
 
@@ -1906,7 +2158,7 @@
         errorLine2="            ~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="38"
+            line="30"
             column="13"/>
     </issue>
 
@@ -1917,7 +2169,7 @@
         errorLine2="            ~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="39"
+            line="31"
             column="13"/>
     </issue>
 
@@ -1928,7 +2180,7 @@
         errorLine2="            ~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="40"
+            line="32"
             column="13"/>
     </issue>
 
@@ -1939,7 +2191,7 @@
         errorLine2="            ~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="41"
+            line="33"
             column="13"/>
     </issue>
 
@@ -1950,7 +2202,7 @@
         errorLine2="            ~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="42"
+            line="34"
             column="13"/>
     </issue>
 
@@ -1961,7 +2213,7 @@
         errorLine2="            ~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="45"
+            line="37"
             column="13"/>
     </issue>
 
@@ -1972,7 +2224,7 @@
         errorLine2="            ~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="46"
+            line="38"
             column="13"/>
     </issue>
 
@@ -1983,7 +2235,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="47"
+            line="39"
             column="13"/>
     </issue>
 
@@ -1994,7 +2246,7 @@
         errorLine2="            ~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="48"
+            line="40"
             column="13"/>
     </issue>
 
@@ -2005,7 +2257,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="51"
+            line="43"
             column="13"/>
     </issue>
 
@@ -2016,7 +2268,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="52"
+            line="44"
             column="13"/>
     </issue>
 
@@ -2027,7 +2279,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="53"
+            line="45"
             column="13"/>
     </issue>
 
@@ -2038,7 +2290,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="54"
+            line="46"
             column="13"/>
     </issue>
 
@@ -2049,7 +2301,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="55"
+            line="47"
             column="13"/>
     </issue>
 
@@ -2060,7 +2312,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="58"
+            line="50"
             column="13"/>
     </issue>
 
@@ -2071,7 +2323,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="59"
+            line="51"
             column="13"/>
     </issue>
 
@@ -2082,7 +2334,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="60"
+            line="52"
             column="13"/>
     </issue>
 
@@ -2093,7 +2345,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="61"
+            line="53"
             column="13"/>
     </issue>
 
@@ -2104,7 +2356,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="62"
+            line="54"
             column="13"/>
     </issue>
 
@@ -2115,7 +2367,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="63"
+            line="55"
             column="13"/>
     </issue>
 
@@ -2126,7 +2378,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="64"
+            line="56"
             column="13"/>
     </issue>
 
@@ -2137,7 +2389,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="65"
+            line="57"
             column="13"/>
     </issue>
 
@@ -2148,7 +2400,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="68"
+            line="60"
             column="13"/>
     </issue>
 
@@ -2159,7 +2411,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="69"
+            line="61"
             column="13"/>
     </issue>
 
@@ -2170,7 +2422,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="70"
+            line="62"
             column="13"/>
     </issue>
 
@@ -2181,7 +2433,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="71"
+            line="63"
             column="13"/>
     </issue>
 
@@ -2192,7 +2444,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="72"
+            line="64"
             column="13"/>
     </issue>
 
@@ -2203,7 +2455,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="73"
+            line="65"
             column="13"/>
     </issue>
 
@@ -2214,7 +2466,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="74"
+            line="66"
             column="13"/>
     </issue>
 
@@ -2225,7 +2477,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="75"
+            line="67"
             column="13"/>
     </issue>
 
@@ -2236,7 +2488,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="78"
+            line="70"
             column="13"/>
     </issue>
 
@@ -2247,7 +2499,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="79"
+            line="71"
             column="13"/>
     </issue>
 
@@ -2258,7 +2510,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="80"
+            line="72"
             column="13"/>
     </issue>
 
@@ -2269,7 +2521,194 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
+            line="73"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_tagline` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_tagline&quot;>Payment Without Internet&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="76"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_connected_bank` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_connected_bank&quot;>Connected Bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="77"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_scan_qr` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_scan_qr&quot;>Scan QR Code&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="78"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_scan_opening` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_scan_opening&quot;>Opening…&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="79"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_pay_contact` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_pay_contact&quot;>Pay Contact&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="80"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.home_recent_payments` appears to be unused"
+        errorLine1="    &lt;string name=&quot;home_recent_payments&quot;>Recent Payments&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
             line="81"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_in_progress_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_in_progress_title&quot;>Payment in progress&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="84"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_in_progress_detail` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_in_progress_detail&quot;>₹%1$s — follow the voice prompts on the call&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="85"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_waiting_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_waiting_title&quot;>Waiting for bank confirmation&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="86"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_waiting_detail` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_waiting_detail&quot;>Request for ₹%1$s sent — the result will appear when your bank\&apos;s SMS arrives&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="87"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_success_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_success_title&quot;>Payment confirmed&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="88"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_success_detail` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_success_detail&quot;>₹%1$s confirmed by your bank&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="89"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_failed_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_failed_title&quot;>Payment failed&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="90"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_cancelled_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_cancelled_title&quot;>Payment cancelled&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="91"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_timeout_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_timeout_title&quot;>No confirmation received&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="92"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_timeout_detail` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_timeout_detail&quot;>Check your bank SMS or statement — the payment may still have gone through&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="93"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.banner_dismiss` appears to be unused"
+        errorLine1="    &lt;string name=&quot;banner_dismiss&quot;>Dismiss payment status&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="94"
             column="13"/>
     </issue>
 
@@ -2280,6 +2719,17 @@
         errorLine2="^">
         <location
             file="src/main/res/drawable/ussd_overlay_background.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.layout.ussd_overlay_redesigned` appears to be unused"
+        errorLine1="&lt;FrameLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/layout/ussd_overlay_redesigned.xml"
             line="2"
             column="1"/>
     </issue>
@@ -2335,7 +2785,7 @@
         errorLine2="                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="63"
+            line="55"
             column="41"/>
     </issue>
 
@@ -2346,15 +2796,8 @@
         errorLine2="                              ~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
-            line="64"
+            line="56"
             column="31"/>
-    </issue>
-
-    <issue
-        id="IconExtension"
-        message="Misleading file extension; named `.png` but the file format is `JPEG`">
-        <location
-            file="src/main/res/drawable-nodpi/ic_flowpay_wordmark.png"/>
     </issue>
 
     <issue
@@ -2408,8 +2851,19 @@
         errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="27"
+            line="29"
             column="33"/>
+    </issue>
+
+    <issue
+        id="KtxExtensionAvailable"
+        message="Add suffix `-ktx` to enable the Kotlin extensions for this library"
+        errorLine1="    implementation &apos;androidx.sqlite:sqlite:2.4.0&apos;"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle"
+            line="138"
+            column="20"/>
     </issue>
 
     <issue
@@ -2419,7 +2873,7 @@
         errorLine2="                                        ^">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="874"
+            line="873"
             column="41"/>
     </issue>
 
@@ -2443,50 +2897,6 @@
             file="src/main/res/layout/activity_payment_success.xml"
             line="29"
             column="14"/>
-    </issue>
-
-    <issue
-        id="ContentDescription"
-        message="Missing `contentDescription` attribute on image"
-        errorLine1="        &lt;ImageButton"
-        errorLine2="         ~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="49"
-            column="10"/>
-    </issue>
-
-    <issue
-        id="ContentDescription"
-        message="Missing `contentDescription` attribute on image"
-        errorLine1="            &lt;ImageButton"
-        errorLine2="             ~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="91"
-            column="14"/>
-    </issue>
-
-    <issue
-        id="ContentDescription"
-        message="Missing `contentDescription` attribute on image"
-        errorLine1="            &lt;ImageButton"
-        errorLine2="             ~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="120"
-            column="14"/>
-    </issue>
-
-    <issue
-        id="ContentDescription"
-        message="Missing `contentDescription` attribute on image"
-        errorLine1="    &lt;ImageButton"
-        errorLine2="     ~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="233"
-            column="6"/>
     </issue>
 
     <issue
@@ -2547,11 +2957,22 @@
     <issue
         id="SetTextI18n"
         message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
+        errorLine1="                view.findViewById&lt;TextView>(R.id.progressPercent)?.text = &quot;${target / 10}%&quot;"
+        errorLine2="                                                                          ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
+            line="405"
+            column="75"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
         errorLine1="            amountText?.text = &quot;₹$amount&quot;"
         errorLine2="                               ~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="642"
+            line="740"
             column="32"/>
     </issue>
 
@@ -2562,7 +2983,7 @@
         errorLine2="                                ~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="652"
+            line="750"
             column="33"/>
     </issue>
 
@@ -2573,63 +2994,8 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="653"
+            line="751"
             column="31"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
-        errorLine1="            progressPercent?.text = &quot;$percent%&quot;"
-        errorLine2="                                    ~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="796"
-            column="37"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                25 -> statusText?.text = &quot;Verifying Details&quot;"
-        errorLine2="                                          ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="806"
-            column="43"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                50 -> statusText?.text = &quot;Processing Transfer&quot;"
-        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="807"
-            column="43"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                75 -> statusText?.text = &quot;Almost Done&quot;"
-        errorLine2="                                          ~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="808"
-            column="43"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                100 -> statusText?.text = &quot;You will recieve a call from the bank&quot;"
-        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="809"
-            column="44"/>
     </issue>
 
     <issue
@@ -2639,7 +3005,7 @@
         errorLine2="                                        ~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="998"
+            line="981"
             column="41"/>
     </issue>
 
@@ -2744,45 +3110,12 @@
 
     <issue
         id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="        statusText.text = &quot;Processing Payment...&quot;"
-        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentProcessingActivity.kt"
-            line="77"
-            column="28"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="        statusText.text = &quot;Payment processing timed out&quot;"
-        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentProcessingActivity.kt"
-            line="133"
-            column="28"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="        statusText.text = &quot;Payment Successful&quot;"
-        errorLine2="                           ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentSuccessActivity.kt"
-            line="105"
-            column="28"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
         message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
         errorLine1="        amountText.text = &quot;₹${formatAmount(amount)}&quot;"
         errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentSuccessActivity.kt"
-            line="106"
+            file="src/main/java/com/flowpay/app/ui/activities/PaymentResultActivity.kt"
+            line="136"
             column="27"/>
     </issue>
 
@@ -2792,8 +3125,8 @@
         errorLine1="                recipientLabel.text = &quot;To&quot;"
         errorLine2="                                       ~~">
         <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentSuccessActivity.kt"
-            line="122"
+            file="src/main/java/com/flowpay/app/ui/activities/PaymentResultActivity.kt"
+            line="152"
             column="40"/>
     </issue>
 
@@ -2903,63 +3236,8 @@
         errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/features/qr_scanner/presentation/QRScannerActivity.kt"
-            line="359"
+            line="357"
             column="34"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="            titleText?.text = &quot;Payment Successful&quot;"
-        errorLine2="                               ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/managers/TransactionDialogManager.kt"
-            line="101"
-            column="32"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="            messageText?.text = &quot;Your payment has been processed successfully! You will receive a confirmation SMS shortly.&quot;"
-        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/managers/TransactionDialogManager.kt"
-            line="105"
-            column="34"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
-        errorLine1="        transactionIdText?.text = &quot;Transaction ID: ${transaction.transactionId}&quot;"
-        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/TransactionSuccessActivity.kt"
-            line="58"
-            column="35"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="        transactionIdText?.text = &quot;Transaction ID: ${transaction.transactionId}&quot;"
-        errorLine2="                                   ~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/TransactionSuccessActivity.kt"
-            line="58"
-            column="36"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
-        errorLine1="        amountText?.text = &quot;₹${transaction.amount}&quot;"
-        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/TransactionSuccessActivity.kt"
-            line="62"
-            column="28"/>
     </issue>
 
     <issue
@@ -3008,23 +3286,12 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;Payment Successful&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;Payment Successful&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="45"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
         message="Hardcoded string &quot;₹0&quot;, should use `@string` resource"
         errorLine1="            android:text=&quot;₹0&quot;"
         errorLine2="            ~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="56"
+            line="68"
             column="13"/>
     </issue>
 
@@ -3035,7 +3302,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="95"
+            line="107"
             column="21"/>
     </issue>
 
@@ -3046,7 +3313,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="105"
+            line="117"
             column="21"/>
     </issue>
 
@@ -3057,7 +3324,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="124"
+            line="136"
             column="21"/>
     </issue>
 
@@ -3068,7 +3335,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="134"
+            line="146"
             column="21"/>
     </issue>
 
@@ -3079,7 +3346,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="151"
+            line="163"
             column="21"/>
     </issue>
 
@@ -3090,7 +3357,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="161"
+            line="173"
             column="21"/>
     </issue>
 
@@ -3101,7 +3368,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="180"
+            line="192"
             column="21"/>
     </issue>
 
@@ -3112,7 +3379,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="190"
+            line="202"
             column="21"/>
     </issue>
 
@@ -3123,7 +3390,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="208"
+            line="220"
             column="21"/>
     </issue>
 
@@ -3134,7 +3401,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="218"
+            line="230"
             column="21"/>
     </issue>
 
@@ -3145,7 +3412,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="239"
+            line="251"
             column="9"/>
     </issue>
 
@@ -3239,35 +3506,13 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;Scan QR Code&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;Scan QR Code&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="64"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Upload QR&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;Upload QR&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="105"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
         message="Hardcoded string &quot;Torch&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;Torch&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="            android:contentDescription=&quot;Torch&quot;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_qr_scanner.xml"
-            line="134"
-            column="17"/>
+            line="102"
+            column="13"/>
     </issue>
 
     <issue
@@ -3277,7 +3522,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_qr_scanner.xml"
-            line="162"
+            line="152"
             column="13"/>
     </issue>
 
@@ -3288,7 +3533,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_qr_scanner.xml"
-            line="181"
+            line="171"
             column="17"/>
     </issue>
 
@@ -3299,7 +3544,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_qr_scanner.xml"
-            line="186"
+            line="176"
             column="17"/>
     </issue>
 
@@ -3310,7 +3555,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_qr_scanner.xml"
-            line="191"
+            line="181"
             column="17"/>
     </issue>
 
@@ -3321,7 +3566,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_qr_scanner.xml"
-            line="196"
+            line="186"
             column="17"/>
     </issue>
 
@@ -3332,7 +3577,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_qr_scanner.xml"
-            line="201"
+            line="191"
             column="17"/>
     </issue>
 
@@ -3514,8 +3759,8 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;FlowPay&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;FlowPay&quot;"
+        message="Hardcoded string &quot;Flowpay&quot;, should use `@string` resource"
+        errorLine1="            android:text=&quot;Flowpay&quot;"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/call_overlay_flowpay.xml"

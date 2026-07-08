@@ -48,6 +48,12 @@
     <string name="status_explainer_unverified">पुष्टि SMS नहीं आया। भुगतान फिर भी हुआ हो सकता है — दोबारा कोशिश से पहले बैंक स्टेटमेंट या SMS इनबॉक्स देखें।</string>
     <string name="status_explainer_cancelled">भुगतान पूरा होने से पहले रुक गया। पैसा नहीं कटना चाहिए।</string>
     <string name="status_explainer_failed">आपके बैंक ने यह भुगतान विफल बताया। कटी राशि आमतौर पर अपने आप वापस आती है।</string>
+    <string name="status_explainer_needs_review">इस भुगतान के दौरान बैंक SMS आया लेकिन राशि मेल नहीं खाई। दोबारा कोशिश से पहले बैंक स्टेटमेंट जांचें।</string>
+
+    <!-- Payment result screen -->
+    <string name="payment_status_success">भुगतान सफल</string>
+    <string name="payment_status_failed">भुगतान विफल</string>
+    <string name="payment_status_needs_review">यह भुगतान जांचें</string>
 
     <!-- Errors -->
     <string name="invalid_phone_number">कृपया सही 10 अंकों का मोबाइल नंबर डालें</string>

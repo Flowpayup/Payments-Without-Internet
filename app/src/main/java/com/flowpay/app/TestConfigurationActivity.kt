@@ -31,10 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flowpay.app.ui.theme.FlowPayTheme
+import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.BlueAccentTheme
-import com.flowpay.app.ui.theme.LocalFlowPayAccentTheme
-import com.flowpay.app.FlowPayApplication
+import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
+import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.data.SettingsRepository
 import androidx.compose.runtime.CompositionLocalProvider
 import com.flowpay.app.R
@@ -120,13 +120,23 @@ class TestConfigurationActivity : ComponentActivity() {
         // Initialize the helper
         testHelper.initialize()
 
-        setTheme(R.style.Theme_FlowPay)
+        setTheme(R.style.Theme_Flowpay)
         setContent {
-            CompositionLocalProvider(LocalFlowPayAccentTheme provides BlueAccentTheme) {
-                FlowPayTheme {
+            CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
+                FlowpayTheme {
                     TestConfigurationScreen(testHelper = testHelper)
                 }
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Unregisters the CallManager's PhoneStateListener and cancels
+        // pending timeout runnables — without this, a listener registered
+        // for an in-flight test call leaks past the screen.
+        if (::testHelper.isInitialized) {
+            testHelper.cleanup()
         }
     }
 
@@ -139,7 +149,7 @@ class TestConfigurationActivity : ComponentActivity() {
 @Composable
 fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
     val context = LocalContext.current
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
 
     // Get test states from helper
     val testStates = testHelper.getTestStates()
@@ -382,7 +392,7 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
 
 @Composable
 fun TestHeaderCard() {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
 
     Box(
         modifier = Modifier
@@ -523,7 +533,7 @@ fun TestButton(
     isUnsupported: Boolean = false,
     onClick: () -> Unit
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
 
     val iconBgColor = when {
         isUnsupported -> Color(0xFFFF9800).copy(alpha = 0.15f)
