@@ -10,7 +10,7 @@ class SharedPreferencesHelper(context: Context) {
     private val gson = Gson()
 
     companion object {
-        private const val PREFS_NAME = "FlowPayPrefs"
+        private const val PREFS_NAME = "FlowpayPrefs"
         private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
         private const val KEY_OVERLAY_PERMISSION = "overlay_permission"
     }

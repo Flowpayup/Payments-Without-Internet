@@ -11,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
-class FlowPayApplication : Application() {
+class FlowpayApplication : Application() {
 
     /** Process-wide scope for work that must outlive any single screen. */
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -33,17 +33,17 @@ class FlowPayApplication : Application() {
     }
 
     companion object {
-        private const val TAG = "FlowPayApplication"
+        private const val TAG = "FlowpayApplication"
 
         /** Convenience accessor for receivers/services that only hold a Context. */
-        fun from(context: Context): FlowPayApplication? =
-            context.applicationContext as? FlowPayApplication
+        fun from(context: Context): FlowpayApplication? =
+            context.applicationContext as? FlowpayApplication
     }
 
     override fun onCreate() {
         super.onCreate()
         // Finalise any PENDING rows whose deadline passed while the app was dead.
         paymentSessionManager.reconcileStalePending()
-        Log.d(TAG, "FlowPayApplication initialized")
+        Log.d(TAG, "FlowpayApplication initialized")
     }
 }

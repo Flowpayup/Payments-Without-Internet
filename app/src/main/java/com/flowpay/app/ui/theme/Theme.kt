@@ -9,13 +9,13 @@ import androidx.core.view.WindowCompat
 import com.flowpay.app.utils.findComponentActivity
 
 private val DarkColorScheme = darkColorScheme(
-    primary = FlowPayTextWhite,
-    secondary = FlowPayAccentBlue,
-    tertiary = FlowPayAccentGreen,
-    background = FlowPayBlack,
-    surface = FlowPayDarkGray,
-    onBackground = FlowPayTextWhite,
-    onSurface = FlowPayTextWhite
+    primary = FlowpayTextWhite,
+    secondary = FlowpayAccentBlue,
+    tertiary = FlowpayAccentGreen,
+    background = FlowpayBlack,
+    surface = FlowpayDarkGray,
+    onBackground = FlowpayTextWhite,
+    onSurface = FlowpayTextWhite
 )
 
 /**
@@ -26,7 +26,7 @@ private val DarkColorScheme = darkColorScheme(
  * fake (black background with light accents) and has been removed.
  */
 @Composable
-fun FlowPayTheme(
+fun FlowpayTheme(
     content: @Composable () -> Unit
 ) {
     val view = LocalView.current

@@ -38,11 +38,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flowpay.app.ui.theme.FlowPayTheme
+import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.BlueAccentTheme
-import com.flowpay.app.ui.theme.LocalFlowPayAccentTheme
+import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.helpers.SetupHelper
-import com.flowpay.app.FlowPayApplication
+import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.data.SettingsRepository
 import androidx.compose.runtime.CompositionLocalProvider
 import com.flowpay.app.R
@@ -66,10 +66,10 @@ class SetupActivity : ComponentActivity() {
             }
         })
 
-        setTheme(R.style.Theme_FlowPay)
+        setTheme(R.style.Theme_Flowpay)
         setContent {
-            CompositionLocalProvider(LocalFlowPayAccentTheme provides BlueAccentTheme) {
-                FlowPayTheme {
+            CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
+                FlowpayTheme {
                     SetupScreen(setupHelper = setupHelper)
                 }
             }
@@ -172,7 +172,7 @@ fun SetupScreen(setupHelper: SetupHelper) {
 
 @Composable
 fun HeaderCard() {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
     val headerShape = RoundedCornerShape(20.dp)
 
     Card(
@@ -383,7 +383,7 @@ fun SimCardSelectionSection(
     onDualSimToggled: (Boolean) -> Unit,
     secondarySimOptions: List<Pair<String, String>>
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
 
     Column {
         // Section Header
@@ -636,7 +636,7 @@ fun DisclaimerSection(
     isAccepted: Boolean,
     onAcceptedChange: (Boolean) -> Unit
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
     var isExpanded by remember { mutableStateOf(false) }
 
     Column {
@@ -754,7 +754,7 @@ fun CompleteSetupButton(
     enabled: Boolean,
     onCompleteSetup: () -> Unit
 ) {
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
     val buttonShape = RoundedCornerShape(16.dp)
 
     val gradientColors = if (enabled) {

@@ -12,15 +12,15 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.flowpay.app.helpers.AudioStateManager
 import com.flowpay.app.helpers.TransactionDetector
 import com.flowpay.app.repository.TransactionRepository
-import com.flowpay.app.ui.activities.PaymentSuccessActivity
+import com.flowpay.app.ui.activities.PaymentResultActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class FlowPayNotificationListener : NotificationListenerService() {
+class FlowpayNotificationListener : NotificationListenerService() {
 
     companion object {
-        private const val TAG = "FlowPayNotifListener"
+        private const val TAG = "FlowpayNotifListener"
 
         private val SMS_APP_PACKAGES = setOf(
             "com.android.mms",
@@ -78,7 +78,12 @@ class FlowPayNotificationListener : NotificationListenerService() {
 
         // For UPI 123 — mute call audio immediately (same as SimpleSMSReceiver)
         val operationType = detector.getOperationType()
-        if (operationType == "UPI_123") {
+        // Only a confirmed-successful payment justifies muting the IVR call —
+        // a FAILED or NEEDS_REVIEW confirmation must leave the call audible
+        // so the user can hear the bank's prompts and react.
+        if (operationType == "UPI_123" &&
+            transaction.status == com.flowpay.app.data.TransactionStatus.SUCCESS
+        ) {
             Log.d(TAG, "UPI 123 transaction — muting call immediately")
             Handler(Looper.getMainLooper()).post {
                 val muted = AudioStateManager.muteCallAudio(applicationContext)
@@ -93,7 +98,7 @@ class FlowPayNotificationListener : NotificationListenerService() {
 
         // An active payment session owns its row — update it in place;
         // otherwise fall back to inserting a fresh row (QR/legacy flow).
-        val sessionTxnId = com.flowpay.app.FlowPayApplication.from(applicationContext)
+        val sessionTxnId = com.flowpay.app.FlowpayApplication.from(applicationContext)
             ?.paymentSessionManager?.onSmsConfirmed(transaction)
         if (sessionTxnId == null) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -114,8 +119,8 @@ class FlowPayNotificationListener : NotificationListenerService() {
         LocalBroadcastManager.getInstance(applicationContext)
             .sendBroadcast(Intent("com.flowpay.app.SMS_RECEIVED"))
 
-        // Launch PaymentSuccessActivity
-        val intent = Intent(applicationContext, PaymentSuccessActivity::class.java).apply {
+        // Launch PaymentResultActivity
+        val intent = Intent(applicationContext, PaymentResultActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("transaction_id",   transaction.transactionId)
             putExtra("amount",           transaction.amount)

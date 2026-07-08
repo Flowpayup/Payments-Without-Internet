@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.flowpay.app.ui.theme.LocalFlowPayAccentTheme
+import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.data.Transaction
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -38,7 +38,7 @@ fun TransactionDetailDialog(
     onDelete: (() -> Unit)? = null
 ) {
     val clipboardManager = LocalClipboardManager.current
-    val accent = LocalFlowPayAccentTheme.current
+    val accent = LocalFlowpayAccentTheme.current
     val statusColor = getStatusColor(transaction.status)
 
     Dialog(onDismissRequest = onDismiss) {
@@ -323,6 +323,7 @@ private fun getStatusColor(status: String): Color {
         "SUCCESS", "SUCCESSFUL", "COMPLETED" -> Color(0xFF4CAF50)
         "PENDING" -> Color(0xFFFF9800)
         "UNVERIFIED" -> Color(0xFFFFC107)
+        "NEEDS_REVIEW" -> Color(0xFFFF9800)
         "CANCELLED" -> Color(0xFF9E9E9E)
         "FAILED", "DECLINED" -> Color(0xFFF44336)
         else -> Color(0xFF9E9E9E)
@@ -334,6 +335,7 @@ private fun getStatusColor(status: String): Color {
 private fun statusExplainerText(status: String): String? = when (status.uppercase()) {
     "PENDING" -> androidx.compose.ui.res.stringResource(com.flowpay.app.R.string.status_explainer_pending)
     "UNVERIFIED" -> androidx.compose.ui.res.stringResource(com.flowpay.app.R.string.status_explainer_unverified)
+    "NEEDS_REVIEW" -> androidx.compose.ui.res.stringResource(com.flowpay.app.R.string.status_explainer_needs_review)
     "CANCELLED" -> androidx.compose.ui.res.stringResource(com.flowpay.app.R.string.status_explainer_cancelled)
     "FAILED" -> androidx.compose.ui.res.stringResource(com.flowpay.app.R.string.status_explainer_failed)
     else -> null

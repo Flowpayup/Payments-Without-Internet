@@ -160,7 +160,7 @@ class CallManager(private val context: Context) {
             context.startActivity(intent)
             Log.d(TAG, "Call initiated: $callType")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to initiate call: ${e.message}")
+            Log.e(TAG, "Failed to initiate call", e)
             synchronized(callStateLock) {
                 _isCallInProgress.value = false
                 currentCallType = null
@@ -175,7 +175,7 @@ class CallManager(private val context: Context) {
             try {
                 phoneStateListener?.let { telephonyManager.listen(it, PhoneStateListener.LISTEN_NONE) }
             } catch (e: Exception) {
-                Log.e(TAG, "Error unregistering phone state listener: ${e.message}")
+                Log.e(TAG, "Error unregistering phone state listener", e)
             } finally {
                 phoneStateListener = null
             }
@@ -227,7 +227,7 @@ class CallManager(private val context: Context) {
             context.startActivity(intent)
             Log.d(TAG, "USSD call initiated: $ussdCode")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to initiate USSD call: ${e.message}")
+            Log.e(TAG, "Failed to initiate USSD call", e)
             isUSSDDialPending.set(false)
             synchronized(callStateLock) {
                 _isCallInProgress.value = false
@@ -381,11 +381,11 @@ class CallManager(private val context: Context) {
             Log.d(TAG, "UPI123 call started")
             true
         } catch (e: SecurityException) {
-            Log.e(TAG, "Security exception while initiating call: ${e.message}")
+            Log.e(TAG, "Security exception while initiating call", e)
             Toast.makeText(context, "Permission denied: ${e.message}", Toast.LENGTH_SHORT).show()
             false
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error while initiating UPI123 call: ${e.message}")
+            Log.e(TAG, "Unexpected error while initiating UPI123 call", e)
             Toast.makeText(context, "Failed to initiate call. Please try again.", Toast.LENGTH_SHORT).show()
             false
         }
@@ -421,7 +421,7 @@ class CallManager(private val context: Context) {
             try {
                 audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, 0, 0)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to mute voice-call stream: ${e.message}")
+                Log.e(TAG, "Failed to mute voice-call stream", e)
             }
 
             isAudioMuted = true
@@ -429,11 +429,11 @@ class CallManager(private val context: Context) {
             true
             
             } catch (e: SecurityException) {
-                Log.e(TAG, "Security exception while muting audio: ${e.message}")
+                Log.e(TAG, "Security exception while muting audio", e)
                 Toast.makeText(context, "Permission required to control audio", Toast.LENGTH_SHORT).show()
                 false
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to mute call audio: ${e.message}")
+                Log.e(TAG, "Failed to mute call audio", e)
                 Toast.makeText(context, "Failed to mute audio: ${e.message}", Toast.LENGTH_SHORT).show()
                 false
             }
@@ -466,7 +466,7 @@ class CallManager(private val context: Context) {
                     Log.w(TAG, "Failed to restore call volume, expected: $originalCallVolume, actual: $currentCallVolume")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to restore call volume: ${e.message}")
+                Log.e(TAG, "Failed to restore call volume", e)
             }
 
             isAudioMuted = false
@@ -474,11 +474,11 @@ class CallManager(private val context: Context) {
             true
             
             } catch (e: SecurityException) {
-                Log.e(TAG, "Security exception while restoring audio: ${e.message}")
+                Log.e(TAG, "Security exception while restoring audio", e)
                 Toast.makeText(context, "Permission required to control audio", Toast.LENGTH_SHORT).show()
                 false
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to restore call audio: ${e.message}")
+                Log.e(TAG, "Failed to restore call audio", e)
                 Toast.makeText(context, "Failed to restore audio: ${e.message}", Toast.LENGTH_SHORT).show()
                 false
             }
@@ -518,10 +518,10 @@ class CallManager(private val context: Context) {
                 }
                 
             } catch (e: SecurityException) {
-                Log.e(TAG, "Security exception while setting call volume: ${e.message}")
+                Log.e(TAG, "Security exception while setting call volume", e)
                 false
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to set call volume to minimum: ${e.message}")
+                Log.e(TAG, "Failed to set call volume to minimum", e)
                 false
             }
         }
@@ -559,10 +559,10 @@ class CallManager(private val context: Context) {
                 }
                 
             } catch (e: SecurityException) {
-                Log.e(TAG, "Security exception while restoring call volume: ${e.message}")
+                Log.e(TAG, "Security exception while restoring call volume", e)
                 false
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to restore call volume: ${e.message}")
+                Log.e(TAG, "Failed to restore call volume", e)
                 false
             }
         }
@@ -577,7 +577,7 @@ class CallManager(private val context: Context) {
             com.flowpay.app.services.CallOverlayService.showOverlay(context, phoneNumber, amount)
             Log.d(TAG, "Call overlay shown via service")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to show call overlay: ${e.message}")
+            Log.e(TAG, "Failed to show call overlay", e)
         }
     }
     
@@ -590,7 +590,7 @@ class CallManager(private val context: Context) {
             com.flowpay.app.services.CallOverlayService.hideOverlay(context)
             Log.d(TAG, "Call overlay hidden via service")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to hide call overlay: ${e.message}")
+            Log.e(TAG, "Failed to hide call overlay", e)
         }
     }
     
@@ -627,10 +627,10 @@ class CallManager(private val context: Context) {
             }
             terminated
         } catch (e: SecurityException) {
-            Log.e(TAG, "Security exception while terminating call: ${e.message}")
+            Log.e(TAG, "Security exception while terminating call", e)
             false
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to terminate call: ${e.message}")
+            Log.e(TAG, "Failed to terminate call", e)
             false
         }
     }
@@ -649,7 +649,7 @@ class CallManager(private val context: Context) {
                     Log.d(TAG, "Audio was not muted, no restoration needed")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error during audio cleanup: ${e.message}")
+                Log.e(TAG, "Error during audio cleanup", e)
             }
         }
         
@@ -660,7 +660,7 @@ class CallManager(private val context: Context) {
                 currentCallType = null
                 _isCallInProgress.value = false
             } catch (e: Exception) {
-                Log.e(TAG, "Error during state cleanup: ${e.message}")
+                Log.e(TAG, "Error during state cleanup", e)
             }
         }
         
@@ -672,7 +672,7 @@ class CallManager(private val context: Context) {
                 }
                 phoneStateListener = null
             } catch (e: Exception) {
-                Log.e(TAG, "Error unregistering phone state listener: ${e.message}")
+                Log.e(TAG, "Error unregistering phone state listener", e)
             }
         }
         

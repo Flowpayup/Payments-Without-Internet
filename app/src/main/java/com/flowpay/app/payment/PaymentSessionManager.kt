@@ -177,6 +177,15 @@ class PaymentSessionManager(
      * persistence.
      */
     fun onSmsConfirmed(parsed: SimpleTransaction): String? {
+        // Direction check: a manual session is always an outgoing DEBIT
+        // (begin() inserts transactionType = "DEBIT"), so an incoming CREDIT
+        // SMS can never confirm it. Returning null lets the caller fall back
+        // to standalone persistence, exactly like the QR/no-session flow.
+        if (parsed.transactionType == "CREDIT") {
+            Log.d(TAG, "CREDIT SMS during DEBIT session - not a confirmation")
+            return null
+        }
+
         val current: PaymentState
         synchronized(sessionLock) {
             current = _paymentState.value
@@ -186,8 +195,13 @@ class PaymentSessionManager(
         val phone = current.getPhoneNumberValue() ?: parsed.phoneNumber ?: ""
         val amount = current.getAmountValue() ?: parsed.amount
 
-        val succeeded = !parsed.status.equals(TransactionStatus.FAILED, ignoreCase = true)
-        val newStatus = if (succeeded) TransactionStatus.SUCCESS else TransactionStatus.FAILED
+        val newStatus = when {
+            parsed.status.equals(TransactionStatus.FAILED, ignoreCase = true) ->
+                TransactionStatus.FAILED
+            parsed.status.equals(TransactionStatus.NEEDS_REVIEW, ignoreCase = true) ->
+                TransactionStatus.NEEDS_REVIEW
+            else -> TransactionStatus.SUCCESS
+        }
         val verifiedAt = clock()
 
         scope.launch {
@@ -205,21 +219,25 @@ class PaymentSessionManager(
             Log.d(TAG, "Session row confirmed as $newStatus (rows=$updated)")
         }
 
-        val terminal = if (succeeded) {
-            PaymentState.Success(
-                transactionId = txnId,
-                phoneNumber = phone,
-                amount = amount,
-                bankReference = parsed.transactionId,
-                timestamp = verifiedAt
-            )
-        } else {
-            PaymentState.Failed(
+        val terminal = when (newStatus) {
+            TransactionStatus.FAILED -> PaymentState.Failed(
                 error = "Bank reported the payment as failed",
                 phoneNumber = phone,
                 amount = amount,
                 transactionId = txnId,
                 canRetry = true
+            )
+            TransactionStatus.NEEDS_REVIEW -> PaymentState.NeedsReview(
+                transactionId = txnId,
+                phoneNumber = phone,
+                amount = amount
+            )
+            else -> PaymentState.Success(
+                transactionId = txnId,
+                phoneNumber = phone,
+                amount = amount,
+                bankReference = parsed.transactionId,
+                timestamp = verifiedAt
             )
         }
         synchronized(sessionLock) {

@@ -27,7 +27,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import com.flowpay.app.FlowPayApplication
+import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.R
 import com.flowpay.app.managers.TransactionDialogManager
 import com.flowpay.app.payment.PaymentSessionManager
@@ -50,6 +50,8 @@ class CallOverlayService : Service() {
         private const val ACTION_START_OVERLAY = "START_OVERLAY"
         private const val ACTION_STOP_OVERLAY = "STOP_OVERLAY"
         private const val TIMEOUT_DURATION = 40000L // 40 seconds timeout
+        private const val TIMEOUT_EXTENSION_MS = 10000L // re-arm step while device not idle
+        private const val MAX_TIMEOUT_EXTENSIONS = 3 // bounded: +30s worst case
         
         private var serviceInstance: CallOverlayService? = null
         private val serviceReadyLock = Any()
@@ -179,6 +181,7 @@ class CallOverlayService : Service() {
     // Timeout management
     private var timeoutHandler: Handler? = null
     private var timeoutRunnable: Runnable? = null
+    private var timeoutExtensions = 0
     private var isCallDetected = false
     private var serviceStartTime = 0L
     private var pendingPhoneNumber = ""
@@ -229,7 +232,16 @@ class CallOverlayService : Service() {
     }
     
     override fun onBind(intent: Intent?): IBinder = binder
-    
+
+    // Deliberately NOT a foreground service. On targetSdk 35 an FGS needs a
+    // foregroundServiceType the app can't honestly claim ("phoneCall"
+    // requires MANAGE_OWN_CALLS + a ConnectionService; "specialUse" invites
+    // Play review friction). Survival is covered without it: the service is
+    // started while the app is foreground, and once the call goes OFFHOOK
+    // its TYPE_APPLICATION_OVERLAY window keeps the process perceptible for
+    // the call's duration; the pre-OFFHOOK gap is bounded by the 40s(+30s)
+    // watchdog, well inside the started-service grace period. Revisit only
+    // if field logs ever show mid-call service death.
     override fun onCreate() {
         super.onCreate()
         val startTime = System.currentTimeMillis()
@@ -260,7 +272,7 @@ class CallOverlayService : Service() {
         // Observe the single app-wide call-state authority and the payment
         // session. These replace the service's own PhoneStateListener and
         // the old duration-based outcome guessing.
-        FlowPayApplication.from(this)?.let { app ->
+        FlowpayApplication.from(this)?.let { app ->
             coordinator = app.callStateCoordinator
             sessionManager = app.paymentSessionManager
             coordinator?.acquire("call-overlay-service")
@@ -344,12 +356,18 @@ class CallOverlayService : Service() {
             }
             is PaymentState.Success -> {
                 vibrate()
-                // PaymentSuccessActivity (launched by the SMS pipeline) is the
+                // PaymentResultActivity (launched by the SMS pipeline) is the
                 // success surface; no extra dialog from the service.
                 finishWithResult { }
             }
             is PaymentState.Failed -> {
                 finishWithResult { dialogManager?.showTransactionFailed() }
+            }
+            is PaymentState.NeedsReview -> {
+                // PaymentResultActivity (launched by the SMS pipeline with
+                // the NEEDS_REVIEW status extra) is the review surface; no
+                // extra dialog from the service.
+                finishWithResult { }
             }
             is PaymentState.Cancelled -> {
                 val byUser = state.reason.contains("by user", ignoreCase = true)
@@ -554,7 +572,7 @@ class CallOverlayService : Service() {
             pendingAmount = amount
             
             // Get UPI service number from shared preferences or use default
-            val prefs = getSharedPreferences("FlowPayPrefs", Context.MODE_PRIVATE)
+            val prefs = getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
             upiServiceNumber = prefs.getString("upi_service_number", "08045163666") ?: "08045163666"
             
                                     
@@ -598,20 +616,35 @@ class CallOverlayService : Service() {
     }
     
     /**
-     * Start the 40-second timeout timer
+     * Start the 40-second timeout timer.
+     *
+     * Before declaring "the call never started", the runnable consults the
+     * coordinator's live state: if the device is ringing/off-hook (or the
+     * OFFHOOK collector is simply lagging), the timer re-arms in 10s steps
+     * (max 3, +30s total) instead of cancelling a session whose call is in
+     * fact connecting. Only a persistently Idle device cancels.
      */
     private fun startTimeoutTimer() {
         Log.d(TAG, "Starting 40-second timeout timer")
-        
+
+        timeoutExtensions = 0
         timeoutRunnable = Runnable {
-            if (!isCallDetected) {
-                Log.d(TAG, "Timeout reached - no call detected, stopping service")
-                // The dial never produced an active call; close the session
-                // honestly instead of leaving it to the 10-minute deadline.
-                sessionManager?.onCallNeverStarted()
-                hideOverlayInternal()
-                stopSelf()
+            if (isCallDetected) return@Runnable
+
+            val deviceBusy = coordinator?.callState?.value !is DeviceCallState.Idle
+            if (deviceBusy && timeoutExtensions < MAX_TIMEOUT_EXTENSIONS) {
+                timeoutExtensions++
+                Log.d(TAG, "Timeout reached but device not idle - re-arming ($timeoutExtensions/$MAX_TIMEOUT_EXTENSIONS)")
+                timeoutHandler?.postDelayed(timeoutRunnable!!, TIMEOUT_EXTENSION_MS)
+                return@Runnable
             }
+
+            Log.d(TAG, "Timeout reached - no call detected, stopping service")
+            // The dial never produced an active call; close the session
+            // honestly instead of leaving it to the 10-minute deadline.
+            sessionManager?.onCallNeverStarted()
+            hideOverlayInternal()
+            stopSelf()
         }
 
         timeoutHandler?.postDelayed(timeoutRunnable!!, TIMEOUT_DURATION)

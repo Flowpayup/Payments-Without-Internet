@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flowpay.app.ui.theme.LocalFlowPayAccentTheme
+import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -39,7 +39,7 @@ data class Contact(
 
 /**
  * Contact picker dialog that displays a searchable list of contacts
- * Uses FlowPay's dark theme styling
+ * Uses Flowpay's dark theme styling
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,7 +132,7 @@ fun ContactPickerDialog(
                         unfocusedTextColor = Color.White,
                         focusedBorderColor = Color(0xFF4A4A4A),
                         unfocusedBorderColor = Color(0xFF3A3A3A),
-                        cursorColor = LocalFlowPayAccentTheme.current.accent,
+                        cursorColor = LocalFlowpayAccentTheme.current.accent,
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent
                     ),
@@ -147,7 +147,7 @@ fun ContactPickerDialog(
                             .height(300.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = LocalFlowPayAccentTheme.current.accent)
+                        CircularProgressIndicator(color = LocalFlowpayAccentTheme.current.accent)
                     }
                 } else if (filteredContacts.isEmpty()) {
                     Box(
@@ -215,7 +215,7 @@ fun ContactItem(
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        color = LocalFlowPayAccentTheme.current.accent.copy(alpha = 0.2f),
+                        color = LocalFlowpayAccentTheme.current.accent.copy(alpha = 0.2f),
                         shape = RoundedCornerShape(20.dp)
                     ),
                 contentAlignment = Alignment.Center
@@ -223,7 +223,7 @@ fun ContactItem(
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
-                    tint = LocalFlowPayAccentTheme.current.accent,
+                    tint = LocalFlowpayAccentTheme.current.accent,
                     modifier = Modifier.size(24.dp)
                 )
             }

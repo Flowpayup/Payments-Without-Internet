@@ -6,7 +6,7 @@ import java.util.*
 
 /**
  * Data class representing successful payment transaction details
- * Used for displaying transaction information in PaymentSuccessActivity
+ * Used for displaying transaction information in PaymentResultActivity
  */
 data class PaymentSuccessData(
     val transactionId: String,

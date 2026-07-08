@@ -114,5 +114,11 @@
     <string name="status_explainer_unverified">No confirmation SMS arrived. The payment may still have gone through — check your bank statement or SMS inbox before retrying.</string>
     <string name="status_explainer_cancelled">The payment flow ended before completing. No money should have moved.</string>
     <string name="status_explainer_failed">Your bank reported this payment as failed. Any debited amount is normally auto-reversed.</string>
+    <string name="status_explainer_needs_review">A bank SMS arrived during this payment but its amount didn\'t match. Check your bank statement before retrying.</string>
+
+    <!-- Payment result screen -->
+    <string name="payment_status_success">Payment Successful</string>
+    <string name="payment_status_failed">Payment Failed</string>
+    <string name="payment_status_needs_review">Check This Payment</string>
 
 </resources>

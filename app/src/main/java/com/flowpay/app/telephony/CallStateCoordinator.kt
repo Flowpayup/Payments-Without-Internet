@@ -75,6 +75,12 @@ class CallStateCoordinator(
     private val refCount = AtomicInteger(0)
     private val registrationLock = Any()
 
+    // Tracked separately from refCount: if register() fails (e.g.
+    // READ_PHONE_STATE not yet granted), refCount stays elevated but
+    // `registered` stays false, so the NEXT acquire() retries instead of
+    // leaving the flow permanently dead until process restart.
+    private var registered = false
+
     @Volatile
     private var offHookSinceMs = 0L
 
@@ -84,8 +90,11 @@ class CallStateCoordinator(
     private var phoneStateListener: PhoneStateListener? = null
 
     override fun acquire(tag: String) {
-        if (refCount.incrementAndGet() == 1) {
-            register(tag)
+        refCount.incrementAndGet()
+        synchronized(registrationLock) {
+            if (refCount.get() > 0 && !registered) {
+                register(tag)
+            }
         }
         Log.d(TAG, "acquire($tag) refCount=${refCount.get()}")
     }
@@ -94,14 +103,18 @@ class CallStateCoordinator(
         val remaining = refCount.decrementAndGet()
         if (remaining <= 0) {
             refCount.set(0)
-            unregister(tag)
+            synchronized(registrationLock) {
+                if (registered) {
+                    unregister(tag)
+                }
+            }
         }
         Log.d(TAG, "release($tag) refCount=${refCount.get()}")
     }
 
     private fun register(tag: String) {
         synchronized(registrationLock) {
-            if (telephonyCallback != null || phoneStateListener != null) return
+            if (registered) return
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     val callback = object : TelephonyCallback(), TelephonyCallback.CallStateListener {
@@ -126,14 +139,17 @@ class CallStateCoordinator(
                     telephonyManager.listen(listener, PhoneStateListener.LISTEN_CALL_STATE)
                     phoneStateListener = listener
                 }
+                registered = true
                 // Seed current state so consumers that acquire mid-call see OFFHOOK.
                 handleStateChange(currentCallStateCompat())
                 Log.d(TAG, "Telephony listener registered ($tag)")
             } catch (e: SecurityException) {
-                // READ_PHONE_STATE not granted; consumers observe a permanently Idle flow.
+                // READ_PHONE_STATE not granted; consumers observe an Idle
+                // flow until a later acquire() retries after the grant.
                 Log.e(TAG, "Cannot register telephony listener: ${e.message}")
                 telephonyCallback = null
                 phoneStateListener = null
+                registered = false
             }
         }
     }
@@ -151,10 +167,11 @@ class CallStateCoordinator(
                 }
                 Log.d(TAG, "Telephony listener unregistered ($tag)")
             } catch (e: Exception) {
-                Log.e(TAG, "Error unregistering telephony listener: ${e.message}")
+                Log.e(TAG, "Error unregistering telephony listener", e)
             } finally {
                 telephonyCallback = null
                 phoneStateListener = null
+                registered = false
             }
         }
     }

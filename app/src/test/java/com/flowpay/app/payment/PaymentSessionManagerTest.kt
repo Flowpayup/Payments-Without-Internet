@@ -110,13 +110,18 @@ class PaymentSessionManagerTest {
         return Triple(manager, store, source)
     }
 
-    private fun bankSms(status: String = "SUCCESS", amount: String = "100") = SimpleTransaction(
+    private fun bankSms(
+        status: String = "SUCCESS",
+        amount: String = "100",
+        transactionType: String = "DEBIT"
+    ) = SimpleTransaction(
         transactionId = "HDFC123456",
         amount = amount,
         status = status,
         bankName = "HDFC Bank",
         smsExcerpt = "₹$amount debited — HDFC Bank · Ref HDFC123456",
-        timestamp = 0L
+        timestamp = 0L,
+        transactionType = transactionType
     )
 
     @Test
@@ -256,6 +261,61 @@ class PaymentSessionManagerTest {
         val (manager, _, _) = newManager()
 
         assertNull(manager.onSmsConfirmed(bankSms()))
+    }
+
+    @Test
+    fun `incoming CREDIT SMS never confirms an outgoing DEBIT session`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        val claimed = manager.onSmsConfirmed(bankSms(transactionType = "CREDIT"))
+        runCurrent()
+
+        assertNull("credit SMS must not be claimed by a debit session", claimed)
+        assertTrue(
+            "session must stay live for the real confirmation",
+            manager.paymentState.value is PaymentState.InProgress
+        )
+        assertEquals(TransactionStatus.PENDING, store.rows[txnId]!!.status)
+    }
+
+    @Test
+    fun `NEEDS_REVIEW confirmation yields NEEDS_REVIEW row and NeedsReview state`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        val claimed = manager.onSmsConfirmed(
+            bankSms(status = TransactionStatus.NEEDS_REVIEW, amount = "499")
+        )
+        runCurrent()
+
+        assertEquals(txnId, claimed)
+        assertTrue(manager.paymentState.value is PaymentState.NeedsReview)
+        assertEquals(TransactionStatus.NEEDS_REVIEW, store.rows[txnId]!!.status)
+    }
+
+    @Test
+    fun `second onSmsConfirmed after terminal state is not claimed`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        val first = manager.onSmsConfirmed(bankSms())
+        runCurrent()
+        val second = manager.onSmsConfirmed(bankSms())
+        runCurrent()
+
+        assertEquals(txnId, first)
+        assertNull("terminal session must not claim a second SMS", second)
+        assertEquals(TransactionStatus.SUCCESS, store.rows[txnId]!!.status)
     }
 
     @Test
