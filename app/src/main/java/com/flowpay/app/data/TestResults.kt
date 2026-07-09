@@ -3,7 +3,6 @@ package com.flowpay.app.data
 import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
 data class TestResults(
     val ussdEnabled: Boolean = false,
@@ -34,10 +33,6 @@ class TestResultsManager(private val context: Context) {
         } catch (e: Exception) {
             null
         }
-    }
-    
-    fun clearTestResults() {
-        prefs.edit().remove(KEY_TEST_RESULTS).apply()
     }
     
     fun hasCompletedTests(): Boolean {

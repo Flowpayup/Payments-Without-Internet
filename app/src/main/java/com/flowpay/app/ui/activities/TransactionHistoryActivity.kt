@@ -75,16 +75,6 @@ fun getStatusColor(status: String): Color {
     }
 }
 
-/** Human meaning of each lifecycle status, used wherever a status is shown. */
-fun getStatusExplainer(status: String): String? = when (status.uppercase()) {
-    "PENDING" -> "Waiting for your bank's confirmation SMS."
-    "UNVERIFIED" -> "No confirmation SMS arrived. The payment may still have gone through — check your bank statement or SMS inbox before retrying."
-    "NEEDS_REVIEW" -> "A bank SMS arrived during this payment but its amount didn't match. Check your bank statement before retrying."
-    "CANCELLED" -> "The payment flow ended before completing. No money should have moved."
-    "FAILED" -> "Your bank reported this payment as failed. Any debited amount is normally auto-reversed."
-    else -> null
-}
-
 private fun isSameDay(c1: Calendar, c2: Calendar): Boolean =
     c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) &&
     c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)

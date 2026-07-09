@@ -3,14 +3,6 @@ package com.flowpay.app.states
 import java.util.UUID
 
 /**
- * Enum for different payment types
- */
-enum class PaymentType {
-    MANUAL_TRANSFER,  // UPI call flow
-    QR_SCANNING       // USSD flow
-}
-
-/**
  * Sealed class hierarchy for payment states providing type-safe state management
  * and clear state transitions for the UPI123 payment system
  */
@@ -315,15 +307,6 @@ sealed class PaymentState {
         is QRPaymentWaitingForVerification -> this.vpa
         is QRPaymentSuccess -> this.vpa
         is QRPaymentFailed -> this.vpa
-        else -> null
-    }
-    
-    /**
-     * Gets the payment type
-     */
-    fun getPaymentType(): PaymentType? = when (this) {
-        is Initiating, is InProgress, is WaitingForVerification, is Success, is Failed, is NeedsReview, is Cancelled, is Retrying, is Timeout -> PaymentType.MANUAL_TRANSFER
-        is QRPaymentInitiating, is QRPaymentInProgress, is QRPaymentWaitingForVerification, is QRPaymentSuccess, is QRPaymentFailed -> PaymentType.QR_SCANNING
         else -> null
     }
 }

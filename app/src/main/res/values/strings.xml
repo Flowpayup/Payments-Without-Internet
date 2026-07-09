@@ -4,94 +4,32 @@
     <!-- Setup Screen Strings -->
     <string name="setup_flowpay">Setup Flowpay</string>
     <string name="configure_upi_payments">Configure your UPI payments</string>
-    <string name="mobile_number">Mobile Number</string>
-    <string name="mobile_number_hint">10-digit mobile number</string>
     <string name="bank_selection">Bank Selection</string>
     <string name="choose_primary_bank">Choose your primary bank for UPI payments</string>
-    <string name="select_bank">Choose your bank</string>
     <string name="sim_card_selection">SIM Card Selection</string>
     <string name="configure_sim_cards">Configure your SIM cards for USSD payments</string>
-    <string name="primary_sim">Primary SIM</string>
-    <string name="select_primary_sim">Select your primary SIM</string>
     <string name="enable_dual_sim">Enable Dual SIM support</string>
     <string name="secondary_sim">Secondary SIM</string>
-    <string name="select_secondary_sim">Select your secondary SIM</string>
     <string name="complete_setup">Complete Setup</string>
     <string name="disclaimer">Disclaimer</string>
     <string name="disclaimer_summary">Flowpay only triggers your bank\'s *99# / UPI 123 flow — tap to read the full disclaimer.</string>
     <string name="disclaimer_text">Flowpay is an open-source app. It does not process payments itself — it only triggers your bank\'s *99# (UPI 123) dialer flow on your behalf. All transactions happen between you, your bank, and your phone. Flowpay accepts no responsibility whatsoever for any transaction outcome. By accepting, you acknowledge this.</string>
     
     <!-- Bank Names -->
-    <string name="sbi">State Bank of India</string>
-    <string name="hdfc">HDFC Bank</string>
-    <string name="icici">ICICI Bank</string>
-    <string name="axis">Axis Bank</string>
-    <string name="kotak">Kotak Mahindra Bank</string>
-    <string name="pnb">Punjab National Bank</string>
-    <string name="bob">Bank of Baroda</string>
-    <string name="yes">Yes Bank</string>
-    <string name="idbi">IDBI Bank</string>
-    <string name="canara">Canara Bank</string>
     
     <!-- SIM Carriers -->
-    <string name="jio">Jio (Reliance Jio)</string>
-    <string name="airtel">Airtel (Bharti Airtel)</string>
-    <string name="vodafone">Vodafone (Vodafone Idea)</string>
-    <string name="bsnl">BSNL (Bharat Sanchar Nigam Limited)</string>
     
     <!-- Validation Messages -->
-    <string name="please_enter_mobile">Please enter your mobile number</string>
-    <string name="please_select_bank">Please select your bank</string>
-    <string name="please_select_primary_sim">Please select your primary SIM</string>
-    <string name="please_select_secondary_sim">Please select your secondary SIM</string>
-    <string name="setup_completed">Flowpay setup completed successfully!</string>
     
     <!-- Overlay Messages -->
-    <string name="upi_payment_progress">UPI Payment Progress</string>
-    <string name="paste_vpa">Paste the VPA</string>
-    <string name="enter_amount">Enter amount you wish to pay</string>
-    <string name="press_skip">Press 1 to skip remarks</string>
-    <string name="enter_pin">Enter your UPI PIN</string>
-    <string name="waiting_confirmation">Waiting for confirmation...</string>
-    <string name="processing">Processing...</string>
-    <string name="check_sms_status">Please check your SMS for status</string>
     
     <!-- Error Messages -->
-    <string name="invalid_phone_number">Please enter a valid 10-digit phone number</string>
-    <string name="invalid_amount">Please enter a valid amount</string>
-    <string name="permission_required">Required permissions not granted</string>
-    <string name="overlay_permission_required">Overlay permission required for payment protection</string>
-    <string name="phone_permission_required">Phone call permission is required</string>
-    <string name="camera_permission_required">Camera permission required for QR scanning</string>
-    <string name="invalid_qr_code">Invalid UPI QR code</string>
-    <string name="error_processing_qr">Error processing QR code</string>
     
     <!-- Success Messages -->
-    <string name="vpa_copied">VPA copied to clipboard</string>
-    <string name="payment_initiated">Payment initiated successfully</string>
-    <string name="call_connected">UPI call connected</string>
-    <string name="call_ended">UPI call ended</string>
 
     <!-- Home screen -->
-    <string name="home_tagline">Payment Without Internet</string>
-    <string name="home_connected_bank">Connected Bank</string>
-    <string name="home_scan_qr">Scan QR Code</string>
-    <string name="home_scan_opening">Opening…</string>
-    <string name="home_pay_contact">Pay Contact</string>
-    <string name="home_recent_payments">Recent Payments</string>
 
     <!-- Live payment status banner -->
-    <string name="banner_in_progress_title">Payment in progress</string>
-    <string name="banner_in_progress_detail">₹%1$s — follow the voice prompts on the call</string>
-    <string name="banner_waiting_title">Waiting for bank confirmation</string>
-    <string name="banner_waiting_detail">Request for ₹%1$s sent — the result will appear when your bank\'s SMS arrives</string>
-    <string name="banner_success_title">Payment confirmed</string>
-    <string name="banner_success_detail">₹%1$s confirmed by your bank</string>
-    <string name="banner_failed_title">Payment failed</string>
-    <string name="banner_cancelled_title">Payment cancelled</string>
-    <string name="banner_timeout_title">No confirmation received</string>
-    <string name="banner_timeout_detail">Check your bank SMS or statement — the payment may still have gone through</string>
-    <string name="banner_dismiss">Dismiss payment status</string>
 
     <!-- Payment result dialogs (shown over the dialer) -->
     <string name="dialog_cancelled_title">Transaction Cancelled</string>
