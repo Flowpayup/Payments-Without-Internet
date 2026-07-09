@@ -466,50 +466,6 @@ class TestConfigurationHelper(
     }
     
     /**
-     * Reset all test configurations
-     */
-    fun resetAllTests() {
-        Log.d(TAG, "Resetting all test configurations")
-        cancelUssdTimeout()
-        cancelUpi123ConfigDelay()
-        
-        // Reset USSD test
-        ussdTesting = false
-        showUssdDialog = false
-        ussdTestCompleted = false
-        
-        // Reset UPI123 test
-        upi123Testing = false
-        upi123TestCompleted = false
-        
-        // Reset voice test
-        voiceTesting = false
-        showVoiceDialog = false
-        voiceTestCompleted = false
-        
-        // Reset call complete button
-        showCallCompleteButton = false
-        
-        // Update UI callbacks
-        uiCallback.updateUssdTesting(false)
-        uiCallback.updateUssdDialog(false)
-        uiCallback.updateUssdTestCompleted(false)
-        uiCallback.updateUpi123Testing(false)
-        uiCallback.updateUpi123TestCompleted(false)
-        uiCallback.updateVoiceTesting(false)
-        uiCallback.updateVoiceDialog(false)
-        uiCallback.updateVoiceTestCompleted(false)
-        uiCallback.updateCallCompleteButton(false)
-        
-        // Clear saved test results
-        testResultsManager.clearTestResults()
-        SetupHelper.clearUserReportedUssdNotWorking(context)
-        
-        uiCallback.showToast("All test configurations have been reset")
-        Log.d(TAG, "All test configurations reset successfully")
-    }
-
-    /**
      * Get current test states
      */
     fun getTestStates(): TestStates {
@@ -530,14 +486,6 @@ class TestConfigurationHelper(
         )
     }
     
-    /**
-     * Get current USSD progress message
-     */
-    fun getUssdProgressMessage(): String {
-        return ussdProgressMessage
-    }
-    
-
     /**
      * Data class for test states
      */

@@ -60,11 +60,6 @@ class SetupHelper(
             return "Scan to pay is not available — USSD does not work for you on this device, so this feature can't be used."
         }
 
-        @Deprecated(
-            message = "Use isPrimarySimUssdCapable for carrier-only checks, or isScanToPayUssdAvailable for scan-to-pay.",
-            replaceWith = ReplaceWith("isPrimarySimUssdCapable(context)")
-        )
-        fun isUssdSupported(context: Context): Boolean = isPrimarySimUssdCapable(context)
     }
 
     /**
@@ -250,67 +245,10 @@ class SetupHelper(
     }
 
     /**
-     * Load existing setup data
-     */
-    fun loadSetupData(): SetupData? {
-        val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
-        
-        val selectedBank = sharedPreferences.getString("selected_bank", "")
-        val selectedPrimarySim = sharedPreferences.getString("selected_primary_sim", "")
-        val isDualSimEnabled = sharedPreferences.getBoolean("is_dual_sim_enabled", false)
-        val selectedSecondarySim = sharedPreferences.getString("selected_secondary_sim", "")
-        val disclaimerAccepted = sharedPreferences.getBoolean("disclaimer_accepted", false)
-
-        // Only return data if setup was completed
-        val isSetupCompleted = sharedPreferences.getBoolean("setup_completed", false)
-        if (!isSetupCompleted) {
-            return null
-        }
-
-        return SetupData(
-            selectedBank = selectedBank ?: "",
-            selectedPrimarySim = selectedPrimarySim ?: "",
-            isDualSimEnabled = isDualSimEnabled,
-            selectedSecondarySim = selectedSecondarySim ?: "",
-            disclaimerAccepted = disclaimerAccepted
-        )
-    }
-
-    /**
      * Check if setup is already completed
      */
     fun isSetupCompleted(): Boolean {
         val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         return sharedPreferences.getBoolean("setup_completed", false)
-    }
-
-    /**
-     * Reset setup data
-     */
-    fun resetSetupData() {
-        val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
-        sharedPreferences.edit()
-            .putBoolean("setup_completed", false)
-            .remove("selected_bank")
-            .remove("selected_primary_sim")
-            .remove("is_dual_sim_enabled")
-            .remove("selected_secondary_sim")
-            .remove("disclaimer_accepted")
-            .apply()
-        clearUserReportedUssdNotWorking(context)
-    }
-
-    /**
-     * Check if dual SIM is valid (primary and secondary are different)
-     */
-    fun isDualSimValid(primarySim: String, secondarySim: String): Boolean {
-        return primarySim.isNotEmpty() && secondarySim.isNotEmpty() && primarySim != secondarySim
-    }
-
-    /**
-     * Get setup completion message
-     */
-    fun getSetupCompletionMessage(): String {
-        return "Setup completed successfully!"
     }
 }

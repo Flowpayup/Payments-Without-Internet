@@ -78,19 +78,6 @@ class PermissionManager(private val activity: Activity) {
         return isPermissionGranted(Manifest.permission.CAMERA)
     }
 
-    fun requestCameraPermission() {
-        if (!hasCameraPermission()) {
-            Log.d(TAG, "Requesting camera permission")
-            ActivityCompat.requestPermissions(
-                activity,
-                arrayOf(Manifest.permission.CAMERA),
-                PermissionConstants.CAMERA_PERMISSION_REQ_CODE
-            )
-        } else {
-            Log.d(TAG, "Camera permission already granted")
-        }
-    }
-    
     /**
      * Checks if overlay permission is granted
      */
@@ -102,32 +89,6 @@ class PermissionManager(private val activity: Activity) {
      * Alias for readability in some call sites
      */
     fun hasOverlayPermission(): Boolean = checkOverlayPermission()
-    
-    /**
-     * Requests all required permissions using native Android dialogs
-     */
-    fun requestRequiredPermissions() {
-        val permissionsNeeded = mutableListOf<String>()
-        
-        PermissionConstants.REQUIRED_PERMISSIONS.forEach { permission ->
-            if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(permission)
-            }
-        }
-        
-        if (permissionsNeeded.isNotEmpty()) {
-            Log.d(TAG, "Requesting permissions: ${permissionsNeeded.joinToString()}")
-            // Use native Android permission request - no custom dialog
-            ActivityCompat.requestPermissions(
-                activity,
-                permissionsNeeded.toTypedArray(),
-                PermissionConstants.PERMISSIONS_REQUEST_CODE
-            )
-        } else {
-            Log.d(TAG, "All permissions already granted")
-        }
-    }
-    
     
     /**
      * Requests overlay permission
@@ -204,19 +165,6 @@ class PermissionManager(private val activity: Activity) {
     }
     
     /**
-     * Gets permission status summary
-     */
-    fun getPermissionStatusSummary(): String {
-        val granted = PermissionConstants.REQUIRED_PERMISSIONS.count { isPermissionGranted(it) }
-        val total = PermissionConstants.REQUIRED_PERMISSIONS.size
-        val overlayGranted = checkOverlayPermission()
-        
-        return "Permissions: $granted/$total granted, Overlay: ${if (overlayGranted) "Yes" else "No"}"
-    }
-    
-    
-    
-    /**
      * Checks if overlay permission is available for services
      * This replaces inline checks in USSDOverlayService and UssdSetupOverlayService
      */
@@ -233,9 +181,6 @@ class PermissionManager(private val activity: Activity) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    /** Alias with consistent naming */
-    fun hasSmsPermissions(): Boolean = checkSMSPermissions()
-
     /**
      * Requests RECEIVE_SMS permission at runtime.
      */
@@ -248,15 +193,6 @@ class PermissionManager(private val activity: Activity) {
         )
     }
 
-    /** Returns SMS permission status */
-    fun getSMSPermissionStatus(): String {
-        val enabled = checkSMSPermissions()
-        return "SMS: ${if (enabled) "✅ Granted" else "❌ Denied"}"
-    }
-
-    /** SMS permission is required for payment detection */
-    fun areSMSPermissionsCritical(): Boolean = true
-    
     /**
      * Checks if contact permission is granted
      */

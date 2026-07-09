@@ -297,27 +297,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Custom QR Frame Icon - Bracket-style scan frame
-@Composable
-fun QRFrameIcon(
-    modifier: Modifier = Modifier,
-    tint: Color = Color.White
-) {
-    Canvas(modifier = modifier) {
-        val strokeWidth = 4.dp.toPx()
-        val cornerLength = size.width * 0.25f
-
-        drawLine(tint, Offset(0f, cornerLength), Offset(0f, 0f), strokeWidth, cap = StrokeCap.Round)
-        drawLine(tint, Offset(0f, 0f), Offset(cornerLength, 0f), strokeWidth, cap = StrokeCap.Round)
-        drawLine(tint, Offset(size.width - cornerLength, 0f), Offset(size.width, 0f), strokeWidth, cap = StrokeCap.Round)
-        drawLine(tint, Offset(size.width, 0f), Offset(size.width, cornerLength), strokeWidth, cap = StrokeCap.Round)
-        drawLine(tint, Offset(0f, size.height - cornerLength), Offset(0f, size.height), strokeWidth, cap = StrokeCap.Round)
-        drawLine(tint, Offset(0f, size.height), Offset(cornerLength, size.height), strokeWidth, cap = StrokeCap.Round)
-        drawLine(tint, Offset(size.width - cornerLength, size.height), Offset(size.width, size.height), strokeWidth, cap = StrokeCap.Round)
-        drawLine(tint, Offset(size.width, size.height - cornerLength), Offset(size.width, size.height), strokeWidth, cap = StrokeCap.Round)
-    }
-}
-
 // Payment Action Buttons - QR scan + Pay Contact
 @Composable
 fun PaymentActionButtons(
@@ -1018,13 +997,6 @@ fun MainScreen(
             }
         }
     }
-}
-
-fun isNotificationListenerEnabled(context: Context): Boolean {
-    val flat = Settings.Secure.getString(
-        context.contentResolver, "enabled_notification_listeners"
-    )
-    return flat?.contains(context.packageName) == true
 }
 
 @Composable
