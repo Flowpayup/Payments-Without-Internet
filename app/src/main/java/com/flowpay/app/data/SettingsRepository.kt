@@ -21,7 +21,6 @@ class SettingsRepository(private val context: Context) {
     
     data class SavedSettings(
         val bankId: String = "hdfc",
-        val upiServiceNumber: String = "08045163666",
         val ussdTimeout: Int = 30,
         val smsDetectionEnabled: Boolean = true,
         val overlayEnabled: Boolean = true,
@@ -34,7 +33,6 @@ class SettingsRepository(private val context: Context) {
     fun saveSettings(settings: SavedSettings) {
         prefs.edit {
             putString("bank_id", settings.bankId)
-            putString("upi_service_number", settings.upiServiceNumber)
             putInt("ussd_timeout", settings.ussdTimeout)
             putBoolean("sms_detection_enabled", settings.smsDetectionEnabled)
             putBoolean("overlay_enabled", settings.overlayEnabled)
@@ -49,7 +47,6 @@ class SettingsRepository(private val context: Context) {
     private fun loadSettings(): SavedSettings {
         return SavedSettings(
             bankId = prefs.getString("bank_id", "hdfc") ?: "hdfc",
-            upiServiceNumber = prefs.getString("upi_service_number", "08045163666") ?: "08045163666",
             ussdTimeout = prefs.getInt("ussd_timeout", 30),
             smsDetectionEnabled = prefs.getBoolean("sms_detection_enabled", true),
             overlayEnabled = prefs.getBoolean("overlay_enabled", true),

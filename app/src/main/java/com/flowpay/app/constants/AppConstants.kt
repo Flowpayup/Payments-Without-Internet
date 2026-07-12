@@ -22,7 +22,6 @@ object AppConstants {
 
     // SharedPreferences keys
     const val PREFS_NAME = "FlowpayPrefs"
-    const val KEY_UPI_SERVICE_NUMBER = "upi_service_number"
     const val KEY_SETUP_COMPLETED = "setup_completed"
     const val KEY_TEST_COMPLETED = "test_configuration_completed"
     const val KEY_SELECTED_BANK = "selected_bank"

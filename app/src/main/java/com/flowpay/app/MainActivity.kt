@@ -48,6 +48,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PermContactCalendar
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
@@ -103,6 +104,7 @@ import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.data.PaymentDetails
 import com.flowpay.app.data.PaymentStatus
+import com.flowpay.app.data.TestResultsManager
 import com.flowpay.app.helpers.MainActivityHelper
 import com.flowpay.app.managers.PermissionManager
 import com.flowpay.app.ui.activities.SettingsActivity
@@ -151,6 +153,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setTheme(R.style.Theme_Flowpay)
+
+        // Draw edge-to-edge so Compose's statusBarsPadding()/navigationBarsPadding()
+        // are the single source of inset padding. The theme previously also set
+        // android:fitsSystemWindows=true, which made the decor pad the content as
+        // well — a double inset that, depending on inset-dispatch timing, showed
+        // intermittent black bars at the top and bottom.
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // Black system bars from the first frame
         window.statusBarColor = android.graphics.Color.BLACK
@@ -302,6 +311,7 @@ class MainActivity : ComponentActivity() {
 fun PaymentActionButtons(
     onQRScanClick: () -> Unit,
     onPayContactClick: () -> Unit,
+    isUpi123Ready: Boolean,
     isScanning: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -421,7 +431,9 @@ fun PaymentActionButtons(
             )
         }
 
-        // Pay Contact Button
+        // Pay Contact Button — inactive until the UPI 123 IVR test has
+        // passed; in that state it prompts for setup and tapping it opens
+        // the *99# / UPI 123 test screen.
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -430,21 +442,29 @@ fun PaymentActionButtons(
                 modifier = Modifier
                     .size(70.dp)
                     .shadow(
-                        elevation = 12.dp,
+                        elevation = if (isUpi123Ready) 12.dp else 0.dp,
                         shape = RoundedCornerShape(20.dp),
                         ambientColor = LocalFlowpayAccentTheme.current.headerGradientStart.copy(alpha = 0.3f),
                         spotColor = LocalFlowpayAccentTheme.current.headerGradientEnd.copy(alpha = 0.4f)
                     )
                     .scale(payButtonScale)
                     .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                LocalFlowpayAccentTheme.current.headerGradientStart,
-                                LocalFlowpayAccentTheme.current.headerGradientEnd
-                            ),
-                            start = Offset(0f, 0f),
-                            end = Offset(1f, 1f)
-                        ),
+                        brush = if (isUpi123Ready) {
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    LocalFlowpayAccentTheme.current.headerGradientStart,
+                                    LocalFlowpayAccentTheme.current.headerGradientEnd
+                                ),
+                                start = Offset(0f, 0f),
+                                end = Offset(1f, 1f)
+                            )
+                        } else {
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFF2A2A2A), Color(0xFF1E1E1E)),
+                                start = Offset(0f, 0f),
+                                end = Offset(1f, 1f)
+                            )
+                        },
                         shape = RoundedCornerShape(20.dp)
                     )
                     .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
@@ -461,18 +481,18 @@ fun PaymentActionButtons(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Pay Contact",
-                    tint = Color.White,
+                    imageVector = if (isUpi123Ready) Icons.Default.Person else Icons.Default.Lock,
+                    contentDescription = if (isUpi123Ready) "Pay Contact" else "Set up UPI 123 IVR",
+                    tint = if (isUpi123Ready) Color.White else Color.White.copy(alpha = 0.5f),
                     modifier = Modifier.size(32.dp)
                 )
             }
 
             Text(
-                text = "Pay Contact",
+                text = if (isUpi123Ready) "Pay Contact" else "Set up UPI 123 IVR",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White,
+                color = if (isUpi123Ready) Color.White else Color(0xFF888888),
                 textAlign = TextAlign.Center,
                 style = TextStyle(
                     shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 1f), 3f)
@@ -496,10 +516,19 @@ fun MainScreen(
         mutableStateOf(sharedPreferences.getString(AppConstants.KEY_SELECTED_BANK, "hdfc") ?: "hdfc")
     }
 
+    // Pay Contact dials the UPI 123 IVR, so it stays inactive until the
+    // UPI 123 configuration test has passed (re-checked on every resume so
+    // completing the test activates it immediately).
+    val testResultsManager = remember { TestResultsManager(context) }
+    var isUpi123Ready by remember {
+        mutableStateOf(testResultsManager.getTestResults()?.upi123Enabled == true)
+    }
+
     LaunchedEffect(lifecycle) {
         snapshotFlow { lifecycle.currentState }.collect { state ->
             if (state == Lifecycle.State.RESUMED) {
                 savedBank = sharedPreferences.getString(AppConstants.KEY_SELECTED_BANK, "hdfc") ?: "hdfc"
+                isUpi123Ready = testResultsManager.getTestResults()?.upi123Enabled == true
             }
         }
     }
@@ -748,13 +777,29 @@ fun MainScreen(
                         val hasSms = ContextCompat.checkSelfPermission(
                             context, Manifest.permission.RECEIVE_SMS
                         ) == PackageManager.PERMISSION_GRANTED
-                        if (!hasSms) {
-                            pendingSmsAction = { showPayContact = true }
-                            showSmsPermissionDialog = true
-                        } else {
-                            showPayContact = true
+                        when {
+                            // UPI 123 IVR not verified yet — the button is in its
+                            // "Set up UPI 123 IVR" state; take the user to the
+                            // *99# / UPI 123 test screen instead of the pay dialog.
+                            !isUpi123Ready -> {
+                                context.startActivity(
+                                    Intent(context, TestConfigurationActivity::class.java)
+                                )
+                            }
+                            // Overlay permission is required before the payment
+                            // call can show its UI, so ask now — not after the
+                            // user has filled in the transfer details.
+                            !PermissionManager.canDrawOverlays(context) -> {
+                                showOverlayPermissionDialog = true
+                            }
+                            !hasSms -> {
+                                pendingSmsAction = { showPayContact = true }
+                                showSmsPermissionDialog = true
+                            }
+                            else -> showPayContact = true
                         }
                     },
+                    isUpi123Ready = isUpi123Ready,
                     isScanning = isScanning
                 )
 
@@ -979,12 +1024,15 @@ fun MainScreen(
                         hostActivity?.let { activity ->
                             MainActivity.onSmsPermissionGrantedCallback = pendingSmsAction
                             pendingSmsAction = null
+                            // Only RECEIVE_SMS is declared in the manifest and
+                            // needed (the app never reads the inbox). Requesting
+                            // the undeclared READ_SMS here made Android return it
+                            // as denied, so the "all granted" check failed and a
+                            // "permission still required" message showed even
+                            // though RECEIVE_SMS was actually granted.
                             androidx.core.app.ActivityCompat.requestPermissions(
                                 activity,
-                                arrayOf(
-                                    Manifest.permission.RECEIVE_SMS,
-                                    Manifest.permission.READ_SMS
-                                ),
+                                arrayOf(Manifest.permission.RECEIVE_SMS),
                                 PermissionConstants.SMS_PERMISSION_REQUEST_CODE
                             )
                         }

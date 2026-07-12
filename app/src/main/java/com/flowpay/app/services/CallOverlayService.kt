@@ -186,8 +186,7 @@ class CallOverlayService : Service() {
     private var serviceStartTime = 0L
     private var pendingPhoneNumber = ""
     private var pendingAmount = ""
-    private var upiServiceNumber = ""
-    
+
     // SMS detection handled by new system
 
     // Call/payment state observation and dialog management
@@ -571,11 +570,6 @@ class CallOverlayService : Service() {
             pendingPhoneNumber = phoneNumber
             pendingAmount = amount
             
-            // Get UPI service number from shared preferences or use default
-            val prefs = getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
-            upiServiceNumber = prefs.getString("upi_service_number", "08045163666") ?: "08045163666"
-            
-                                    
             // Start timeout timer - overlay will be hidden after 40 seconds if no call detected
             startTimeoutTimer()
             

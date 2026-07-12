@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.R
 import com.flowpay.app.SetupActivity
+import com.flowpay.app.TestConfigurationActivity
 import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
@@ -99,13 +100,11 @@ fun FlowpaySettingsTheme(content: @Composable () -> Unit) {
 // Data Classes
 data class Bank(
     val id: String,
-    val name: String,
-    val upiNumber: String
+    val name: String
 )
 
 data class SettingsState(
     val selectedBank: Bank = banks.first(),
-    val upiServiceNumber: String = "08045163666",
     val ussdTimeout: Int = 30,
     val smsDetectionEnabled: Boolean = true,
     val overlayEnabled: Boolean = true,
@@ -117,16 +116,16 @@ data class SettingsState(
 
 // Bank Data
 val banks = listOf(
-    Bank("hdfc", "HDFC Bank", "08045163666"),
-    Bank("sbi", "State Bank of India", "09223766666"),
-    Bank("icici", "ICICI Bank", "09222208888"),
-    Bank("axis", "Axis Bank", "09225892258"),
-    Bank("kotak", "Kotak Mahindra Bank", "09227663676"),
-    Bank("pnb", "Punjab National Bank", "09223011311"),
-    Bank("bob", "Bank of Baroda", "09223268686"),
-    Bank("yes", "Yes Bank", "09223920000"),
-    Bank("idbi", "IDBI Bank", "09212993399"),
-    Bank("canara", "Canara Bank", "09015483333")
+    Bank("hdfc", "HDFC Bank"),
+    Bank("sbi", "State Bank of India"),
+    Bank("icici", "ICICI Bank"),
+    Bank("axis", "Axis Bank"),
+    Bank("kotak", "Kotak Mahindra Bank"),
+    Bank("pnb", "Punjab National Bank"),
+    Bank("bob", "Bank of Baroda"),
+    Bank("yes", "Yes Bank"),
+    Bank("idbi", "IDBI Bank"),
+    Bank("canara", "Canara Bank")
 )
 
 // ViewModel
@@ -135,10 +134,7 @@ class SettingsViewModel : androidx.lifecycle.ViewModel() {
         private set
 
     fun updateBank(bank: Bank) {
-        state = state.copy(
-            selectedBank = bank,
-            upiServiceNumber = bank.upiNumber
-        )
+        state = state.copy(selectedBank = bank)
     }
 
     fun toggleSmsDetection() {
@@ -170,7 +166,6 @@ class SettingsViewModel : androidx.lifecycle.ViewModel() {
         val bank = banks.find { it.id == saved.bankId } ?: banks.first()
         state = state.copy(
             selectedBank = bank,
-            upiServiceNumber = bank.upiNumber,
             ussdTimeout = saved.ussdTimeout,
             smsDetectionEnabled = saved.smsDetectionEnabled,
             overlayEnabled = saved.overlayEnabled,
@@ -283,33 +278,17 @@ fun SettingsScreen(
                             value = primarySim,
                             onClick = { showSimPicker = true }
                         )
-                        // Per-app language (Android 13+). The app ships English
-                        // and Hindi via localeConfig; this deep-links to the
-                        // system per-app language screen.
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                            GroupDivider()
-                            SettingsRow(
-                                icon = Icons.Default.Language,
-                                title = "Language / भाषा",
-                                value = java.util.Locale.getDefault().displayLanguage,
-                                onClick = {
-                                    try {
-                                        context.startActivity(
-                                            android.content.Intent(
-                                                android.provider.Settings.ACTION_APP_LOCALE_SETTINGS,
-                                                android.net.Uri.fromParts("package", context.packageName, null)
-                                            )
-                                        )
-                                    } catch (e: Exception) {
-                                        android.widget.Toast.makeText(
-                                            context,
-                                            "Language settings unavailable on this device",
-                                            android.widget.Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-                            )
-                        }
+                        GroupDivider()
+                        SettingsRow(
+                            icon = Icons.Default.Dialpad,
+                            title = "Payment Setup",
+                            value = "*99# / UPI 123",
+                            onClick = {
+                                context.startActivity(
+                                    Intent(context, TestConfigurationActivity::class.java)
+                                )
+                            }
+                        )
                     }
                 }
 
@@ -409,10 +388,7 @@ fun SettingsScreen(
             onBankSelected = { bank ->
                 viewModel.updateBank(bank)
                 settingsRepository?.saveSettings(
-                    settingsRepository.settingsFlow.value.copy(
-                        bankId = bank.id,
-                        upiServiceNumber = bank.upiNumber
-                    )
+                    settingsRepository.settingsFlow.value.copy(bankId = bank.id)
                 )
                 // Also sync to FlowpayPrefs so the main screen picks it up
                 context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)

@@ -121,6 +121,8 @@ class TestConfigurationActivity : ComponentActivity() {
         testHelper.initialize()
 
         setTheme(R.style.Theme_Flowpay)
+        // Edge-to-edge: Compose insets are the single source of padding (see MainActivity).
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
                 FlowpayTheme {
@@ -253,12 +255,12 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
             // Gradient Header Card
             TestHeaderCard()
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Test Instructions
             TestInstructions()
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Test Buttons Container
             Column(
@@ -439,7 +441,7 @@ fun TestHeaderCard() {
                 Column {
                     Text(
                         text = "Test Configuration",
-                        fontSize = 26.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         letterSpacing = 0.3.sp
@@ -495,8 +497,8 @@ fun TestInstructions() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .background(Color(0xFF1A1A1A), RoundedCornerShape(16.dp))
-            .padding(20.dp)
+            .background(Color(0xFF0A0A0A), RoundedCornerShape(20.dp))
+            .padding(16.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -504,19 +506,19 @@ fun TestInstructions() {
         ) {
             Text(
                 text = "Configure Payment Methods",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color.White,
                 letterSpacing = 0.3.sp
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = "We'll test both scanning and manual payment methods to ensure everything works smoothly",
-                fontSize = 15.sp,
+                fontSize = 13.sp,
                 color = Color(0xFF888888),
-                lineHeight = 22.sp,
+                lineHeight = 19.sp,
                 textAlign = TextAlign.Center
             )
         }
@@ -550,21 +552,21 @@ fun TestButton(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 22.dp),
+                .padding(horizontal = 16.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Icon circle — bigger
+            // Icon circle
             Box(
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(44.dp)
                     .background(
                         color = iconBgColor,
                         shape = CircleShape
@@ -575,7 +577,7 @@ fun TestButton(
                     imageVector = if (code == "*99#") UssdIcon else UpiIcon,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
 
@@ -589,38 +591,38 @@ fun TestButton(
                 ) {
                     Text(
                         text = title,
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = if (isUnsupported) Color(0xFFFF9800) else Color.White
                     )
                     Text(
                         text = code,
-                        fontSize = 20.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isUnsupported) Color(0xFFFF9800) else accent.accent,
                         fontFamily = FontFamily.Monospace
                     )
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(3.dp))
 
                 Text(
                     text = description,
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     color = if (isUnsupported) Color(0xFFFF9800).copy(alpha = 0.8f) else Color(0xFF888888),
-                    lineHeight = 20.sp
+                    lineHeight = 18.sp
                 )
             }
 
-            // Status indicator — bigger
+            // Status indicator
             Box(
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(28.dp),
                 contentAlignment = Alignment.Center
             ) {
                 when {
                     isTesting -> {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(22.dp),
                             color = accent.primary,
                             strokeWidth = 2.5.dp,
                             trackColor = Color(0xFF333333)
@@ -629,13 +631,13 @@ fun TestButton(
                     isUnsupported -> {
                         Box(
                             modifier = Modifier
-                                .size(28.dp)
+                                .size(24.dp)
                                 .background(Color(0xFFFF9800), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "!",
-                                fontSize = 16.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
@@ -644,7 +646,7 @@ fun TestButton(
                     isCompleted -> {
                         Box(
                             modifier = Modifier
-                                .size(28.dp)
+                                .size(24.dp)
                                 .background(Color(0xFF4CAF50), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
@@ -652,14 +654,14 @@ fun TestButton(
                                 imageVector = CheckIcon,
                                 contentDescription = "Completed",
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     }
                     else -> {
                         Box(
                             modifier = Modifier
-                                .size(28.dp)
+                                .size(24.dp)
                                 .border(1.5.dp, Color(0xFF333333), CircleShape)
                         )
                     }

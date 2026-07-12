@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun UssdProgressDialog(
@@ -195,24 +196,56 @@ private fun UssdProgressDialogContent(
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    // After a short delay, offer two shortcuts: confirm it's
+                    // already set up, or report it isn't working. Delayed so
+                    // neither tempts an action before USSD has had time to
+                    // respond (mirrors the UPI 123 dialog's delayed shortcut).
+                    // Neither touches the ongoing call.
+                    var showShortcuts by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) {
+                        delay(3000)
+                        showShortcuts = true
+                    }
+                    if (showShortcuts) {
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    OutlinedButton(
-                        onClick = onDoesNotWork,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(15.dp),
-                        border = BorderStroke(1.dp, Color(0xFF444444)),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFFBBBBBB)
-                        )
-                    ) {
-                        Text(
-                            text = "It doesn't work for me",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        OutlinedButton(
+                            onClick = onConfigured,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(15.dp),
+                            border = BorderStroke(1.dp, LocalFlowpayAccentTheme.current.accent),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = LocalFlowpayAccentTheme.current.accent
+                            )
+                        ) {
+                            Text(
+                                text = "I've already set up *99#",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = onDoesNotWork,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(15.dp),
+                            border = BorderStroke(1.dp, Color(0xFF444444)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFFBBBBBB)
+                            )
+                        ) {
+                            Text(
+                                text = "It doesn't work for me",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
             }

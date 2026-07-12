@@ -10,6 +10,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.flowpay.app.MainActivity
+import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.data.TestResults
 import com.flowpay.app.data.TestResultsManager
 import com.flowpay.app.managers.CallManager
@@ -367,7 +368,7 @@ class TestConfigurationHelper(
             // Initiate UPI123 call - simple flow
             callManager.initiateCall(
                 context = context,
-                phoneNumber = "08045163666", // Use the specific number for UPI123
+                phoneNumber = AppConstants.DEFAULT_UPI_SERVICE_NUMBER,
                 callType = CallType.UPI123,
                 onCallEnded = { type ->
                     if (type == CallType.UPI123 && upi123Testing) {
