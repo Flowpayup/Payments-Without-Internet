@@ -75,6 +75,10 @@ android {
         compose true
         buildConfig true
     }
+    // Exported Room schemas as androidTest assets so MigrationTestHelper can load them
+    sourceSets {
+        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
     packaging {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
@@ -83,10 +87,6 @@ android {
     // Baseline freezes pre-existing lint issues; new issues will still fail builds.
     lint {
         disable 'NullSafeMutableLiveData'
-        // Hindi coverage is deliberately partial: every payment-critical
-        // string is translated, decorative ones fall back to English until
-        // translated. Keep visible as warnings, not build-breakers.
-        warning 'MissingTranslation'
         baseline = file("lint-baseline.xml")
     }
     testOptions {
@@ -144,5 +144,6 @@ dependencies {
     // Real android.net.Uri etc. in JVM tests (QRCodeParser)
     testImplementation 'org.robolectric:robolectric:4.14.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
     androidTestImplementation 'androidx.room:room-testing:2.6.1'
 }

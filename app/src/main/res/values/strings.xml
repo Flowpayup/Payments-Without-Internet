@@ -12,8 +12,8 @@
     <string name="secondary_sim">Secondary SIM</string>
     <string name="complete_setup">Complete Setup</string>
     <string name="disclaimer">Disclaimer</string>
-    <string name="disclaimer_summary">Flowpay only triggers your bank\'s *99# / UPI 123 flow — tap to read the full disclaimer.</string>
-    <string name="disclaimer_text">Flowpay is an open-source app. It does not process payments itself — it only triggers your bank\'s *99# (UPI 123) dialer flow on your behalf. All transactions happen between you, your bank, and your phone. Flowpay accepts no responsibility whatsoever for any transaction outcome. By accepting, you acknowledge this.</string>
+    <string name="disclaimer_summary">Flowpay never touches your money or your UPI PIN — it only dials your bank\'s *99# / UPI 123 flow for you. Tap to read the full disclaimer.</string>
+    <string name="disclaimer_text">Flowpay is a free, open-source app. It is not a bank, wallet, or payment processor, and it never holds, moves, or has access to your money.\n\nWhat it does: it automates dialling your bank\'s *99# / UPI 123 (UPI 123PAY) menu for you. Every payment is authorised and processed directly by you, your bank, and NPCI over your mobile network — exactly as if you had dialled it yourself.\n\nYour UPI PIN never touches Flowpay. The app does not use Android accessibility services, screen reading, or any form of input capture. Your PIN is entered only within your bank\'s own *99# / IVR flow — Flowpay cannot see it, intercept it, or store it.\n\nYour data stays on your device. Flowpay reads incoming bank SMS only while a payment is in progress, to detect the confirmation. It never uploads your messages, contacts, or transaction history anywhere.\n\nFlowpay is provided \"as is\", without warranty of any kind, and is not affiliated with or endorsed by NPCI or any bank. You use it at your own risk and remain solely responsible for every transaction you make.\n\nBy continuing, you confirm that you have read and understood this.</string>
     
     <!-- Bank Names -->
     

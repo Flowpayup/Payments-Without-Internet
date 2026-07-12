@@ -2,8 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="flowpay_blue">#FF2196F3</color>
-    <color name="flowpay_blue_dark">#FF1976D2</color>
     <color name="flowpay_green">#FF4CAF50</color>
     
     <!-- Setup Screen Colors -->
@@ -20,9 +18,5 @@
     <color name="warning_orange">#FFFF9800</color>
 
     <!-- General UI Colors -->
-    <color name="background_primary">#FFFFFFFF</color>
     <color name="background_secondary">#FFF5F5F5</color>
-    <color name="text_primary">#FF212121</color>
-    <color name="text_secondary">#FF666666</color>
-    <color name="accent_primary">#FF2196F3</color>
 </resources>

@@ -51,35 +51,7 @@ class CallManager(private val context: Context) {
     private val listenerLock = Any()
 
     private val isUSSDDialPending = AtomicBoolean(false)
-    
-    private val prefs = context.getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE)
-    
-    /**
-     * Gets the configured UPI service number or default
-     */
-    private fun getUpiServiceNumber(): String {
-        return prefs.getString(AppConstants.KEY_UPI_SERVICE_NUMBER, AppConstants.DEFAULT_UPI_SERVICE_NUMBER) ?: AppConstants.DEFAULT_UPI_SERVICE_NUMBER
-    }
-    
-    /**
-     * Sets the UPI service number with validation
-     */
-    fun setUpiServiceNumber(serviceNumber: String) {
-        val sanitizedNumber = sanitizePhoneNumber(serviceNumber)
-        if (isValidPhoneNumber(sanitizedNumber)) {
-            prefs.edit().putString(AppConstants.KEY_UPI_SERVICE_NUMBER, sanitizedNumber).apply()
-            Log.d(TAG, "UPI service number updated to: $sanitizedNumber")
-        } else {
-            Log.e(TAG, "Invalid UPI service number: $serviceNumber")
-            throw IllegalArgumentException("Invalid UPI service number format")
-        }
-    }
-    
-    /**
-     * Gets the current UPI service number
-     */
-    fun getCurrentUpiServiceNumber(): String = getUpiServiceNumber()
-    
+
     /**
      * Thread-safe callback management
      */
@@ -310,19 +282,12 @@ class CallManager(private val context: Context) {
      * Validation and construction live in the pure, unit-tested Upi123CallStringBuilder.
      */
     fun constructUPI123CallString(phoneNumber: String, amount: String): String {
-        return when (val result = Upi123CallStringBuilder.build(getUpiServiceNumber(), phoneNumber, amount)) {
+        return when (val result = Upi123CallStringBuilder.build(AppConstants.DEFAULT_UPI_SERVICE_NUMBER, phoneNumber, amount)) {
             is Upi123CallStringBuilder.Result.Valid -> result.callString
             is Upi123CallStringBuilder.Result.Invalid -> throw IllegalArgumentException(result.reason)
         }
     }
     
-    
-    /**
-     * Sanitizes phone number input (digits only)
-     */
-    private fun sanitizePhoneNumber(input: String): String {
-        return input.replace(Regex("[^0-9]"), "")
-    }
     
     /**
      * Sanitizes amount input (digits and single decimal point)
@@ -344,7 +309,7 @@ class CallManager(private val context: Context) {
     fun initiateUPI123Call(phoneNumber: String, amount: String): Boolean {
         return try {
             val result = Upi123CallStringBuilder.build(
-                getUpiServiceNumber(),
+                AppConstants.DEFAULT_UPI_SERVICE_NUMBER,
                 phoneNumber.orEmpty(),
                 amount.orEmpty()
             )
@@ -710,14 +675,6 @@ class CallManager(private val context: Context) {
         } catch (e: NumberFormatException) {
             false
         }
-    }
-    
-    /**
-     * Validates UPI service number format
-     */
-    fun isValidUpiServiceNumber(serviceNumber: String): Boolean {
-        if (serviceNumber.isNullOrBlank()) return false
-        return serviceNumber.matches(Regex("^[0-9]{10,12}$"))
     }
     
     /**

@@ -11,10 +11,6 @@
     </style>
 
     <style name="Theme.Flowpay" parent="Base.Theme.Flowpay">
-        <!-- Accent theme attributes (Theme Blue) -->
-        <item name="flowpayColorPrimary">@color/flowpay_blue</item>
-        <item name="flowpayColorPrimaryDark">@color/flowpay_blue_dark</item>
-        <item name="flowpayColorAccent">@color/accent_primary</item>
         <!-- Complete blue/white blocking - no blue or white anywhere -->
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:colorBackground">@android:color/black</item>
@@ -27,7 +23,9 @@
         <item name="android:navigationBarColor">#FF000000</item>
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowTranslucentNavigation">false</item>
-        <item name="android:fitsSystemWindows">true</item>
+        <!-- Insets are handled edge-to-edge in Compose (statusBarsPadding /
+             navigationBarsPadding). fitsSystemWindows here would double-inset
+             the content and cause intermittent black bars. -->
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="28">shortEdges</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowActionBar">false</item>

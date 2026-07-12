@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.delay
 
 @Composable
 fun Upi123ProgressDialog(
@@ -177,9 +178,9 @@ private fun Upi123ProgressDialogContent(
                         color = Color(0xFF4CAF50),
                         trackColor = Color(0xFF333333)
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Text(
                         text = "Configuring UPI123...",
                         fontSize = 14.sp,
@@ -187,6 +188,37 @@ private fun Upi123ProgressDialogContent(
                         color = Color(0xFF666666).copy(alpha = alpha),
                         textAlign = TextAlign.Center
                     )
+
+                    // Shortcut for users who already have UPI 123 set up: after a
+                    // short delay, offer a way to confirm without waiting for the
+                    // whole call flow. This only records the test result — it never
+                    // touches the ongoing IVR call.
+                    var showAlreadySetUp by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) {
+                        delay(3000)
+                        showAlreadySetUp = true
+                    }
+                    if (showAlreadySetUp) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        OutlinedButton(
+                            onClick = onConfigured,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(15.dp),
+                            border = BorderStroke(1.dp, Color(0xFF4CAF50)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFF4CAF50)
+                            )
+                        ) {
+                            Text(
+                                text = "I've already set up UPI 123",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             }
 

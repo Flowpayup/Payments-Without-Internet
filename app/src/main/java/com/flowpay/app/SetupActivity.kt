@@ -67,6 +67,8 @@ class SetupActivity : ComponentActivity() {
         })
 
         setTheme(R.style.Theme_Flowpay)
+        // Edge-to-edge: Compose insets are the single source of padding (see MainActivity).
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
                 FlowpayTheme {
@@ -101,17 +103,19 @@ fun SetupScreen(setupHelper: SetupHelper) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .widthIn(max = 420.dp)
+                .align(Alignment.Center)
                 .verticalScroll(rememberScrollState())
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Header Card
             HeaderCard()
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Bank Selection Section
             BankSelectionSection(
@@ -120,7 +124,7 @@ fun SetupScreen(setupHelper: SetupHelper) {
                 onBankSelected = { selectedBank = it }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // SIM Card Selection Section
             SimCardSelectionSection(
@@ -134,7 +138,7 @@ fun SetupScreen(setupHelper: SetupHelper) {
                 secondarySimOptions = secondarySimOptions
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Disclaimer Section
             DisclaimerSection(
@@ -142,7 +146,7 @@ fun SetupScreen(setupHelper: SetupHelper) {
                 onAcceptedChange = { disclaimerAccepted = it }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // All form fields must be answered before the user can continue
             val isFormComplete = selectedBank.isNotBlank() &&
@@ -198,68 +202,129 @@ fun HeaderCard() {
                     shape = headerShape
                 )
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 28.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(24.dp)
             ) {
-                // Icon
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(
-                            color = Color.White.copy(alpha = 0.22f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountBalanceWallet,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Icon in frosted circle
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                color = Color.White.copy(alpha = 0.22f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountBalanceWallet,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column {
+                        Text(
+                            text = stringResource(R.string.setup_flowpay),
+                            style = TextStyle(
+                                color = Color.White,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.3.sp,
+                                shadow = Shadow(
+                                    color = Color.Black.copy(alpha = 0.15f),
+                                    offset = Offset(0f, 2f),
+                                    blurRadius = 6f
+                                )
+                            )
+                        )
+                        Text(
+                            text = "Step 1 of 3",
+                            fontSize = 14.sp,
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                Column {
-                    Text(
-                        text = stringResource(R.string.setup_flowpay),
-                        style = TextStyle(
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp,
-                            shadow = Shadow(
-                                color = Color.Black.copy(alpha = 0.15f),
-                                offset = Offset(0f, 2f),
-                                blurRadius = 6f
-                            )
-                        )
-                    )
+                Text(
+                    text = stringResource(R.string.configure_upi_payments),
+                    fontSize = 15.sp,
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 22.sp
+                )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                    Text(
-                        text = stringResource(R.string.configure_upi_payments),
-                        style = TextStyle(
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Color.White.copy(alpha = 0.95f),
-                            letterSpacing = 0.2.sp,
-                            shadow = Shadow(
-                                color = Color.Black.copy(alpha = 0.1f),
-                                offset = Offset(0f, 1f),
-                                blurRadius = 3f
-                            )
-                        )
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ProgressDot(isActive = true)
+                    ProgressDot(isActive = false)
+                    ProgressDot(isActive = false)
                 }
             }
         }
     }
+}
+
+/**
+ * Shared section-header pattern from MainScreen/Settings: small accent-tinted
+ * circle icon, 16sp title, 12sp gray subtitle.
+ */
+@Composable
+private fun SetupSectionHeader(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String
+) {
+    val accent = LocalFlowpayAccentTheme.current
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(accent.primary.copy(alpha = 0.12f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = accent.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = subtitle,
+                fontSize = 12.sp,
+                color = Color(0xFF888888)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SetupFieldLabel(text: String) {
+    Text(
+        text = text,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium,
+        color = Color(0xFF888888),
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -269,51 +334,21 @@ fun BankSelectionSection(
     selectedBank: String,
     onBankSelected: (String) -> Unit
 ) {
-    Column {
-        // Section Header
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = Icons.Default.AccountBalance,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.width(20.dp))
-
-            Text(
-                text = stringResource(R.string.bank_selection),
-                style = TextStyle(
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    letterSpacing = (-0.5).sp,
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = 0.6f),
-                        offset = Offset(0f, 1f),
-                        blurRadius = 3f
-                    )
-                )
-            )
-        }
-
-        Text(
-            text = stringResource(R.string.choose_primary_bank),
-            fontSize = 18.sp,
-            color = Color(0xFF888888),
-            modifier = Modifier.padding(start = 44.dp, top = 10.dp, bottom = 16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF0A0A0A), RoundedCornerShape(20.dp))
+            .padding(18.dp)
+    ) {
+        SetupSectionHeader(
+            icon = Icons.Default.AccountBalance,
+            title = stringResource(R.string.bank_selection),
+            subtitle = stringResource(R.string.choose_primary_bank)
         )
 
-        Text(
-            text = "Select Bank",
-            fontSize = 18.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier.padding(start = 44.dp, bottom = 8.dp)
-        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SetupFieldLabel("Select Bank")
 
         var expanded by remember { mutableStateOf(false) }
 
@@ -342,7 +377,7 @@ fun BankSelectionSection(
                     unfocusedTrailingIconColor = Color.White
                 ),
                 shape = RoundedCornerShape(12.dp),
-                textStyle = TextStyle(fontSize = 17.sp),
+                textStyle = TextStyle(fontSize = 15.sp),
             )
 
             ExposedDropdownMenu(
@@ -356,7 +391,7 @@ fun BankSelectionSection(
                             Text(
                                 label,
                                 color = Color.White,
-                                fontSize = 17.sp
+                                fontSize = 15.sp
                             )
                         },
                         onClick = {
@@ -385,51 +420,21 @@ fun SimCardSelectionSection(
 ) {
     val accent = LocalFlowpayAccentTheme.current
 
-    Column {
-        // Section Header
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = Icons.Default.SimCard,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.width(20.dp))
-
-            Text(
-                text = stringResource(R.string.sim_card_selection),
-                style = TextStyle(
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    letterSpacing = (-0.5).sp,
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = 0.6f),
-                        offset = Offset(0f, 1f),
-                        blurRadius = 3f
-                    )
-                )
-            )
-        }
-
-        Text(
-            text = stringResource(R.string.configure_sim_cards),
-            fontSize = 18.sp,
-            color = Color(0xFF888888),
-            modifier = Modifier.padding(start = 44.dp, top = 10.dp, bottom = 16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF0A0A0A), RoundedCornerShape(20.dp))
+            .padding(18.dp)
+    ) {
+        SetupSectionHeader(
+            icon = Icons.Default.SimCard,
+            title = stringResource(R.string.sim_card_selection),
+            subtitle = stringResource(R.string.configure_sim_cards)
         )
 
-        Text(
-            text = "Primary SIM",
-            fontSize = 18.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier.padding(start = 44.dp, bottom = 8.dp)
-        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SetupFieldLabel("Primary SIM")
 
         // Primary SIM Selection
         var primaryExpanded by remember { mutableStateOf(false) }
@@ -459,7 +464,7 @@ fun SimCardSelectionSection(
                     unfocusedTrailingIconColor = Color.White
                 ),
                 shape = RoundedCornerShape(12.dp),
-                textStyle = TextStyle(fontSize = 17.sp),
+                textStyle = TextStyle(fontSize = 15.sp),
             )
 
             ExposedDropdownMenu(
@@ -473,7 +478,7 @@ fun SimCardSelectionSection(
                             Text(
                                 label,
                                 color = Color.White,
-                                fontSize = 17.sp
+                                fontSize = 15.sp
                             )
                         },
                         onClick = {
@@ -521,57 +526,28 @@ fun SimCardSelectionSection(
                 }
             }
 
-            Spacer(modifier = Modifier.width(15.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             Text(
                 text = stringResource(R.string.enable_dual_sim),
-                fontSize = 18.sp,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
                 color = Color.White
             )
         }
 
         // Secondary SIM Section
         if (isDualSimEnabled) {
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             HorizontalDivider(
-                color = Color(0xFF333333),
-                thickness = 1.dp
+                color = Color(0xFF2A2A2A),
+                thickness = 0.5.dp
             )
 
-            Spacer(modifier = Modifier.height(25.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Secondary SIM Header
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.SimCard,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-
-                Spacer(modifier = Modifier.width(20.dp))
-
-                Text(
-                    text = stringResource(R.string.secondary_sim),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Light,
-                    color = Color.White
-                )
-            }
-
-            Spacer(modifier = Modifier.height(25.dp))
-
-            Text(
-                text = "Secondary SIM",
-                fontSize = 18.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(start = 44.dp, bottom = 12.dp)
-            )
+            SetupFieldLabel(stringResource(R.string.secondary_sim))
 
             // Secondary SIM Selection
             var secondaryExpanded by remember { mutableStateOf(false) }
@@ -601,7 +577,7 @@ fun SimCardSelectionSection(
                         unfocusedTrailingIconColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp),
-                    textStyle = TextStyle(fontSize = 17.sp),
+                    textStyle = TextStyle(fontSize = 15.sp),
                 )
 
                 ExposedDropdownMenu(
@@ -615,7 +591,7 @@ fun SimCardSelectionSection(
                                 Text(
                                     label,
                                     color = Color.White,
-                                    fontSize = 17.sp
+                                    fontSize = 15.sp
                                 )
                             },
                             onClick = {
@@ -639,51 +615,22 @@ fun DisclaimerSection(
     val accent = LocalFlowpayAccentTheme.current
     var isExpanded by remember { mutableStateOf(false) }
 
-    Column {
-        // Section Header
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Info,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF0A0A0A), RoundedCornerShape(20.dp))
+            .padding(18.dp)
+    ) {
+        SetupSectionHeader(
+            icon = Icons.Outlined.Info,
+            title = stringResource(R.string.disclaimer),
+            subtitle = "Please read before continuing"
+        )
 
-            Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
-            Text(
-                text = stringResource(R.string.disclaimer),
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = 0.6f),
-                        offset = Offset(0f, 1f),
-                        blurRadius = 3f
-                    )
-                )
-            )
-        }
-
-        // Disclaimer Card
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = Color(0xFF0A0A0A),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .border(
-                    width = 1.dp,
-                    color = Color(0xFF333333),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(16.dp)
-        ) {
+        // Disclaimer body
+        Box(modifier = Modifier.fillMaxWidth()) {
             Row(
                 verticalAlignment = Alignment.Top
             ) {
