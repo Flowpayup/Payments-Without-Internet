@@ -111,7 +111,9 @@ If you want to skim the code without running it, the build also works without an
 
 **Signed release build:** copy `keystore.properties.example` to `keystore.properties`, fill in your signing-key details, then run `./gradlew assembleRelease`. The `keystore.properties` file and any `*.jks`/`*.keystore` files are gitignored, so signing material is never committed. Without a keystore the release build still compiles, just unsigned.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions. See [SECURITY.md](SECURITY.md) for vulnerability disclosure.
+**Verify a build:** check any release APK against its signing certificate with `apksigner verify --print-certs <apk>` and compare the SHA-256 fingerprint with the one published alongside the release.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
 
 ## License
 
