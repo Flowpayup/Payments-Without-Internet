@@ -13,7 +13,7 @@ Thanks for your interest in contributing. This guide covers everything you need 
 
 ```bash
 git clone <repo-url>
-cd Flowpay_MVP_Final
+cd Flowpay_v1
 ```
 
 Create `local.properties` at the repo root (it is gitignored):
@@ -34,6 +34,14 @@ That single line is all the local configuration the build needs.
 ```
 
 JVM unit tests live in `app/src/test/` (`Upi123CallStringBuilderTest`, `PaymentSessionManagerTest`, `SmsParsingRegexTest`, `QRCodeParserTest`) and an instrumentation test in `app/src/androidTest/` (`MigrationTest`). CI runs `./gradlew test` on every push, so keep them green and add coverage for new logic where it makes sense.
+
+### Adding a bank SMS template
+
+The SMS parser is only as good as its corpus of real bank confirmation formats, and every bank's template is different — new samples are one of the most valuable contributions.
+
+1. Take a real confirmation SMS from your bank and **redact it**: replace account digits with `**1234`-style masks, real names with placeholders (`KIRANA STORE`, `Rahul Sharma`), and reference numbers with obviously fake ones (`123456789012`). Keep the exact wording, punctuation, and field order — that's what the parser matches on.
+2. Note the sender ID it arrived from (e.g. `VK-HDFCBK`) — DLT sender codes matter for bank detection.
+3. Add it as a test case next to the existing samples in `app/src/test/` and run `./gradlew test`. If the parser mishandles it, file an issue with the redacted SMS and sender ID instead — that alone is a useful bug report.
 
 ## Project layout
 
@@ -80,12 +88,7 @@ CI runs on every push and PR. A green run is required before merge.
 
 ## About the lint baseline
 
-`app/lint-baseline.xml` freezes a set of pre-existing lint findings so CI passes today. They are real issues to address over time. The most prominent:
-
-- `CallManager.endCall` triggers a `MissingPermission` warning for `ANSWER_PHONE_CALLS`. Adding that permission is a behavioral change (extra runtime prompt) and is deferred.
-- Several `MissingSuperCall`, `UnspecifiedRegisterReceiverFlag`, `UseAppTint`, and `PermissionImpliesUnsupportedChromeOsHardware` items.
-
-Fixes are very welcome — please don't pile new items into the baseline.
+`app/lint-baseline.xml` exists to freeze pre-existing lint findings so CI can gate on *new* ones. The baseline is currently **empty** — all previously baselined issues have been fixed — so any lint finding your change introduces is genuinely new. Fix it rather than adding it to the baseline.
 
 ## Filing issues
 
