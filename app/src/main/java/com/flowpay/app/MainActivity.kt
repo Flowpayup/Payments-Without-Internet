@@ -15,8 +15,10 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -114,6 +116,8 @@ import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.utils.findComponentActivity
+import com.flowpay.app.viewmodel.MainUiEvent
+import com.flowpay.app.viewmodel.MainViewModel
 import com.flowpay.app.viewmodel.TransactionViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -123,30 +127,48 @@ import java.util.Locale
 class MainActivity : ComponentActivity() {
     companion object {
         private const val TAG = "Flowpay"
-        const val QR_SCAN_REQUEST_CODE = 1001
-
-        @Volatile
-        var showCallDurationDialogCallback: (() -> Unit)? = null
-        @Volatile
-        var showCallSuccessDialogCallback: (() -> Unit)? = null
-        @Volatile
-        var dismissCallSuccessDialogCallback: (() -> Unit)? = null
-        @Volatile
-        var resetQRScanningStateCallback: (() -> Unit)? = null
-        @Volatile
-        var showOverlayPermissionDialogCallback: (() -> Unit)? = null
-        @Volatile
-        var onSmsPermissionGrantedCallback: (() -> Unit)? = null
     }
 
     // Helper for all business logic
     private lateinit var helper: MainActivityHelper
 
-    // QR Scanner permission launcher
-    private val requestPermissionLauncher = registerForActivityResult(
+    // Shared with MainScreen (same instance via Compose viewModel()); carries
+    // one-shot Activity -> Compose events, replacing the old static callbacks.
+    private val mainViewModel: MainViewModel by viewModels()
+
+    // Launches QRScannerActivity and, on return, un-sticks the QR button's
+    // "Opening..." state via a QrScannerClosed event.
+    private val qrScannerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        mainViewModel.onQrScannerClosed()
+    }
+
+    // Launches the system "draw over other apps" settings screen; on return,
+    // re-checks the permission and reports the outcome via toast (there is
+    // no reliable resultCode for this settings screen, so re-checking is
+    // the only correct way to know what happened).
+    private val overlayPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        val granted = PermissionManager.canDrawOverlays(this)
+        val message = if (granted) {
+            "Overlay permission granted. You can now proceed with the transfer."
+        } else {
+            "Overlay permission is required for payment protection. Please enable it in Settings."
+        }
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    // Phone-call permission group, requested before dialing or QR scanning.
+    // There is no auto-retry: the user re-taps the action once granted.
+    private val phonePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        helper.handleQRPermissionResult(permissions)
+    ) { results ->
+        val granted = results.values.all { it }
+        if (!granted) {
+            Toast.makeText(this, "Some permissions were denied. App may not work properly.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -201,7 +223,15 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun showOverlayPermissionExplanation() {
-                runOnUiThread { showOverlayPermissionDialogCallback?.invoke() }
+                mainViewModel.onOverlayPermissionNeeded()
+            }
+
+            override fun launchQRScanner(intent: Intent) {
+                qrScannerLauncher.launch(intent)
+            }
+
+            override fun requestPhonePermissions() {
+                phonePermissionLauncher.launch(PermissionConstants.PHONE_PERMISSIONS)
             }
         })
 
@@ -225,49 +255,13 @@ class MainActivity : ComponentActivity() {
                         },
                         onQRScanClick = {
                             helper.startQRScanning()
+                        },
+                        onRequestOverlayPermission = {
+                            PermissionManager(this).overlayPermissionSettingsIntent()?.let {
+                                overlayPermissionLauncher.launch(it)
+                            }
                         }
                     )
-                }
-            }
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == QR_SCAN_REQUEST_CODE) {
-            Log.d(TAG, "QR scan finished with result code: $resultCode")
-            resetQRScanningStateCallback?.invoke()
-        }
-        helper.handleActivityResult(requestCode, resultCode, data)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        val success = helper.handlePermissionResult(requestCode, permissions, grantResults)
-
-        when (requestCode) {
-            PermissionConstants.SMS_PERMISSION_REQUEST_CODE -> {
-                if (success) {
-                    onSmsPermissionGrantedCallback?.invoke()
-                    onSmsPermissionGrantedCallback = null
-                } else {
-                    Toast.makeText(
-                        this,
-                        "SMS permission is required to detect payment confirmations",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-            PermissionConstants.PERMISSIONS_REQUEST_CODE -> {
-                if (success) {
-                    Toast.makeText(this, "All permissions granted", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Some permissions were denied", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -506,7 +500,8 @@ fun PaymentActionButtons(
 @Composable
 fun MainScreen(
     onInitiateTransfer: (String, String) -> Unit,
-    onQRScanClick: () -> Unit
+    onQRScanClick: () -> Unit,
+    onRequestOverlayPermission: () -> Unit
 ) {
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE)
@@ -540,8 +535,6 @@ fun MainScreen(
 
     var showPayContact by remember { mutableStateOf(false) }
     var isScanning by remember { mutableStateOf(false) }
-    var showCallDurationDialog by remember { mutableStateOf(false) }
-    var showCallSuccessDialog by remember { mutableStateOf(false) }
 
     var showSmsPermissionDialog by remember { mutableStateOf(false) }
     var pendingSmsAction by remember { mutableStateOf<(() -> Unit)?>(null) }
@@ -551,12 +544,34 @@ fun MainScreen(
         hostActivity?.let { PermissionManager(it) }
     }
 
+    // Runs the queued action (start scan / open pay dialog / initiate transfer)
+    // once RECEIVE_SMS is granted; the launcher stays Compose-scoped so no
+    // Activity-level callback bridge is needed.
+    val smsPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            pendingSmsAction?.invoke()
+        } else {
+            Toast.makeText(
+                context,
+                "SMS permission is required to detect payment confirmations",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        pendingSmsAction = null
+    }
+
+    // One-shot events from MainActivity (launchers + business-logic helper),
+    // replacing the former static @Volatile callbacks on its companion.
+    val mainViewModel: MainViewModel = viewModel()
     LaunchedEffect(Unit) {
-        MainActivity.showCallDurationDialogCallback = { showCallDurationDialog = true }
-        MainActivity.showCallSuccessDialogCallback = { showCallSuccessDialog = true }
-        MainActivity.dismissCallSuccessDialogCallback = { showCallSuccessDialog = false }
-        MainActivity.resetQRScanningStateCallback = { isScanning = false }
-        MainActivity.showOverlayPermissionDialogCallback = { showOverlayPermissionDialog = true }
+        mainViewModel.events.collect { event ->
+            when (event) {
+                MainUiEvent.QrScannerClosed -> isScanning = false
+                MainUiEvent.OverlayPermissionNeeded -> showOverlayPermissionDialog = true
+            }
+        }
     }
 
     // Reset scanning + refresh list whenever the app resumes
@@ -993,14 +1008,6 @@ fun MainScreen(
                 )
             }
 
-            if (showCallDurationDialog) {
-                CallDurationIssueDialog(onDismiss = { showCallDurationDialog = false })
-            }
-
-            if (showCallSuccessDialog) {
-                CallSuccessDialog(onDismiss = { showCallSuccessDialog = false })
-            }
-
             if (showOverlayPermissionDialog) {
                 PermissionExplanationDialog(
                     title = "Overlay Permission",
@@ -1008,7 +1015,7 @@ fun MainScreen(
                     confirmButtonText = "Grant",
                     onConfirm = {
                         showOverlayPermissionDialog = false
-                        permissionManager?.requestOverlayPermission()
+                        onRequestOverlayPermission()
                     },
                     onDismiss = { showOverlayPermissionDialog = false }
                 )
@@ -1021,21 +1028,10 @@ fun MainScreen(
                     confirmButtonText = "Grant",
                     onConfirm = {
                         showSmsPermissionDialog = false
-                        hostActivity?.let { activity ->
-                            MainActivity.onSmsPermissionGrantedCallback = pendingSmsAction
-                            pendingSmsAction = null
-                            // Only RECEIVE_SMS is declared in the manifest and
-                            // needed (the app never reads the inbox). Requesting
-                            // the undeclared READ_SMS here made Android return it
-                            // as denied, so the "all granted" check failed and a
-                            // "permission still required" message showed even
-                            // though RECEIVE_SMS was actually granted.
-                            androidx.core.app.ActivityCompat.requestPermissions(
-                                activity,
-                                arrayOf(Manifest.permission.RECEIVE_SMS),
-                                PermissionConstants.SMS_PERMISSION_REQUEST_CODE
-                            )
-                        }
+                        // Only RECEIVE_SMS is declared in the manifest and
+                        // needed (the app never reads the inbox). The launcher's
+                        // callback runs pendingSmsAction once granted.
+                        smsPermissionLauncher.launch(Manifest.permission.RECEIVE_SMS)
                     },
                     onDismiss = {
                         showSmsPermissionDialog = false
@@ -1128,6 +1124,11 @@ fun PayContactDialog(
     var showContactPermissionDialog by remember { mutableStateOf(false) }
     val permissionManager = remember(hostActivity) {
         hostActivity?.let { PermissionManager(it) }
+    }
+    val contactPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) showContactPicker = true
     }
 
     AlertDialog(
@@ -1295,7 +1296,7 @@ fun PayContactDialog(
             confirmButtonText = "Grant",
             onConfirm = {
                 showContactPermissionDialog = false
-                permissionManager?.requestContactPermission()
+                contactPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             },
             onDismiss = { showContactPermissionDialog = false }
         )
@@ -1342,105 +1343,6 @@ fun PermissionExplanationDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Not now", color = Color(0xFF8A8A8A))
-            }
-        }
-    )
-}
-
-@Composable
-fun CallDurationIssueDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A1A),
-        title = {
-            Text(
-                text = "Payment Issue",
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Transaction failed - the call ended too early.",
-                    color = Color(0xFFCCCCCC),
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "This usually means:",
-                    color = Color(0xFFCCCCCC),
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp
-                )
-                Text(
-                    text = "• Daily payment limit reached\n• UPI not configured",
-                    color = Color(0xFFAAAAAA),
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = LocalFlowpayAccentTheme.current.accentLight
-                )
-            ) {
-                Text(text = "OK", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            }
-        }
-    )
-}
-
-@Composable
-fun CallSuccessDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A1A),
-        title = {
-            Text(
-                text = "Great!",
-                color = LocalFlowpayAccentTheme.current.accentLight,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "Your request has been sent to your bank.",
-                    color = Color(0xFFCCCCCC),
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "When the confirmation call comes:",
-                    color = Color(0xFFCCCCCC),
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "1. Open your dialer\n2. Press 1 to confirm\n3. Enter your UPI PIN",
-                    color = Color(0xFFAAAAAA),
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = LocalFlowpayAccentTheme.current.accentLight
-                )
-            ) {
-                Text(text = "Got it", fontSize = 16.sp, fontWeight = FontWeight.Medium)
             }
         }
     )

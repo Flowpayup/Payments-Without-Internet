@@ -22,11 +22,13 @@ object PermissionConstants {
         Manifest.permission.CALL_PHONE,
         Manifest.permission.READ_PHONE_STATE
     )
-    
-    // Permission request codes - using unique values to avoid conflicts
-    const val PERMISSIONS_REQUEST_CODE = 0x1000
-    const val OVERLAY_PERMISSION_REQ_CODE = 0x1001
-    const val CAMERA_PERMISSION_REQ_CODE = 0x1002
-    const val SMS_PERMISSION_REQUEST_CODE = 0x1003
-    const val CONTACTS_PERMISSION_REQUEST_CODE = 0x1004
+
+    // Phone-call permission group requested together before dialing. ANSWER_PHONE_CALLS
+    // powers the overlay's "End call" button and is in the same group, so it adds no
+    // extra consent dialog. Launched via ActivityResultContracts.RequestMultiplePermissions.
+    val PHONE_PERMISSIONS = arrayOf(
+        Manifest.permission.CALL_PHONE,
+        Manifest.permission.READ_PHONE_STATE,
+        Manifest.permission.ANSWER_PHONE_CALLS
+    )
 }

@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import com.flowpay.app.constants.PermissionConstants
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -48,6 +50,14 @@ import kotlinx.coroutines.delay
 
 class TestConfigurationActivity : ComponentActivity() {
     private lateinit var testHelper: TestConfigurationHelper
+
+    // Phone-call permission group, requested before a test dial. No auto-retry:
+    // the user re-taps the test action once granted.
+    private val phonePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        testHelper.onPhonePermissionsResult(results.values.all { it })
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,6 +125,10 @@ class TestConfigurationActivity : ComponentActivity() {
                 startActivity(intent)
                 finish()
             }
+
+            override fun requestPhonePermissions() {
+                phonePermissionLauncher.launch(PermissionConstants.PHONE_PERMISSIONS)
+            }
         })
 
         // Initialize the helper
@@ -140,11 +154,6 @@ class TestConfigurationActivity : ComponentActivity() {
         if (::testHelper.isInitialized) {
             testHelper.cleanup()
         }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        testHelper.handlePermissionResult(requestCode, permissions, grantResults)
     }
 }
 

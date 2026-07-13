@@ -8,16 +8,12 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.flowpay.app.constants.PermissionConstants
 
 class PermissionManager(private val activity: Activity) {
-    
+
     companion object {
-        private const val TAG = "PermissionManager"
-        
         fun canDrawOverlays(context: Context): Boolean {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Settings.canDrawOverlays(context)
@@ -41,34 +37,15 @@ class PermissionManager(private val activity: Activity) {
      */
 
     /**
-     * Phone permissions: CALL_PHONE + READ_PHONE_STATE (and any other critical phone-related ones)
+     * Phone permissions: CALL_PHONE + READ_PHONE_STATE (and any other critical phone-related ones).
+     * Requesting them is done by the owning Activity via an
+     * ActivityResultContracts.RequestMultiplePermissions launcher over
+     * [PermissionConstants.PHONE_PERMISSIONS] — a launcher must be registered
+     * at Activity-creation time, which this on-demand helper can't do.
      */
     fun hasPhonePermissions(): Boolean {
         return isPermissionGranted(Manifest.permission.CALL_PHONE) &&
                 isPermissionGranted(Manifest.permission.READ_PHONE_STATE)
-    }
-
-    fun requestPhonePermissions() {
-        val phonePermissions = listOf(
-            Manifest.permission.CALL_PHONE,
-            Manifest.permission.READ_PHONE_STATE,
-            // Optional: powers the overlay's "End call" button. Same PHONE
-            // permission group, so it does not add an extra consent dialog.
-            Manifest.permission.ANSWER_PHONE_CALLS
-        )
-
-        val permissionsNeeded = phonePermissions.filterNot { isPermissionGranted(it) }
-
-        if (permissionsNeeded.isNotEmpty()) {
-            Log.d(TAG, "Requesting phone permissions: ${permissionsNeeded.joinToString()}")
-            ActivityCompat.requestPermissions(
-                activity,
-                permissionsNeeded.toTypedArray(),
-                PermissionConstants.PERMISSIONS_REQUEST_CODE
-            )
-        } else {
-            Log.d(TAG, "Phone permissions already granted")
-        }
     }
 
     /**
@@ -91,16 +68,19 @@ class PermissionManager(private val activity: Activity) {
     fun hasOverlayPermission(): Boolean = checkOverlayPermission()
     
     /**
-     * Requests overlay permission
+     * The system "draw over other apps" settings intent, or null if the
+     * permission is already granted (or unnecessary below API M). Callers
+     * launch it via their own ActivityResultLauncher — a launcher must be
+     * registered at composition/creation time, not launch time, so this
+     * class (constructed on demand, often from a composable) can't safely
+     * own one itself.
      */
-    fun requestOverlayPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !canDrawOverlays(activity)) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:${activity.packageName}")
-            )
-            activity.startActivityForResult(intent, PermissionConstants.OVERLAY_PERMISSION_REQ_CODE)
-        }
+    fun overlayPermissionSettingsIntent(): Intent? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || canDrawOverlays(activity)) return null
+        return Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:${activity.packageName}")
+        )
     }
     
     /**
@@ -122,56 +102,13 @@ class PermissionManager(private val activity: Activity) {
     
     
     /**
-     * Handles permission request results
-     */
-    fun handlePermissionResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ): Boolean {
-        when (requestCode) {
-            PermissionConstants.PERMISSIONS_REQUEST_CODE,
-            PermissionConstants.SMS_PERMISSION_REQUEST_CODE,
-            PermissionConstants.CAMERA_PERMISSION_REQ_CODE,
-            PermissionConstants.CONTACTS_PERMISSION_REQUEST_CODE -> {
-                if (grantResults.isEmpty()) {
-                    Log.w(TAG, "Empty grantResults for requestCode=$requestCode (likely cancelled)")
-                    return false
-                }
-                val allPermissionsGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-                if (allPermissionsGranted) {
-                    Log.d(TAG, "All permissions granted for requestCode=$requestCode")
-                    return true
-                } else {
-                    val deniedPermissions = permissions.filterIndexed { index, _ ->
-                        grantResults[index] != PackageManager.PERMISSION_GRANTED
-                    }
-                    Log.w(TAG, "Denied permissions: ${deniedPermissions.joinToString()}")
-                    return false
-                }
-            }
-            PermissionConstants.OVERLAY_PERMISSION_REQ_CODE -> {
-                val overlayGranted = checkOverlayPermission()
-                if (overlayGranted) {
-                    Log.d(TAG, "Overlay permission granted")
-                    return true
-                } else {
-                    Log.w(TAG, "Overlay permission denied")
-                    return false
-                }
-            }
-        }
-        return false
-    }
-    
-    /**
      * Checks if overlay permission is available for services
      * This replaces inline checks in USSDOverlayService and UssdSetupOverlayService
      */
     fun canDrawOverlays(): Boolean {
         return canDrawOverlays(activity)
     }
-    
+
     /**
      * Checks if RECEIVE_SMS runtime permission is granted.
      */
@@ -182,33 +119,9 @@ class PermissionManager(private val activity: Activity) {
     }
 
     /**
-     * Requests RECEIVE_SMS permission at runtime.
-     */
-    fun requestSMSPermissions() {
-        Log.d(TAG, "Requesting RECEIVE_SMS permission")
-        ActivityCompat.requestPermissions(
-            activity,
-            arrayOf(Manifest.permission.RECEIVE_SMS),
-            PermissionConstants.SMS_PERMISSION_REQUEST_CODE
-        )
-    }
-
-    /**
      * Checks if contact permission is granted
      */
     fun hasContactPermission(): Boolean {
         return isPermissionGranted(Manifest.permission.READ_CONTACTS)
     }
-    
-    /**
-     * Requests contact permission
-     */
-    fun requestContactPermission() {
-        ActivityCompat.requestPermissions(
-            activity,
-            arrayOf(Manifest.permission.READ_CONTACTS),
-            PermissionConstants.CONTACTS_PERMISSION_REQUEST_CODE
-        )
-    }
-
 }
