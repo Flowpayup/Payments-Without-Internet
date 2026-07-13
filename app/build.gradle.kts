@@ -97,6 +97,10 @@ android {
         // Dependency freshness is Dependabot's job; lint's advisory would
         // otherwise go stale in the baseline every week.
         disable += "GradleDependency"
+        // All hardcoded UI strings have been extracted to resources; keep it
+        // that way by failing the build on any new one.
+        error += "HardcodedText"
+        error += "SetTextI18n"
         baseline = file("lint-baseline.xml")
     }
     testOptions {

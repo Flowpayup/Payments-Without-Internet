@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
@@ -65,7 +66,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="₹0"
+            tools:text="₹0"
             android:textColor="@color/flowpay_green"
             android:textSize="36sp"
             android:fontFamily="sans-serif-bold" />
@@ -104,7 +105,7 @@
                     android:id="@+id/tv_recipient_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Paid to"
+                    android:text="@string/recipient_paid_to"
                     android:textColor="#888888"
                     android:textSize="14sp" />
 
@@ -114,7 +115,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="John Doe"
+                    tools:text="John Doe"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
                     android:fontFamily="sans-serif-medium"
@@ -133,7 +134,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Bank"
+                    android:text="@string/label_bank"
                     android:textColor="#888888"
                     android:textSize="14sp" />
 
@@ -143,7 +144,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="HDFC Bank"
+                    tools:text="HDFC Bank"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
                     android:fontFamily="sans-serif-medium" />
@@ -160,7 +161,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Transaction ID"
+                    android:text="@string/label_transaction_id"
                     android:textColor="#888888"
                     android:textSize="14sp" />
 
@@ -170,7 +171,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="TXN123456"
+                    tools:text="TXN123456"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
                     android:fontFamily="sans-serif-medium"
@@ -189,7 +190,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Date &amp; Time"
+                    android:text="@string/label_date_time"
                     android:textColor="#888888"
                     android:textSize="14sp" />
 
@@ -199,7 +200,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="01 Jan 2024, 12:00 PM"
+                    tools:text="01 Jan 2024, 12:00 PM"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
                     android:fontFamily="sans-serif-medium" />
@@ -217,7 +218,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="UPI ID"
+                    android:text="@string/label_upi_id"
                     android:textColor="#888888"
                     android:textSize="14sp" />
 
@@ -227,7 +228,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="user@upi"
+                    tools:text="user@upi"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
                     android:fontFamily="sans-serif-medium" />
@@ -248,7 +249,7 @@
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="80dp"
         android:background="@drawable/button_gradient_bg"
-        android:text="Done"
+        android:text="@string/action_done"
         android:textColor="@android:color/white"
         android:textSize="16sp"
         android:fontFamily="sans-serif-medium"

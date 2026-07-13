@@ -58,5 +58,39 @@
     <string name="payment_status_success">Payment Successful</string>
     <string name="payment_status_failed">Payment Failed</string>
     <string name="payment_status_needs_review">Check This Payment</string>
+    <string name="label_bank">Bank</string>
+    <string name="label_transaction_id">Transaction ID</string>
+    <string name="label_date_time">Date &amp; Time</string>
+    <string name="label_upi_id">UPI ID</string>
+    <string name="action_done">Done</string>
+    <!-- Recipient/sender labels, chosen at runtime by transaction direction -->
+    <string name="recipient_paid_to">Paid to</string>
+    <string name="recipient_received_from">Received from</string>
+    <string name="recipient_to">To</string>
+    <string name="recipient_from">From</string>
+
+    <!-- Call overlay (shown during the payment call) -->
+    <string name="overlay_secure_transfer">Secure Transfer</string>
+    <string name="overlay_processing_payment">Processing Payment</string>
+    <string name="overlay_amount">Amount</string>
+    <string name="overlay_to">To</string>
+    <string name="overlay_audio_muted">Audio muted for security</string>
+    <string name="overlay_terminate">TERMINATE</string>
+    <string name="overlay_connecting">Connecting to bank…</string>
+    <string name="amount_rupees">₹%1$s</string>
+    <string name="percent_format">%1$d%%</string>
+
+    <!-- QR scanner steps -->
+    <string name="qr_torch">Torch</string>
+    <string name="qr_steps_title">Follow These Steps</string>
+    <string name="qr_step_paste_vpa">1. Paste the VPA from clipboard</string>
+    <string name="qr_step_enter_amount">2. Enter the amount</string>
+    <string name="qr_step_press_one">3. Press one to skip</string>
+    <string name="qr_step_enter_pin">4. Enter your pin</string>
+    <string name="qr_step_press_cancel">5. Press cancel to end session</string>
+    <string name="qr_processing">Processing QR code…</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
 
 </resources>

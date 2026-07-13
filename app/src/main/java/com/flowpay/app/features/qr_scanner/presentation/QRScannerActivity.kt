@@ -351,7 +351,7 @@ class QRScannerActivity : ComponentActivity() {
                 bottomActionBar.visibility = View.GONE
                 scanLineAnimator?.cancel()
                 progressBar.visibility = View.VISIBLE
-                tvStatus.text = "Processing QR code..."
+                tvStatus.text = getString(R.string.qr_processing)
                 tvStatus.visibility = View.VISIBLE
             }
 
