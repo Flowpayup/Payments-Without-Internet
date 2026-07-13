@@ -118,22 +118,6 @@ sealed class PaymentState {
     ) : PaymentState()
     
     /**
-     * State when payment is being retried after a failure
-     * @param retryCount Current retry attempt number
-     * @param maxRetries Maximum number of retries allowed
-     * @param phoneNumber The recipient's phone number
-     * @param amount The payment amount
-     * @param transactionId Unique transaction identifier
-     */
-    data class Retrying(
-        val retryCount: Int,
-        val maxRetries: Int,
-        val phoneNumber: String,
-        val amount: String,
-        val transactionId: String
-    ) : PaymentState()
-    
-    /**
      * State when payment is in a timeout scenario
      * @param timeoutType Type of timeout (call, verification, etc.)
      * @param phoneNumber The recipient's phone number
@@ -146,100 +130,26 @@ sealed class PaymentState {
         val amount: String,
         val transactionId: String
     ) : PaymentState()
-    
-    // QR Payment States
-    
-    /**
-     * State when QR payment is being initiated
-     * @param vpa The recipient's VPA
-     * @param amount The payment amount
-     * @param transactionId Unique transaction identifier
-     */
-    data class QRPaymentInitiating(
-        val vpa: String,
-        val amount: String,
-        val transactionId: String = UUID.randomUUID().toString()
-    ) : PaymentState()
-    
-    /**
-     * State when QR payment is in progress
-     * @param vpa The recipient's VPA
-     * @param amount The payment amount
-     * @param step Current step in the payment process
-     * @param progress Progress percentage (0.0 to 1.0)
-     * @param transactionId Unique transaction identifier
-     */
-    data class QRPaymentInProgress(
-        val vpa: String,
-        val amount: String,
-        val step: String,
-        val progress: Float,
-        val transactionId: String
-    ) : PaymentState()
-    
-    /**
-     * State when QR payment is waiting for verification
-     * @param vpa The recipient's VPA
-     * @param amount The payment amount
-     * @param timeout Timeout in milliseconds
-     * @param transactionId Unique transaction identifier
-     */
-    data class QRPaymentWaitingForVerification(
-        val vpa: String,
-        val amount: String,
-        val timeout: Long,
-        val transactionId: String
-    ) : PaymentState()
-    
-    /**
-     * State when QR payment is successfully completed
-     * @param vpa The recipient's VPA
-     * @param amount The payment amount
-     * @param transactionId Unique transaction identifier
-     */
-    data class QRPaymentSuccess(
-        val vpa: String,
-        val amount: String,
-        val transactionId: String
-    ) : PaymentState()
-    
-    /**
-     * State when QR payment fails
-     * @param vpa The recipient's VPA
-     * @param amount The payment amount
-     * @param error Error message describing the failure
-     * @param transactionId Unique transaction identifier
-     */
-    data class QRPaymentFailed(
-        val vpa: String,
-        val amount: String,
-        val error: String,
-        val transactionId: String
-    ) : PaymentState()
-    
+
     /**
      * Checks if the payment is in a terminal state (Success, Failed, Cancelled)
      */
-    fun isTerminal(): Boolean = this is Success || this is Failed || this is Cancelled ||
-                                this is NeedsReview ||
-                                this is QRPaymentSuccess || this is QRPaymentFailed
-    
+    fun isTerminal(): Boolean = this is Success || this is Failed || this is Cancelled || this is NeedsReview
+
     /**
      * Checks if the payment is in progress
      */
-    fun isInProgress(): Boolean = this is Initiating || this is InProgress || this is WaitingForVerification || this is Retrying ||
-                                 this is QRPaymentInitiating || this is QRPaymentInProgress || this is QRPaymentWaitingForVerification
-    
+    fun isInProgress(): Boolean = this is Initiating || this is InProgress || this is WaitingForVerification
+
     /**
      * Checks if the payment can be retried
      */
     fun canRetry(): Boolean = when (this) {
         is Failed -> canRetry
         is Timeout -> true
-        is QRPaymentFailed -> true
         else -> false
     }
-    
+
     /**
      * Gets the transaction ID if available
      */
@@ -251,16 +161,10 @@ sealed class PaymentState {
         is Failed -> this.transactionId
         is NeedsReview -> this.transactionId
         is Cancelled -> this.transactionId
-        is Retrying -> this.transactionId
         is Timeout -> this.transactionId
-        is QRPaymentInitiating -> this.transactionId
-        is QRPaymentInProgress -> this.transactionId
-        is QRPaymentWaitingForVerification -> this.transactionId
-        is QRPaymentSuccess -> this.transactionId
-        is QRPaymentFailed -> this.transactionId
         else -> null
     }
-    
+
     /**
      * Gets the phone number if available
      */
@@ -272,11 +176,10 @@ sealed class PaymentState {
         is Failed -> this.phoneNumber
         is NeedsReview -> this.phoneNumber
         is Cancelled -> this.phoneNumber
-        is Retrying -> this.phoneNumber
         is Timeout -> this.phoneNumber
         else -> null
     }
-    
+
     /**
      * Gets the amount if available
      */
@@ -288,25 +191,7 @@ sealed class PaymentState {
         is Failed -> this.amount
         is NeedsReview -> this.amount
         is Cancelled -> this.amount
-        is Retrying -> this.amount
         is Timeout -> this.amount
-        is QRPaymentInitiating -> this.amount
-        is QRPaymentInProgress -> this.amount
-        is QRPaymentWaitingForVerification -> this.amount
-        is QRPaymentSuccess -> this.amount
-        is QRPaymentFailed -> this.amount
-        else -> null
-    }
-    
-    /**
-     * Gets the VPA if available (for QR payments)
-     */
-    fun getVpaValue(): String? = when (this) {
-        is QRPaymentInitiating -> this.vpa
-        is QRPaymentInProgress -> this.vpa
-        is QRPaymentWaitingForVerification -> this.vpa
-        is QRPaymentSuccess -> this.vpa
-        is QRPaymentFailed -> this.vpa
         else -> null
     }
 }
@@ -333,13 +218,7 @@ fun PaymentState.getDisplayMessage(): String = when (this) {
     is PaymentState.Failed -> "Payment failed: $error"
     is PaymentState.NeedsReview -> "Payment needs review — check your bank statement"
     is PaymentState.Cancelled -> "Payment cancelled: $reason"
-    is PaymentState.Retrying -> "Retrying payment (${retryCount}/${maxRetries})..."
     is PaymentState.Timeout -> "Payment timeout: ${timeoutType.name}"
-    is PaymentState.QRPaymentInitiating -> "Initiating QR payment..."
-    is PaymentState.QRPaymentInProgress -> "Processing QR payment: $step"
-    is PaymentState.QRPaymentWaitingForVerification -> "Waiting for QR payment verification..."
-    is PaymentState.QRPaymentSuccess -> "QR payment successful!"
-    is PaymentState.QRPaymentFailed -> "QR payment failed: $error"
 }
 
 fun PaymentState.getProgressPercentage(): Float = when (this) {
@@ -351,11 +230,5 @@ fun PaymentState.getProgressPercentage(): Float = when (this) {
     is PaymentState.Failed -> 0f
     is PaymentState.NeedsReview -> 1f
     is PaymentState.Cancelled -> 0f
-    is PaymentState.Retrying -> 0.1f
     is PaymentState.Timeout -> 0f
-    is PaymentState.QRPaymentInitiating -> 0.1f
-    is PaymentState.QRPaymentInProgress -> progress
-    is PaymentState.QRPaymentWaitingForVerification -> 0.7f
-    is PaymentState.QRPaymentSuccess -> 1f
-    is PaymentState.QRPaymentFailed -> 0f
 }

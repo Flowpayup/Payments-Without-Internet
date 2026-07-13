@@ -28,8 +28,8 @@ byte-identical modulo the signature block.
    ```bash
    ./gradlew test :app:lintDebug detekt assembleRelease
    ```
-4. **Run the on-device release checklist** (see `docs/RELEASE_CHECKLIST.md`
-   once it exists — real *99# and 123Pay transactions on physical hardware).
+4. **Run the on-device release checklist**: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
+   (real *99# and 123Pay transactions on physical hardware).
 5. **Commit and tag**:
    ```bash
    git commit -am "Release vX.Y.Z"

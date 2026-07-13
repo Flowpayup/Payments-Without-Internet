@@ -4,7 +4,7 @@ import android.content.Context
 import com.flowpay.app.data.AppDatabase
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.data.TransactionDao
-import com.flowpay.app.helpers.SimpleTransaction
+import com.flowpay.app.payment.sms.SimpleTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

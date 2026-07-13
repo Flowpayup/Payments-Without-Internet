@@ -3,6 +3,7 @@ agp = "8.7.2"
 kotlin = "2.1.0"
 ksp = "2.1.0-1.0.29"
 detekt = "1.23.7"
+kover = "0.9.1"
 
 coreKtx = "1.16.0"
 lifecycle = "2.8.7"
@@ -71,3 +72,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

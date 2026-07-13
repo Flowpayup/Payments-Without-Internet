@@ -50,6 +50,9 @@ jobs:
       - name: Run detekt
         run: ./gradlew detekt --no-daemon --stacktrace
 
+      - name: Verify payment-core coverage floor
+        run: ./gradlew koverVerify --no-daemon --stacktrace
+
       - name: Lint baseline must not grow
         run: |
           # The baseline freezes 85 pre-existing findings (mostly HardcodedText
@@ -66,14 +69,14 @@ jobs:
       - name: Detekt baseline must not grow
         run: |
           # detekt-baseline.xml froze the findings that predate detekt's
-          # adoption. Two entries were added for QRCodeAnalyzerDecodeTest.kt,
-          # which inherits the pre-existing qr_scanner package-naming finding
-          # already baselined for every other file in that package. New code
-          # must otherwise come in clean.
+          # adoption. Extracting SmsTransactionParser out of TransactionDetector
+          # (Phase 3) moved some pre-existing findings to the new file/class
+          # signature and shed others as dead weight, netting the baseline
+          # down. New code must otherwise come in clean.
           IDS=$(grep -c "<ID>" app/detekt-baseline.xml || echo 0)
           echo "Detekt baseline currently absorbs $IDS findings"
-          if [ "$IDS" -gt 874 ]; then
-            echo "::error::detekt-baseline.xml grew beyond the frozen budget (874). Fix new detekt findings instead of re-baselining."
+          if [ "$IDS" -gt 861 ]; then
+            echo "::error::detekt-baseline.xml grew beyond the frozen budget (861). Fix new detekt findings instead of re-baselining."
             exit 1
           fi
 
@@ -99,4 +102,12 @@ jobs:
         with:
           name: unit-test-reports
           path: app/build/reports/tests/
+          retention-days: 14
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: coverage-report
+          path: app/build/reports/kover/
           retention-days: 14

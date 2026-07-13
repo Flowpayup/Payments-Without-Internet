@@ -63,7 +63,7 @@ data class Transaction(
      * Convert from SimpleTransaction
      */
     companion object {
-        fun fromSimpleTransaction(simpleTransaction: com.flowpay.app.helpers.SimpleTransaction): Transaction {
+        fun fromSimpleTransaction(simpleTransaction: com.flowpay.app.payment.sms.SimpleTransaction): Transaction {
             return Transaction(
                 transactionId = simpleTransaction.transactionId,
                 amount = simpleTransaction.amount,

@@ -33,7 +33,7 @@ That single line is all the local configuration the build needs.
 ./gradlew :app:lintDebug             # run lint (must pass)
 ```
 
-JVM unit tests live in `app/src/test/` (`Upi123CallStringBuilderTest`, `PaymentSessionManagerTest`, `SmsParsingRegexTest`, `QRCodeParserTest`) and an instrumentation test in `app/src/androidTest/` (`MigrationTest`). CI runs `./gradlew test` on every push, so keep them green and add coverage for new logic where it makes sense.
+JVM unit tests live in `app/src/test/` (`Upi123CallStringBuilderTest`, `PaymentSessionManagerTest`, `SmsTransactionParserTest`, `SmsParsingRegexTest`, `QRCodeParserTest`, `QRCodeAnalyzerDecodeTest`) and an instrumentation test in `app/src/androidTest/` (`MigrationTest`). CI runs `./gradlew test` on every push, so keep them green and add coverage for new logic where it makes sense. See [docs/TESTING.md](docs/TESTING.md) for the full verification story, including a debug-only tool for replaying bank SMS through the live pipeline without a real bank.
 
 ### Adding a bank SMS template
 
