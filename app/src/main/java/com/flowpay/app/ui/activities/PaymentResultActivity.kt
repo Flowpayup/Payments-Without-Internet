@@ -133,23 +133,27 @@ class PaymentResultActivity : AppCompatActivity() {
                 statusText.text = getString(R.string.payment_status_success)
             }
         }
-        amountText.text = "₹${formatAmount(amount)}"
+        amountText.text = getString(R.string.amount_rupees, formatAmount(amount))
         
         // Handle recipient/sender display - UPDATED LOGIC
         when {
             !recipientName.isNullOrEmpty() -> {
                 recipientLayout.visibility = View.VISIBLE
-                recipientLabel.text = if (transactionType == "CREDIT") "Received from" else "Paid to"
+                recipientLabel.text = getString(
+                    if (transactionType == "CREDIT") R.string.recipient_received_from else R.string.recipient_paid_to
+                )
                 recipientText.text = recipientName
             }
             !phoneNumber.isNullOrEmpty() -> {
                 recipientLayout.visibility = View.VISIBLE
-                recipientLabel.text = if (transactionType == "CREDIT") "From" else "To"
+                recipientLabel.text = getString(
+                    if (transactionType == "CREDIT") R.string.recipient_from else R.string.recipient_to
+                )
                 recipientText.text = phoneNumber
             }
             operationType == "UPI_123" && detector.getPhoneNumber() != null -> {
                 recipientLayout.visibility = View.VISIBLE
-                recipientLabel.text = "To"
+                recipientLabel.text = getString(R.string.recipient_to)
                 recipientText.text = detector.getPhoneNumber()
             }
             else -> {

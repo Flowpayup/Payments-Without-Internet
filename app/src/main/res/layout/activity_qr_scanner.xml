@@ -99,7 +99,7 @@
             android:src="@drawable/ic_flash_off"
             android:scaleType="centerInside"
             android:padding="18dp"
-            android:contentDescription="Torch"
+            android:contentDescription="@string/qr_torch"
             app:tint="@color/white" />
 
     </LinearLayout>
@@ -149,7 +149,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Follow These Steps"
+            android:text="@string/qr_steps_title"
             android:textSize="32sp"
             android:textStyle="bold"
             android:textColor="#000000"
@@ -168,27 +168,27 @@
             android:visibility="gone">
 
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="1. Paste the VPA from clipboard"
+                android:text="@string/qr_step_paste_vpa"
                 android:textSize="15sp" android:textColor="#333333"
                 android:lineSpacingExtra="2dp" android:layout_marginBottom="10dp" />
 
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="2. Enter the amount"
+                android:text="@string/qr_step_enter_amount"
                 android:textSize="15sp" android:textColor="#333333"
                 android:lineSpacingExtra="2dp" android:layout_marginBottom="10dp" />
 
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="3. Press one to skip"
+                android:text="@string/qr_step_press_one"
                 android:textSize="15sp" android:textColor="#333333"
                 android:lineSpacingExtra="2dp" android:layout_marginBottom="10dp" />
 
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="4. Enter your pin"
+                android:text="@string/qr_step_enter_pin"
                 android:textSize="15sp" android:textColor="#333333"
                 android:lineSpacingExtra="2dp" android:layout_marginBottom="10dp" />
 
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="5. Press cancel to end session"
+                android:text="@string/qr_step_press_cancel"
                 android:textSize="15sp" android:textColor="#333333"
                 android:lineSpacingExtra="2dp" />
 

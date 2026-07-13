@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `payment/PaymentInputValidator` with unit tests — pure phone/amount validation extracted from `CallManager`.
 - `MainViewModel` carrying Activity↔Compose one-shot events.
 
+### Changed (string hygiene)
+- Extracted every hardcoded UI string in the classic-View screens (payment-result, call-overlay, QR-scanner layouts and their `setText` calls, plus the manifest `Settings` label) into `strings.xml`; runtime-overwritten placeholders became design-time `tools:text`. `HardcodedText` and `SetTextI18n` are now error-level lint checks with zero baselined findings, so any new hardcoded string fails the build. Lint baseline dropped 85 → 45.
+
 ### Changed
 - **All permission and activity results now go through `ActivityResultContracts` launchers.** Removed every `onActivityResult` / `onRequestPermissionsResult` override and all six static `@Volatile` callback fields on `MainActivity`'s companion object (the headline architecture cleanup); one-shot Activity→Compose events flow through `MainViewModel` instead.
 

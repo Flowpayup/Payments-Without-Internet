@@ -55,14 +55,14 @@ jobs:
 
       - name: Lint baseline must not grow
         run: |
-          # The baseline freezes 85 pre-existing findings (mostly HardcodedText
-          # and View-layer items scheduled for the string-hygiene and
-          # architecture phases). It only ratchets DOWN — new code must fix
-          # its lint findings, not absorb them into the baseline.
+          # The baseline freezes pre-existing findings. All hardcoded UI
+          # strings have been extracted (HardcodedText/SetTextI18n are now
+          # error-level, zero baselined). It only ratchets DOWN — new code
+          # must fix its lint findings, not absorb them into the baseline.
           ISSUES=$(grep -cE '<issue\s|<issue$' app/lint-baseline.xml || echo 0)
           echo "Baseline currently absorbs $ISSUES issues"
-          if [ "$ISSUES" -gt 85 ]; then
-            echo "::error::lint-baseline.xml grew beyond the frozen budget (85). Fix new lint issues instead of re-baselining."
+          if [ "$ISSUES" -gt 45 ]; then
+            echo "::error::lint-baseline.xml grew beyond the frozen budget (45). Fix new lint issues instead of re-baselining."
             exit 1
           fi
 

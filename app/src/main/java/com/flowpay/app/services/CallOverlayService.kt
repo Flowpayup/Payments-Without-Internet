@@ -401,7 +401,8 @@ class CallOverlayService : Service() {
                 val progressBar = view.findViewById<android.widget.ProgressBar>(R.id.progressBar)
                 val target = (progressFraction * 1000).toInt().coerceIn(0, 1000)
                 progressBar?.let { animateProgressBar(it, target) }
-                view.findViewById<TextView>(R.id.progressPercent)?.text = "${target / 10}%"
+                view.findViewById<TextView>(R.id.progressPercent)?.text =
+                    getString(R.string.percent_format, target / 10)
             }
         }
     }
@@ -752,18 +753,18 @@ class CallOverlayService : Service() {
             val progressPercent = overlayView?.findViewById<TextView>(R.id.progressPercent)
             
             // Set transaction details
-            amountText?.text = "₹$amount"
-            
+            amountText?.text = getString(R.string.amount_rupees, amount)
+
             // Format phone number to show last 4 digits using PhoneNumberUtils
             val formattedPhone = PhoneNumberUtils.formatPhoneForDisplay(phoneNumber, 4)
             recipientText?.text = formattedPhone
-            
+
             // Initialize progress
             progressBar?.max = 1000
             progressBar?.progress = 0
-            progressPercent?.text = "0%"
-            statusText?.text = "Processing Payment"
-            stepText?.text = "Connecting to bank..."
+            progressPercent?.text = getString(R.string.percent_format, 0)
+            statusText?.text = getString(R.string.overlay_processing_payment)
+            stepText?.text = getString(R.string.overlay_connecting)
             
             // FIX: Create layout parameters with enhanced visibility
             val layoutParams = WindowManager.LayoutParams().apply {
@@ -996,7 +997,7 @@ class CallOverlayService : Service() {
                 // Animate progress bar
                 animateProgressBar(progressBar, step.progress * 10) // Scale to 1000 max
                 stepText?.text = step.description
-                progressPercent?.text = "${step.progress}%"
+                progressPercent?.text = getString(R.string.percent_format, step.progress)
                 
                 // Update progress steps - handled by animateProgressBar
             }

@@ -40,7 +40,7 @@
         errorLine2="                                                                          ~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="722"
+            line="744"
             column="75"/>
     </issue>
 
@@ -183,7 +183,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="35"
+            line="36"
             column="17"/>
     </issue>
 
@@ -194,7 +194,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="57"
+            line="58"
             column="17"/>
     </issue>
 
@@ -205,7 +205,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="227"
+            line="228"
             column="17"/>
     </issue>
 
@@ -216,7 +216,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/dialog_transaction_success.xml"
-            line="17"
+            line="18"
             column="9"/>
     </issue>
 
@@ -243,6 +243,17 @@
     </issue>
 
     <issue
+        id="ExportedReceiver"
+        message="Exported receiver does not require permission"
+        errorLine1="        &lt;receiver"
+        errorLine2="         ~~~~~~~~">
+        <location
+            file="src/debug/AndroidManifest.xml"
+            line="11"
+            column="10"/>
+    </issue>
+
+    <issue
         id="ObsoleteSdkInt"
         message="Unnecessary; SDK_INT is always >= 29"
         errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
@@ -260,7 +271,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="412"
+            line="413"
             column="13"/>
     </issue>
 
@@ -271,7 +282,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="429"
+            line="430"
             column="20"/>
     </issue>
 
@@ -282,7 +293,7 @@
         errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="750"
+            line="772"
             column="28"/>
     </issue>
 
@@ -293,7 +304,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/MainActivity.kt"
-            line="173"
+            line="195"
             column="13"/>
     </issue>
 
@@ -304,18 +315,18 @@
         errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/managers/PermissionManager.kt"
-            line="22"
+            line="18"
             column="24"/>
     </issue>
 
     <issue
         id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &amp;&amp; !canDrawOverlays(activity)) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Unnecessary; SDK_INT is never &lt; 29"
+        errorLine1="        if (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.M || canDrawOverlays(activity)) return null"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/managers/PermissionManager.kt"
-            line="97"
+            line="79"
             column="13"/>
     </issue>
 
@@ -388,7 +399,7 @@
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="6"
+            line="7"
             column="5"/>
     </issue>
 
@@ -421,7 +432,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle.kts"
-            line="159"
+            line="181"
             column="20"/>
     </issue>
 
@@ -432,7 +443,7 @@
         errorLine2="                                        ^">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="867"
+            line="889"
             column="41"/>
     </issue>
 
@@ -443,7 +454,7 @@
         errorLine2="             ~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="29"
+            line="30"
             column="14"/>
     </issue>
 
@@ -454,7 +465,7 @@
         errorLine2="             ~~~~~~~~~">
         <location
             file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="53"
+            line="54"
             column="14"/>
     </issue>
 
@@ -465,7 +476,7 @@
         errorLine2="             ~~~~~~~~~">
         <location
             file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="223"
+            line="224"
             column="14"/>
     </issue>
 
@@ -476,7 +487,7 @@
         errorLine2="     ~~~~~~~~~">
         <location
             file="src/main/res/layout/dialog_transaction_success.xml"
-            line="12"
+            line="13"
             column="6"/>
     </issue>
 
@@ -489,457 +500,6 @@
             file="src/main/java/com/flowpay/app/utils/OverlayLogger.kt"
             line="15"
             column="63"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
-        errorLine1="                view.findViewById&lt;TextView>(R.id.progressPercent)?.text = &quot;${target / 10}%&quot;"
-        errorLine2="                                                                          ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="404"
-            column="75"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
-        errorLine1="            amountText?.text = &quot;₹$amount&quot;"
-        errorLine2="                               ~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="734"
-            column="32"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="            statusText?.text = &quot;Processing Payment&quot;"
-        errorLine2="                                ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="744"
-            column="33"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="            stepText?.text = &quot;Connecting to bank...&quot;"
-        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="745"
-            column="31"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
-        errorLine1="                progressPercent?.text = &quot;${step.progress}%&quot;"
-        errorLine2="                                        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="975"
-            column="41"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
-        errorLine1="        amountText.text = &quot;₹${formatAmount(amount)}&quot;"
-        errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentResultActivity.kt"
-            line="136"
-            column="27"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                recipientLabel.text = &quot;To&quot;"
-        errorLine2="                                       ~~">
-        <location
-            file="src/main/java/com/flowpay/app/ui/activities/PaymentResultActivity.kt"
-            line="152"
-            column="40"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                tvStatus.text = &quot;Processing QR code...&quot;"
-        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/features/qr_scanner/presentation/QRScannerActivity.kt"
-            line="357"
-            column="34"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;₹0&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;₹0&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="68"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Paid to&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;Paid to&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="107"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;John Doe&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;John Doe&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="117"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Bank&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;Bank&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="136"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;HDFC Bank&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;HDFC Bank&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="146"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Transaction ID&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;Transaction ID&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="163"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;TXN123456&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;TXN123456&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="173"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Date &amp; Time&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;Date &amp;amp; Time&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="192"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;01 Jan 2024, 12:00 PM&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;01 Jan 2024, 12:00 PM&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="202"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;UPI ID&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;UPI ID&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="220"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;user@upi&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;user@upi&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="230"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Done&quot;, should use `@string` resource"
-        errorLine1="        android:text=&quot;Done&quot;"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="251"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Torch&quot;, should use `@string` resource"
-        errorLine1="            android:contentDescription=&quot;Torch&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="102"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Follow These Steps&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;Follow These Steps&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="152"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;1. Paste the VPA from clipboard&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;1. Paste the VPA from clipboard&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="171"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;2. Enter the amount&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;2. Enter the amount&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="176"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;3. Press one to skip&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;3. Press one to skip&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="181"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;4. Enter your pin&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;4. Enter your pin&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="186"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;5. Press cancel to end session&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;5. Press cancel to end session&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_qr_scanner.xml"
-            line="191"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Flowpay&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;Flowpay&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="29"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Secure Transfer&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;Secure Transfer&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="62"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Processing Payment&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;Processing Payment&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="74"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;0%&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;0%&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="116"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Connecting to bank...&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;Connecting to bank...&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="128"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;₹0&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;₹0&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="161"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Amount&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;Amount&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="169"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;••••••0000&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;••••••0000&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="194"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;To&quot;, should use `@string` resource"
-        errorLine1="                    android:text=&quot;To&quot;"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="202"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Audio muted for security&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;Audio muted for security&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="233"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;TERMINATE&quot;, should use `@string` resource"
-        errorLine1="            android:text=&quot;TERMINATE&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="248"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Payment Successful&quot;, should use `@string` resource"
-        errorLine1="        android:text=&quot;Payment Successful&quot;"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/dialog_transaction_success.xml"
-            line="30"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Your payment has been processed successfully! You will receive a confirmation SMS shortly.&quot;, should use `@string` resource"
-        errorLine1="        android:text=&quot;Your payment has been processed successfully! You will receive a confirmation SMS shortly.&quot;"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/dialog_transaction_success.xml"
-            line="45"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Great!&quot;, should use `@string` resource"
-        errorLine1="        android:text=&quot;Great!&quot;"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/dialog_transaction_success.xml"
-            line="61"
-            column="9"/>
     </issue>
 
 </issues>

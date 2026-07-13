@@ -82,7 +82,7 @@
             android:name=".ui.activities.SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.Flowpay"
-            android:label="Settings"
+            android:label="@string/settings_title"
             android:parentActivityName=".MainActivity"
             android:screenOrientation="portrait">
             <meta-data
