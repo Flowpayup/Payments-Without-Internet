@@ -725,10 +725,12 @@
     <ID>NoWildcardImports:UssdProgressDialog.kt$import androidx.compose.material3.*</ID>
     <ID>NoWildcardImports:UssdProgressDialog.kt$import androidx.compose.runtime.*</ID>
     <ID>PackageName:QRCodeAnalyzer.kt$package com.flowpay.app.features.qr_scanner.domain</ID>
+    <ID>PackageName:QRCodeAnalyzerDecodeTest.kt$package com.flowpay.app.features.qr_scanner</ID>
     <ID>PackageName:QRCodeParser.kt$package com.flowpay.app.features.qr_scanner.domain</ID>
     <ID>PackageName:QRCodeParserTest.kt$package com.flowpay.app.features.qr_scanner</ID>
     <ID>PackageName:QRScannerActivity.kt$package com.flowpay.app.features.qr_scanner.presentation</ID>
     <ID>PackageNaming:QRCodeAnalyzer.kt$package com.flowpay.app.features.qr_scanner.domain</ID>
+    <ID>PackageNaming:QRCodeAnalyzerDecodeTest.kt$package com.flowpay.app.features.qr_scanner</ID>
     <ID>PackageNaming:QRCodeParser.kt$package com.flowpay.app.features.qr_scanner.domain</ID>
     <ID>PackageNaming:QRCodeParserTest.kt$package com.flowpay.app.features.qr_scanner</ID>
     <ID>PackageNaming:QRScannerActivity.kt$package com.flowpay.app.features.qr_scanner.presentation</ID>

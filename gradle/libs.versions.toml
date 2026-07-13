@@ -10,9 +10,8 @@ activityCompose = "1.10.1"
 composeBom = "2025.05.00"
 coroutines = "1.10.2"
 constraintlayout = "2.1.4"
-mlkitBarcode = "17.2.0"
+zxing = "3.5.3"
 camerax = "1.4.2"
-gson = "2.10.1"
 room = "2.6.1"
 sqlcipher = "4.6.1"
 sqlite = "2.4.0"
@@ -41,13 +40,11 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 
-mlkit-barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlkitBarcode" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
 camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 camerax-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 camerax-core = { module = "androidx.camera:camera-core", version.ref = "camerax" }
-
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }

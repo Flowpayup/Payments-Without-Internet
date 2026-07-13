@@ -17,12 +17,6 @@
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
-# Gson deserializes TestResults by reflecting on its field names — the only
-# app class read/written via reflection. Everything else (Room, Parcelize,
-# Compose, manifest components) is covered by generated keeps or AGP's
-# default rules, so no blanket com.flowpay.app keeps are needed.
--keep class com.flowpay.app.data.TestResults { <fields>; }
-
 # SQLCipher's native side resolves these classes via JNI by name; the @aar
 # dependency ships no consumer rules.
 -keep class net.zetetic.database.** { *; }
@@ -77,19 +71,6 @@
     @android.webkit.JavascriptInterface <methods>;
 }
 
-# Keep Gson classes
--keepattributes Signature
--keepattributes *Annotation*
--dontwarn sun.misc.**
--keep class com.google.gson.** { *; }
--keep class * implements com.google.gson.TypeAdapterFactory
--keep class * implements com.google.gson.JsonSerializer
--keep class * implements com.google.gson.JsonDeserializer
-
-# Keep ML Kit classes
--keep class com.google.mlkit.** { *; }
--keep class com.google.android.gms.** { *; }
-
 # Keep CameraX classes
 -keep class androidx.camera.** { *; }
 
@@ -116,3 +97,11 @@
 -dontwarn org.bouncycastle.jsse.**
 -dontwarn org.conscrypt.**
 -dontwarn org.openjsse.**
+
+# error_prone annotations, pulled in transitively by material's compile-time
+# dependency graph, reference javax.lang.model.* compiler-only types that
+# don't exist on Android at runtime — annotations are erased, so this is
+# harmless. (ML Kit's AAR used to ship a consumer rule covering this; it
+# went away with the ML Kit -> ZXing swap.)
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.lang.model.**
