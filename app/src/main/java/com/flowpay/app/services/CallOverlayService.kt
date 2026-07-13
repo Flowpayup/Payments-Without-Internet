@@ -618,27 +618,48 @@ class CallOverlayService : Service() {
      * (max 3, +30s total) instead of cancelling a session whose call is in
      * fact connecting. Only a persistently Idle device cancels.
      */
+    @Suppress("TooGenericExceptionCaught") // see comment below: must never crash the main looper mid-payment
     private fun startTimeoutTimer() {
         Log.d(TAG, "Starting 40-second timeout timer")
 
         timeoutExtensions = 0
         timeoutRunnable = Runnable {
-            if (isCallDetected) return@Runnable
-
-            val deviceBusy = coordinator?.callState?.value !is DeviceCallState.Idle
-            if (deviceBusy && timeoutExtensions < MAX_TIMEOUT_EXTENSIONS) {
-                timeoutExtensions++
-                Log.d(TAG, "Timeout reached but device not idle - re-arming ($timeoutExtensions/$MAX_TIMEOUT_EXTENSIONS)")
-                timeoutHandler?.postDelayed(timeoutRunnable!!, TIMEOUT_EXTENSION_MS)
-                return@Runnable
+            val shouldGiveUp = try {
+                if (isCallDetected) {
+                    false
+                } else {
+                    val deviceBusy = coordinator?.callState?.value !is DeviceCallState.Idle
+                    if (deviceBusy && timeoutExtensions < MAX_TIMEOUT_EXTENSIONS) {
+                        timeoutExtensions++
+                        Log.d(
+                            TAG,
+                            "Timeout reached but device not idle - re-arming " +
+                                "($timeoutExtensions/$MAX_TIMEOUT_EXTENSIONS)"
+                        )
+                        timeoutHandler?.postDelayed(timeoutRunnable!!, TIMEOUT_EXTENSION_MS)
+                        false
+                    } else {
+                        Log.d(TAG, "Timeout reached - no call detected, stopping service")
+                        true
+                    }
+                }
+            } catch (e: Exception) {
+                // This Runnable executes on the main looper (timeoutHandler =
+                // Handler(Looper.getMainLooper())): an uncaught exception here
+                // would crash the whole app AND skip the session notification
+                // below, stranding the payment until the 10-minute deadline.
+                // Log and still give up cleanly rather than let either happen.
+                Log.e(TAG, "Error in timeout timer: ${e.message}", e)
+                true
             }
 
-            Log.d(TAG, "Timeout reached - no call detected, stopping service")
-            // The dial never produced an active call; close the session
-            // honestly instead of leaving it to the 10-minute deadline.
-            sessionManager?.onCallNeverStarted()
-            hideOverlayInternal()
-            stopSelf()
+            if (shouldGiveUp) {
+                // The dial never produced an active call; close the session
+                // honestly instead of leaving it to the 10-minute deadline.
+                sessionManager?.onCallNeverStarted()
+                hideOverlayInternal()
+                stopSelf()
+            }
         }
 
         timeoutHandler?.postDelayed(timeoutRunnable!!, TIMEOUT_DURATION)
@@ -917,11 +938,14 @@ class CallOverlayService : Service() {
     private fun handleTerminateCall() {
         Log.d(TAG, "=== HANDLING TERMINATE CALL REQUEST ===")
 
-        try {
-            // Mark the session cancelled first — the payment-state collector
-            // hides the overlay and shows the cancellation dialog exactly once.
-            sessionManager?.onUserCancelled()
+        // Mark the session cancelled first and unconditionally — the
+        // payment-state collector hides the overlay and shows the
+        // cancellation dialog exactly once. This must run outside the try
+        // below: audio/telecom cleanup is best-effort UI polish and must
+        // never be able to prevent the session from being marked cancelled.
+        sessionManager?.onUserCancelled()
 
+        try {
             callManager?.restoreCallVolume()
 
             val callTerminated = callManager?.terminateCall() ?: false

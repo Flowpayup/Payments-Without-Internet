@@ -2,7 +2,7 @@ package com.flowpay.app.payment
 
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.data.TransactionStatus
-import com.flowpay.app.helpers.SimpleTransaction
+import com.flowpay.app.payment.sms.SimpleTransaction
 import com.flowpay.app.states.PaymentState
 import com.flowpay.app.telephony.CallSessionEvent
 import com.flowpay.app.telephony.CallStateSource
@@ -330,6 +330,101 @@ class PaymentSessionManagerTest {
         assertTrue(manager.paymentState.value is PaymentState.Cancelled)
         assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
         assertEquals("coordinator must be released on terminal state", 1, source.releaseCount)
+    }
+
+    // -------------------------------------------------------------------
+    // onUserCancelled / onCallNeverStarted — CallOverlayService's overlay
+    // handlers call these unconditionally, before any UI/telecom cleanup
+    // that could throw (see CallOverlayService.handleTerminateCall and
+    // .startTimeoutTimer). These tests prove the transition itself is
+    // correct and safe to invoke more than once, which is what makes that
+    // call-before-cleanup ordering — and a defensive retry from a catch
+    // block — safe rather than merely convenient.
+    // -------------------------------------------------------------------
+
+    @Test
+    fun `user cancellation from the overlay ends the session as CANCELLED`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        manager.onUserCancelled()
+        runCurrent()
+
+        assertTrue(manager.paymentState.value is PaymentState.Cancelled)
+        assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
+        assertEquals("coordinator must be released on terminal state", 1, source.releaseCount)
+    }
+
+    @Test
+    fun `onUserCancelled is a safe no-op with no active session`() = runTest {
+        val (manager, _, _) = newManager()
+
+        // Simulates a stray overlay callback (or a defensive retry after a
+        // caught exception) with nothing in flight — must not throw.
+        manager.onUserCancelled()
+        runCurrent()
+
+        assertEquals(PaymentState.Idle, manager.paymentState.value)
+    }
+
+    @Test
+    fun `onUserCancelled called twice does not double-transition or crash`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        // Mirrors CallOverlayService.handleTerminateCall calling this again
+        // from its catch block after cleanup below it throws.
+        manager.onUserCancelled()
+        runCurrent()
+        manager.onUserCancelled()
+        runCurrent()
+
+        assertTrue(manager.paymentState.value is PaymentState.Cancelled)
+        assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
+        assertEquals("second call must not release the coordinator again", 1, source.releaseCount)
+    }
+
+    @Test
+    fun `call never starting during Initiating ends the session as CANCELLED`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+
+        assertTrue(
+            "precondition: session must still be Initiating (no OFFHOOK yet)",
+            manager.paymentState.value is PaymentState.Initiating
+        )
+
+        manager.onCallNeverStarted()
+        runCurrent()
+
+        assertTrue(manager.paymentState.value is PaymentState.Cancelled)
+        assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
+        assertEquals("coordinator must be released on terminal state", 1, source.releaseCount)
+    }
+
+    @Test
+    fun `onCallNeverStarted is a no-op once the call has actually started`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+        assertTrue(manager.paymentState.value is PaymentState.InProgress)
+
+        // The overlay's 40s watchdog firing late, after OFFHOOK already
+        // arrived, must not cancel a call that is genuinely in progress.
+        manager.onCallNeverStarted()
+        runCurrent()
+
+        assertTrue(manager.paymentState.value is PaymentState.InProgress)
+        assertEquals(TransactionStatus.PENDING, store.rows[txnId]!!.status)
     }
 
     @Test

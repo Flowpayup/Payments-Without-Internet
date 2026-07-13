@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Merged into the manifest for debug builds only (AGP source-set manifest
+  merging) — this receiver and its declaration are entirely absent from
+  release APKs, not merely gated by a runtime check. See
+  DebugSmsInjectionReceiver for what it does and why.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <receiver
+            android:name=".receivers.DebugSmsInjectionReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.flowpay.app.debug.START_OPERATION" />
+                <action android:name="com.flowpay.app.debug.INJECT_SMS" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

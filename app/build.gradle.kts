@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.ksp)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
 }
 
 // Release signing is read from keystore.properties (gitignored). Copy
@@ -116,6 +117,25 @@ android {
 detekt {
     buildUponDefaultConfig = true
     baseline = file("detekt-baseline.xml")
+}
+
+// Coverage floor scoped to the payment lifecycle + SMS-parsing packages —
+// the riskiest code in the app, where an untested regression can silently
+// misreport a payment outcome. No app-wide threshold: a blanket UI-coverage
+// number would just reward screenshot-test theater, not payment safety.
+kover {
+    reports {
+        filters {
+            includes {
+                packages("com.flowpay.app.payment", "com.flowpay.app.payment.sms")
+            }
+        }
+        verify {
+            rule {
+                minBound(85)
+            }
+        }
+    }
 }
 
 dependencies {

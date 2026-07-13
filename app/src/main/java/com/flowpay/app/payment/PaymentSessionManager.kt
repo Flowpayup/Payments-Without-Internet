@@ -4,7 +4,7 @@ import android.util.Log
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.data.TransactionSource
 import com.flowpay.app.data.TransactionStatus
-import com.flowpay.app.helpers.SimpleTransaction
+import com.flowpay.app.payment.sms.SimpleTransaction
 import com.flowpay.app.states.PaymentState
 import com.flowpay.app.states.TimeoutType
 import com.flowpay.app.telephony.CallSessionEvent

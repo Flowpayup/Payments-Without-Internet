@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-13
+
+### Added
+- **`SmsTransactionParser`**: the bank-SMS matching logic extracted from `TransactionDetector` into a pure, Context-free object, directly unit-testable without Robolectric. `TransactionDetector` is now a thin stateful orchestrator (operation window, cross-pipeline dedup) that delegates all matching to it.
+- **`SmsTransactionParserTest`**: a 14-bank corpus exercising `parse()` end-to-end (success/failure/credit/non-UPI-debit-alert shapes, amount-format edge cases including Indian lakh grouping, deterministic transaction-ID generation under an injected clock). `SmsParsingRegexTest`'s previously-duplicated inline regex logic now calls production code directly.
+- Six new `PaymentSessionManagerTest` cases for `onUserCancelled`/`onCallNeverStarted`, including idempotency under a defensive double-call — the exact scenario the `CallOverlayService` hardening below relies on.
+- **Debug SMS-injection tool** (`DebugSmsInjectionReceiver`, debug-build-only source set): replays a bank SMS through the live ingestion pipeline via `adb shell am broadcast`, without a SIM, a bank, or a real call. `SimpleSMSReceiver`'s persistence/broadcast/launch logic was extracted into a shared `SmsIngestionPipeline` so the debug tool exercises identical code, not a reimplementation.
+- `docs/TESTING.md` (the four-layer verification story) and `docs/RELEASE_CHECKLIST.md` (the physical-device release gate).
+- Kover coverage floor (85%, currently ~98%) scoped to the `payment`/`payment.sms` packages only, enforced in CI via `koverVerify`. No app-wide threshold.
+
+### Fixed
+- `CallOverlayService.startTimeoutTimer`'s 40-second watchdog ran with no exception handling on the main looper — an uncaught exception there would have crashed the app *and* skipped `onCallNeverStarted()`, stranding a payment session until the 10-minute deadline. Now caught and the session notification always fires.
+- `CallOverlayService.handleTerminateCall` now calls `onUserCancelled()` unconditionally before any audio/telecom cleanup, so a failure in that cleanup can never prevent the session from being marked cancelled.
+- Deleted five `PaymentState` variants (`Retrying`, `QRPaymentInitiating/InProgress/WaitingForVerification/Success/Failed`) that were never constructed anywhere in the codebase — dead states that misrepresented the state machine's actual surface.
+- A real discrepancy the extraction surfaced: a duplicated-regex test in `SmsParsingRegexTest` asserted a promotional SMS wasn't bank-detected, but its body text accidentally collided with the `YES` (Yes Bank) keyword — the test only ever passed because its local duplicate `detectBank` didn't include that keyword. Fixed the test body; the production behavior was correct all along.
+
 ## [1.1.0] - 2026-07-13
 
 ### Added
