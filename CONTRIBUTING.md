@@ -52,14 +52,18 @@ app/src/main/java/com/flowpay/app/
 ├── TestConfigurationActivity.kt     # post-setup USSD/UPI test gate
 ├── constants/                       # AppConstants, PermissionConstants
 ├── data/                            # Room entities, repositories
-├── features/qr_scanner/             # QR scanner (CameraX + ML Kit)
+├── di/                              # AppContainer (composition root)
+├── features/qr_scanner/             # QR scanner (CameraX + ZXing)
 ├── helpers/                         # business-logic helpers
 ├── managers/                        # CallManager, PermissionManager, etc.
-├── receivers/                       # SMS BroadcastReceiver
+├── payment/                         # PaymentSessionManager, SMS parser, validators
+├── receivers/                       # SMS BroadcastReceiver + ingestion pipeline
 ├── services/                        # call-overlay, notification listener
 ├── ui/                              # Compose screens + theme
 └── utils/                           # small utilities
 ```
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit — the payment state machine, the dual SMS-ingestion pipeline, the composition root, and the deliberate simplifications.
 
 ## Branching
 

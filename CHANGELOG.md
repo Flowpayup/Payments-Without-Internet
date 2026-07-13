@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `docs/ARCHITECTURE.md`: the payment state machine, dual SMS-ingestion pipeline, composition root, component map, and deliberate simplifications.
+- `di/AppContainer`: an explicit, framework-free composition root owned by `FlowpayApplication`.
+- `payment/PaymentInputValidator` with unit tests — pure phone/amount validation extracted from `CallManager`.
+- `MainViewModel` carrying Activity↔Compose one-shot events.
+
+### Changed
+- **All permission and activity results now go through `ActivityResultContracts` launchers.** Removed every `onActivityResult` / `onRequestPermissionsResult` override and all six static `@Volatile` callback fields on `MainActivity`'s companion object (the headline architecture cleanup); one-shot Activity→Compose events flow through `MainViewModel` instead.
+
+### Removed
+- Five never-constructed `PaymentState` variants (`Retrying`, all five `QRPayment*`), three dead `CallManager` validation/sanitization methods, and the obsolete permission request-code constants and helper result-handlers.
+
 ## [1.2.0] - 2026-07-13
 
 ### Added
