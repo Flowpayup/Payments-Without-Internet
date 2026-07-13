@@ -7,14 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-07-13
+
+The quality release: a sustained pass over architecture, testing, build
+engineering, FOSS purity, and documentation. Every dependency is now FOSS,
+the riskiest code (bank-SMS parsing, the payment state machine) is tested
+against production code, the UI is one consistent pattern with no static
+mutable state, all hardcoded strings are extracted, and the whole system is
+documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The versions
+below (1.1.0–1.2.0) chart that pass; 2.0.0 is where it lands.
+
 ### Added
-- `docs/ARCHITECTURE.md`: the payment state machine, dual SMS-ingestion pipeline, composition root, component map, and deliberate simplifications.
+- `docs/ARCHITECTURE.md` (system map), `docs/FAQ.md` (trust/permissions Q&A), `docs/TESTING.md` (four-layer verification), `docs/RELEASE_CHECKLIST.md`, `docs/RELEASING.md`.
 - `di/AppContainer`: an explicit, framework-free composition root owned by `FlowpayApplication`.
 - `payment/PaymentInputValidator` with unit tests — pure phone/amount validation extracted from `CallManager`.
 - `MainViewModel` carrying Activity↔Compose one-shot events.
+- A curated "good first contributions" list in CONTRIBUTING and a gitleaks secret-scan CI step.
 
-### Changed (string hygiene)
-- Extracted every hardcoded UI string in the classic-View screens (payment-result, call-overlay, QR-scanner layouts and their `setText` calls, plus the manifest `Settings` label) into `strings.xml`; runtime-overwritten placeholders became design-time `tools:text`. `HardcodedText` and `SetTextI18n` are now error-level lint checks with zero baselined findings, so any new hardcoded string fails the build. Lint baseline dropped 85 → 45.
+### Changed
+- **Zero static mutable state on `MainActivity`'s companion object.** Removed all six `@Volatile` static callback fields and both deprecated result overrides; all permission and activity results go through `ActivityResultContracts` launchers, with one-shot Activity→Compose events flowing through `MainViewModel`.
+- **All hardcoded UI strings extracted** to `strings.xml` across the classic-View screens (layouts, `setText` calls, the manifest label); runtime placeholders became design-time `tools:text`. `HardcodedText`/`SetTextI18n` are now error-level lint checks with zero baselined findings — lint baseline dropped 85 → 45.
+
+### Removed
+- Five never-constructed `PaymentState` variants (`Retrying`, all five `QRPayment*`), three dead `CallManager` validation/sanitization methods, unreachable dialogs, and the obsolete permission request-code constants and helper result-handlers.
 
 ### Changed
 - **All permission and activity results now go through `ActivityResultContracts` launchers.** Removed every `onActivityResult` / `onRequestPermissionsResult` override and all six static `@Volatile` callback fields on `MainActivity`'s companion object (the headline architecture cleanup); one-shot Activity→Compose events flow through `MainViewModel` instead.
