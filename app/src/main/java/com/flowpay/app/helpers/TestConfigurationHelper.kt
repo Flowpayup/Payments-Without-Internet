@@ -73,6 +73,9 @@ class TestConfigurationHelper(
         fun updateUssdProgressMessage(message: String)
         fun updateUssdConfigurationOptions(show: Boolean)
         fun navigateToMain()
+
+        /** Launch the phone-permission request (Activity owns the launcher). */
+        fun requestPhonePermissions()
     }
     
 
@@ -100,22 +103,17 @@ class TestConfigurationHelper(
     }
 
     /**
-     * Handle permission results
+     * Handle the phone-permission launcher result. There is no auto-retry:
+     * the user re-taps the test action once permissions are granted.
      */
-    fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
-        val success = permissionManager.handlePermissionResult(requestCode, permissions, grantResults)
-        if (requestCode == com.flowpay.app.constants.PermissionConstants.PERMISSIONS_REQUEST_CODE) {
-            if (success) {
-                Log.d(TAG, "All permissions granted")
-                uiCallback.showToast("Permissions granted! You can now test USSD")
-            } else {
-                Log.w(TAG, "Some permissions denied")
-                uiCallback.showToast("Some permissions were denied. App may not work properly.")
-            }
+    fun onPhonePermissionsResult(granted: Boolean) {
+        if (granted) {
+            Log.d(TAG, "All permissions granted")
+            uiCallback.showToast("Permissions granted! You can now test USSD")
         } else {
-            Log.d(TAG, "Permission result for requestCode=$requestCode handled at activity level (success=$success)")
+            Log.w(TAG, "Some permissions denied")
+            uiCallback.showToast("Some permissions were denied. App may not work properly.")
         }
-        return success
     }
 
     /**
@@ -128,11 +126,11 @@ class TestConfigurationHelper(
             return
         }
 
-        // Check phone permissions before initiating call - request directly if missing
+        // Check phone permissions before initiating call - request if missing
         if (!permissionManager.hasPhonePermissions()) {
             Log.e(TAG, "Phone permissions not granted")
             uiCallback.showToast("Phone call permission is required to test USSD")
-            permissionManager.requestPhonePermissions()
+            uiCallback.requestPhonePermissions()
             return
         }
         

@@ -69,14 +69,12 @@ jobs:
       - name: Detekt baseline must not grow
         run: |
           # detekt-baseline.xml froze the findings that predate detekt's
-          # adoption. Extracting SmsTransactionParser out of TransactionDetector
-          # (Phase 3) moved some pre-existing findings to the new file/class
-          # signature and shed others as dead weight, netting the baseline
-          # down. New code must otherwise come in clean.
+          # adoption. Successive phases have netted it down as dead code was
+          # removed and helpers were consolidated. New code must come in clean.
           IDS=$(grep -c "<ID>" app/detekt-baseline.xml || echo 0)
           echo "Detekt baseline currently absorbs $IDS findings"
-          if [ "$IDS" -gt 861 ]; then
-            echo "::error::detekt-baseline.xml grew beyond the frozen budget (861). Fix new detekt findings instead of re-baselining."
+          if [ "$IDS" -gt 835 ]; then
+            echo "::error::detekt-baseline.xml grew beyond the frozen budget (835). Fix new detekt findings instead of re-baselining."
             exit 1
           fi
 

@@ -7,7 +7,6 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import com.flowpay.app.FlowpayApplication
-import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.managers.CallManager
 import com.flowpay.app.managers.PermissionManager
 import com.flowpay.app.services.CallOverlayService
@@ -36,9 +35,6 @@ class MainActivityHelper(
     private var callManager: CallManager? = null
     private var permissionManager: PermissionManager? = null
 
-    // Permission request tracking
-    private var isRequestingPermissions = false
-
     /**
      * Interface for UI callbacks
      */
@@ -49,20 +45,10 @@ class MainActivityHelper(
         fun navigateToTestConfiguration()
         fun finishActivity()
         fun showOverlayPermissionExplanation()
-    }
+        fun launchQRScanner(intent: Intent)
 
-    /**
-     * Check SMS permissions specifically
-     */
-    fun checkSMSPermissions(): Boolean {
-        return permissionManager?.checkSMSPermissions() ?: false
-    }
-
-    /**
-     * Request SMS permissions specifically
-     */
-    fun requestSMSPermissions() {
-        permissionManager?.requestSMSPermissions()
+        /** Launch the phone-permission request (Activity owns the launcher). */
+        fun requestPhonePermissions()
     }
 
     /**
@@ -70,14 +56,7 @@ class MainActivityHelper(
      */
     private fun openQRScanner() {
         val intent = Intent(context, com.flowpay.app.features.qr_scanner.presentation.QRScannerActivity::class.java)
-        // Remove FLAG_ACTIVITY_NEW_TASK to allow result handling
-        if (context is Activity) {
-            context.startActivityForResult(intent, com.flowpay.app.MainActivity.QR_SCAN_REQUEST_CODE)
-        } else {
-            // Fallback for non-Activity context
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
-        }
+        uiCallback.launchQRScanner(intent)
     }
 
     /**
@@ -96,47 +75,13 @@ class MainActivityHelper(
         if (permissionManager?.hasPhonePermissions() != true) {
             Log.d(TAG, "Phone permissions not granted, requesting...")
             uiCallback.showToast("Requesting required permissions...")
-            isRequestingPermissions = true
-            permissionManager?.requestPhonePermissions()
+            uiCallback.requestPhonePermissions()
             return
         }
 
         Log.d(TAG, "Phone permissions granted, opening QR scanner")
         uiCallback.showToast("Opening QR scanner...")
         openQRScanner()
-    }
-
-    /**
-     * Handle activity result
-     */
-    fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Log.d(TAG, "handleActivityResult: requestCode=$requestCode, resultCode=$resultCode")
-
-        when (requestCode) {
-            PermissionConstants.OVERLAY_PERMISSION_REQ_CODE -> {
-                Log.d(TAG, "Overlay permission result received")
-                isRequestingPermissions = false
-                if (Settings.canDrawOverlays(context)) {
-                    Log.d(TAG, "Overlay permission granted")
-                    uiCallback.showToast("Overlay permission granted. You can now proceed with the transfer.")
-                } else {
-                    Log.w(TAG, "Overlay permission not granted")
-                    uiCallback.showToast("Overlay permission is required for payment protection. Please enable it in Settings.")
-                }
-            }
-            PermissionConstants.PERMISSIONS_REQUEST_CODE -> {
-                Log.d(TAG, "Basic permissions result received")
-                isRequestingPermissions = false
-                // Handle basic permission results if needed
-                if (permissionManager?.checkAllPermissions() == true) {
-                    Log.d(TAG, "Basic permissions granted, checking overlay permission")
-                    startQRScanning()
-                } else {
-                    Log.w(TAG, "Basic permissions not granted")
-                    uiCallback.showToast("Required permissions not granted. Please try again.")
-                }
-            }
-        }
     }
 
     /**
@@ -214,7 +159,7 @@ class MainActivityHelper(
         // Check phone permissions only (camera/contacts handled separately)
         if (permissionManager?.hasPhonePermissions() != true) {
             uiCallback.showToast("Phone permissions required")
-            permissionManager?.requestPhonePermissions()
+            uiCallback.requestPhonePermissions()
             return
         }
 
@@ -298,37 +243,6 @@ class MainActivityHelper(
         } catch (e: Exception) {
             Log.w(TAG, "SIM mismatch check failed: ${e.message}")
         }
-    }
-
-    /**
-     * Handle QR permission results
-     */
-    fun handleQRPermissionResult(permissions: Map<String, Boolean>) {
-        Log.d(TAG, "QR permission results received: $permissions")
-
-        val allGranted = permissions.values.all { it }
-        if (allGranted) {
-            Log.d(TAG, "All QR permissions granted, starting QR scanning")
-            startQRScanning()
-        } else {
-            Log.w(TAG, "Some QR permissions were denied")
-            uiCallback.showToast("Camera permission is required for QR scanning")
-        }
-    }
-
-    /**
-     * Handle permission results
-     */
-    fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
-        val success = permissionManager?.handlePermissionResult(requestCode, permissions, grantResults) ?: false
-
-        if (!success && requestCode == PermissionConstants.PERMISSIONS_REQUEST_CODE) {
-            // Only show the generic toast for the batch request. Specific request codes
-            // (SMS, camera, contacts) have their own activity-level feedback.
-            uiCallback.showToast("Some permissions were denied. App may not work properly.")
-        }
-
-        return success
     }
 
     /**
