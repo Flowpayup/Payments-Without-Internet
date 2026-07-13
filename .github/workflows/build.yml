@@ -47,14 +47,30 @@ jobs:
       - name: Run lint
         run: ./gradlew :app:lintDebug --no-daemon --stacktrace
 
+      - name: Run detekt
+        run: ./gradlew detekt --no-daemon --stacktrace
+
       - name: Lint baseline must not grow
         run: |
-          # The baseline freezes PRE-EXISTING lint debt. New code must fix
+          # The baseline freezes 85 pre-existing findings (mostly HardcodedText
+          # and View-layer items scheduled for the string-hygiene and
+          # architecture phases). It only ratchets DOWN — new code must fix
           # its lint findings, not absorb them into the baseline.
-          ISSUES=$(grep -c "<issue" app/lint-baseline.xml || echo 0)
+          ISSUES=$(grep -cE '<issue\s|<issue$' app/lint-baseline.xml || echo 0)
           echo "Baseline currently absorbs $ISSUES issues"
-          if [ "$ISSUES" -gt 400 ]; then
-            echo "::error::lint-baseline.xml grew beyond the frozen budget (400). Fix new lint issues instead of re-baselining."
+          if [ "$ISSUES" -gt 85 ]; then
+            echo "::error::lint-baseline.xml grew beyond the frozen budget (85). Fix new lint issues instead of re-baselining."
+            exit 1
+          fi
+
+      - name: Detekt baseline must not grow
+        run: |
+          # detekt-baseline.xml froze the findings that predate detekt's
+          # adoption (872 IDs). New code must come in clean.
+          IDS=$(grep -c "<ID>" app/detekt-baseline.xml || echo 0)
+          echo "Detekt baseline currently absorbs $IDS findings"
+          if [ "$IDS" -gt 872 ]; then
+            echo "::error::detekt-baseline.xml grew beyond the frozen budget (872). Fix new detekt findings instead of re-baselining."
             exit 1
           fi
 

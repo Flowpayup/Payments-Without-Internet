@@ -1,0 +1,55 @@
+name: Release
+
+# Builds an UNSIGNED release APK for every version tag and attaches it to a
+# draft GitHub Release. The signing key never touches CI: the maintainer signs
+# locally and uploads the signed APK before publishing the draft.
+# See docs/RELEASING.md for the full flow.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: test + assembleRelease (unsigned)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Run unit tests
+        run: ./gradlew test --no-daemon --stacktrace
+
+      - name: Assemble release APK (unsigned)
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Generate checksums
+        run: |
+          cd app/build/outputs/apk/release
+          shasum -a 256 *.apk > SHA-256SUMS
+          cat SHA-256SUMS
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/release/SHA-256SUMS
