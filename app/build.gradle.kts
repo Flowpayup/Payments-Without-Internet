@@ -27,8 +27,8 @@ android {
         applicationId = "com.flowpay.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -137,17 +137,15 @@ dependencies {
     // Constraint Layout
     implementation(libs.androidx.constraintlayout)
 
-    // QR Code Scanning
-    implementation(libs.mlkit.barcode.scanning)
+    // QR Code Scanning — ZXing core: pure Java, Apache 2.0, no proprietary
+    // model blob (unlike ML Kit, which this replaced for FOSS purity).
+    implementation(libs.zxing.core)
 
     // CameraX
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
     implementation(libs.camerax.core)
-
-    // JSON parsing
-    implementation(libs.gson)
 
     // Room Database
     implementation(libs.room.runtime)

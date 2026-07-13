@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -15,10 +16,14 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.GetContent
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -32,14 +37,6 @@ import com.flowpay.app.features.qr_scanner.domain.QRCodeAnalyzer
 import com.flowpay.app.helpers.SetupHelper
 import com.flowpay.app.helpers.TransactionDetector
 import com.flowpay.app.managers.PermissionManager
-import android.view.WindowManager
-import android.widget.ImageButton
-import androidx.activity.result.contract.ActivityResultContracts.GetContent
-import androidx.camera.core.Camera
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -848,22 +845,18 @@ class QRScannerActivity : ComponentActivity() {
 
     private fun scanImageFromGallery(uri: Uri) {
         try {
-            val image = InputImage.fromFilePath(this, uri)
-            val options = BarcodeScannerOptions.Builder()
-                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-                .build()
-            BarcodeScanning.getClient(options).process(image)
-                .addOnSuccessListener { barcodes ->
-                    val qr = barcodes.firstOrNull()?.rawValue
-                    if (qr != null) {
-                        processQRCode(qr)
-                    } else {
-                        Toast.makeText(this, "No QR code found in image", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Failed to scan image", Toast.LENGTH_SHORT).show()
-                }
+            val source = ImageDecoder.createSource(contentResolver, uri)
+            val bitmap = ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                // ZXing reads pixels off the CPU; force a software bitmap so
+                // getPixels() doesn't throw on a HARDWARE-config decode.
+                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            }
+            val qr = QRCodeAnalyzer.decodeBitmap(bitmap)
+            if (qr != null) {
+                processQRCode(qr)
+            } else {
+                Toast.makeText(this, "No QR code found in image", Toast.LENGTH_SHORT).show()
+            }
         } catch (e: Exception) {
             Toast.makeText(this, "Could not load image", Toast.LENGTH_SHORT).show()
         }
