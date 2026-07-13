@@ -92,7 +92,17 @@ CI runs on every push and PR. A green run is required before merge.
 
 ## About the lint and detekt baselines
 
-`app/lint-baseline.xml` and `app/detekt-baseline.xml` freeze pre-existing findings so CI can gate on *new* ones. Both baselines only ratchet **down**: CI fails if either grows, so any finding your change introduces must be fixed, not baselined. Shrinking them is a welcome contribution — most remaining lint entries are `HardcodedText`/`SetTextI18n` string extractions.
+`app/lint-baseline.xml` and `app/detekt-baseline.xml` freeze pre-existing findings so CI can gate on *new* ones. Both baselines only ratchet **down**: CI fails if either grows, so any finding your change introduces must be fixed, not baselined. Shrinking them is a welcome contribution — the remaining entries are mostly formatting and View-layer items in the older screens.
+
+## Good first contributions
+
+If you're looking for a place to start:
+
+- **Add a bank SMS template** to the parser corpus (see "Adding a bank SMS template" above) — the single most valuable contribution, and low-risk.
+- **Shrink a detekt/lint baseline entry** — pick one finding, fix it, drop it from the baseline (see above).
+- **Improve a `docs/` page** — a clearer FAQ answer, a diagram, a fixed link.
+- **Reduce a god-file** — `MainActivity.kt` and `CallOverlayService.kt` are large; extracting a self-contained composable or helper (with no behavior change) is a good scoped task.
+- **Report a carrier/USSD quirk** — the bug template asks for carrier and SIM; a well-documented report is itself a contribution.
 
 ## Filing issues
 

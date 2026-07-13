@@ -113,7 +113,7 @@ If you want to skim the code without running it, the build also works without an
 
 **Verify a build:** check any release APK against its signing certificate with `apksigner verify --print-certs <apk>` and compare the SHA-256 fingerprint with the one published alongside the release.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the system fits together, [docs/FAQ.md](docs/FAQ.md) for the trust/permissions questions, [docs/TESTING.md](docs/TESTING.md) for how outcomes are verified, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
 
 ## License
 
