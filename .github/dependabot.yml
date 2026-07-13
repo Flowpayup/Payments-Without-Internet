@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # One PR for routine minor/patch bumps; majors stay individual PRs
+      # so their release notes get read before merging.
+      gradle-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch

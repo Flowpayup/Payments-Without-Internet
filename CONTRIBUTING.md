@@ -84,11 +84,11 @@ CI runs on every push and PR. A green run is required before merge.
 
 - Kotlin official style (4-space indent, no wildcard imports).
 - An `.editorconfig` at the repo root captures the conventions; most IDEs respect it automatically.
-- No automated formatter is enforced yet — feel free to propose `ktlint` or `detekt` config if you want one.
+- `detekt` (with the ktlint-style formatting ruleset) is enforced in CI: run `./gradlew detekt` locally before pushing. Pre-existing findings are frozen in `app/detekt-baseline.xml`; new code must come in clean.
 
-## About the lint baseline
+## About the lint and detekt baselines
 
-`app/lint-baseline.xml` exists to freeze pre-existing lint findings so CI can gate on *new* ones. The baseline is currently **empty** — all previously baselined issues have been fixed — so any lint finding your change introduces is genuinely new. Fix it rather than adding it to the baseline.
+`app/lint-baseline.xml` and `app/detekt-baseline.xml` freeze pre-existing findings so CI can gate on *new* ones. Both baselines only ratchet **down**: CI fails if either grows, so any finding your change introduces must be fixed, not baselined. Shrinking them is a welcome contribution — most remaining lint entries are `HardcodedText`/`SetTextI18n` string extractions.
 
 ## Filing issues
 

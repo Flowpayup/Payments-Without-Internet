@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Flowpay"
-include ':app'
+include(":app")
