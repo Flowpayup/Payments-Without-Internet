@@ -4,33 +4,23 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import com.flowpay.app.data.SettingsRepository
+import com.flowpay.app.di.AppContainer
 import com.flowpay.app.payment.PaymentSessionManager
-import com.flowpay.app.repository.TransactionRepository
 import com.flowpay.app.telephony.CallStateCoordinator
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 
 class FlowpayApplication : Application() {
 
-    /** Process-wide scope for work that must outlive any single screen. */
-    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    /** The manual composition root; see [AppContainer]. */
+    val container: AppContainer by lazy { AppContainer(applicationContext) }
 
-    val settingsRepository: SettingsRepository by lazy { SettingsRepository(applicationContext) }
-
-    /** Single telephony listener for the whole app. */
-    val callStateCoordinator: CallStateCoordinator by lazy {
-        CallStateCoordinator(applicationContext)
-    }
-
-    /** The only writer of payment lifecycle state. */
-    val paymentSessionManager: PaymentSessionManager by lazy {
-        PaymentSessionManager(
-            store = TransactionRepository.getInstance(applicationContext),
-            coordinator = callStateCoordinator,
-            scope = appScope
-        )
-    }
+    // Delegating accessors so existing call sites
+    // (FlowpayApplication.from(context)?.paymentSessionManager, etc.) keep
+    // working while construction lives in the container.
+    val appScope: CoroutineScope get() = container.appScope
+    val settingsRepository: SettingsRepository get() = container.settingsRepository
+    val callStateCoordinator: CallStateCoordinator get() = container.callStateCoordinator
+    val paymentSessionManager: PaymentSessionManager get() = container.paymentSessionManager
 
     companion object {
         private const val TAG = "FlowpayApplication"
