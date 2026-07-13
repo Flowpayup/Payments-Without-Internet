@@ -7,13 +7,14 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import com.flowpay.app.FlowpayApplication
-import com.flowpay.app.managers.CallManager
-import com.flowpay.app.managers.PermissionManager
-import com.flowpay.app.services.CallOverlayService
-import com.flowpay.app.states.PaymentState
 import com.flowpay.app.SetupActivity
 import com.flowpay.app.TestConfigurationActivity
 import com.flowpay.app.constants.AppConstants
+import com.flowpay.app.managers.CallManager
+import com.flowpay.app.managers.PermissionManager
+import com.flowpay.app.payment.PaymentInputValidator
+import com.flowpay.app.services.CallOverlayService
+import com.flowpay.app.states.PaymentState
 
 /**
  * Helper class containing all business logic for MainActivity
@@ -140,7 +141,7 @@ class MainActivityHelper(
         }
 
         // Validate phone number
-        if (callManager?.isValidPhoneNumber(phoneNumber) != true) {
+        if (!PaymentInputValidator.isValidPhoneNumber(phoneNumber)) {
             uiCallback.showToast("Please enter valid 10-digit number")
             return
         }

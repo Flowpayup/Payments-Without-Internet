@@ -290,20 +290,6 @@ class CallManager(private val context: Context) {
     
     
     /**
-     * Sanitizes amount input (digits and single decimal point)
-     */
-    private fun sanitizeAmount(input: String): String {
-        val digitsOnly = input.replace(Regex("[^0-9.]"), "")
-        // Ensure only one decimal point
-        val parts = digitsOnly.split(".")
-        return if (parts.size > 2) {
-            parts[0] + "." + parts.drop(1).joinToString("")
-        } else {
-            digitsOnly
-        }
-    }
-    
-    /**
      * Initiates a UPI123 call with the given phone number and amount
      */
     fun initiateUPI123Call(phoneNumber: String, amount: String): Boolean {
@@ -653,45 +639,4 @@ class CallManager(private val context: Context) {
      * Gets the current call state
      */
     fun getCallState(): Int = telephonyManager.callState
-    
-    /**
-     * Validates phone number format (10 digits)
-     */
-    fun isValidPhoneNumber(phoneNumber: String?): Boolean {
-        if (phoneNumber.isNullOrBlank()) return false
-        // More strict validation - exactly 10 digits, no leading zeros for first digit
-        return phoneNumber.matches(Regex(AppConstants.PHONE_NUMBER_PATTERN))
-    }
-    
-    /**
-     * Validates amount format (positive number with reasonable limits)
-     */
-    fun isValidAmount(amount: String?): Boolean {
-        if (amount.isNullOrBlank()) return false
-        return try {
-            val amountValue = amount.toDouble()
-            // More reasonable limits: minimum 1 rupee, maximum 1 lakh
-            amountValue >= AppConstants.MIN_AMOUNT_VALUE && amountValue <= AppConstants.MAX_AMOUNT_VALUE
-        } catch (e: NumberFormatException) {
-            false
-        }
-    }
-    
-    /**
-     * Sanitizes and validates phone number input
-     */
-    fun sanitizeAndValidatePhoneNumber(phoneNumber: String): String? {
-        if (phoneNumber.isNullOrBlank()) return null
-        val sanitized = phoneNumber.replace(Regex("[^0-9]"), "")
-        return if (sanitized.length == 10) sanitized else null
-    }
-    
-    /**
-     * Sanitizes and validates amount input
-     */
-    fun sanitizeAndValidateAmount(amount: String): String? {
-        if (amount.isNullOrBlank()) return null
-        val sanitized = amount.replace(Regex("[^0-9.]"), "")
-        return if (isValidAmount(sanitized)) sanitized else null
-    }
 }

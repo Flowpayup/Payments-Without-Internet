@@ -73,8 +73,8 @@ jobs:
           # removed and helpers were consolidated. New code must come in clean.
           IDS=$(grep -c "<ID>" app/detekt-baseline.xml || echo 0)
           echo "Detekt baseline currently absorbs $IDS findings"
-          if [ "$IDS" -gt 835 ]; then
-            echo "::error::detekt-baseline.xml grew beyond the frozen budget (835). Fix new detekt findings instead of re-baselining."
+          if [ "$IDS" -gt 832 ]; then
+            echo "::error::detekt-baseline.xml grew beyond the frozen budget (832). Fix new detekt findings instead of re-baselining."
             exit 1
           fi
 
