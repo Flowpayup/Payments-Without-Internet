@@ -73,7 +73,7 @@
     <string name="overlay_processing_payment">Processing Payment</string>
     <string name="overlay_amount">Amount</string>
     <string name="overlay_to">To</string>
-    <string name="overlay_audio_muted">Audio muted for security</string>
+    <string name="overlay_audio_muted">Call volume lowered</string>
     <string name="overlay_terminate">TERMINATE</string>
     <string name="overlay_connecting">Connecting to bank…</string>
     <string name="amount_rupees">₹%1$s</string>

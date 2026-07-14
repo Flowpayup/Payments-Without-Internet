@@ -207,12 +207,15 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Muted Audio Indicator - More Prominent -->
+        <!-- Volume-lowered indicator. Hidden until the volume change actually
+             succeeds (shown from CallOverlayService), so the label never claims
+             something that didn't happen. -->
         <LinearLayout
             android:id="@+id/mutedIndicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:visibility="gone"
             android:background="@drawable/muted_pill_bg"
             android:paddingHorizontal="16dp"
             android:paddingVertical="8dp"

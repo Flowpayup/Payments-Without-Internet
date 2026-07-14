@@ -24,32 +24,27 @@ object AudioStateManager {
                 Log.d(TAG, "Set audio mode to IN_CALL")
             }
             
-            // Save ALL original states
+            // Save original states we actually change.
             originalCallVolume = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
             originalMicMute = audioManager.isMicrophoneMute
-            val originalRingerMode = audioManager.ringerMode
-            
+
             Log.d(TAG, "Original call volume: $originalCallVolume")
-            Log.d(TAG, "Max call volume: ${audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)}")
-            
-            // Method 1: Set call volume to 0
+
+            // Silence ONLY the voice-call stream. Ring/notification/system
+            // streams are deliberately left untouched — zeroing a user's ringer
+            // during a payment (and never restoring it) is real-world harm.
             audioManager.setStreamVolume(
-                AudioManager.STREAM_VOICE_CALL, 
-                0,  // Mute
+                AudioManager.STREAM_VOICE_CALL,
+                0,  // Mute the IVR voice line
                 0   // No UI flags
             )
             Log.d(TAG, "Set STREAM_VOICE_CALL volume to 0")
-            
-            // Method 2: Also mute other relevant streams
-            audioManager.setStreamVolume(AudioManager.STREAM_SYSTEM, 0, 0)
-            audioManager.setStreamVolume(AudioManager.STREAM_RING, 0, 0)
-            audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, 0, 0)
-            
-            // Method 3: Mute microphone
+
+            // Mute microphone
             audioManager.isMicrophoneMute = true
             Log.d(TAG, "Microphone muted")
             
-            // Method 4: Request audio focus to ensure our app controls audio
+            // Request audio focus so our app controls the call audio
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
                     .setAudioAttributes(
@@ -69,7 +64,8 @@ object AudioStateManager {
                 )
             }
             
-            // Method 5: Adjust call volume using adjustStreamVolume (alternative approach)
+            // Belt-and-suspenders: force the voice-call stream down on OEMs
+            // where a single setStreamVolume(0) doesn't fully take effect.
             for (i in 0..10) {
                 audioManager.adjustStreamVolume(
                     AudioManager.STREAM_VOICE_CALL,
