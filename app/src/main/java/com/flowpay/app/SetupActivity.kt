@@ -244,7 +244,7 @@ fun HeaderCard() {
                             )
                         )
                         Text(
-                            text = "Step 1 of 3",
+                            text = "Step 1 of 2",
                             fontSize = 14.sp,
                             color = Color.White.copy(alpha = 0.7f),
                             fontWeight = FontWeight.Medium
@@ -266,7 +266,6 @@ fun HeaderCard() {
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ProgressDot(isActive = true)
-                    ProgressDot(isActive = false)
                     ProgressDot(isActive = false)
                 }
             }

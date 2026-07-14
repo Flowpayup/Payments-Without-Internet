@@ -251,6 +251,7 @@
             android:background="@drawable/terminate_button_bg"
             android:text="@string/overlay_terminate"
             android:textColor="#FFFFFF"
+            android:textAllCaps="false"
             android:textSize="12sp"
             android:textStyle="bold"
             android:drawableStart="@drawable/ic_phone_hangup"

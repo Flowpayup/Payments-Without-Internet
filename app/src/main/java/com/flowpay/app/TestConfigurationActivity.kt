@@ -168,6 +168,9 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
     var upi123TestCompleted by remember { mutableStateOf(testStates.upi123TestCompleted) }
     var ussdTesting by remember { mutableStateOf(testStates.ussdTesting) }
     var upi123Testing by remember { mutableStateOf(testStates.upi123Testing) }
+    // Holds the pending real-call dial action until the user consents (a test
+    // dial places a real *99#/UPI 123 call that may incur carrier charges).
+    var pendingDial by remember { mutableStateOf<(() -> Unit)?>(null) }
     var showUssdDialog by remember { mutableStateOf(testStates.showUssdDialog) }
     var showUpi123Dialog by remember { mutableStateOf(testStates.showUpi123Dialog) }
     var showUssdConfigurationOptions by remember { mutableStateOf(testStates.showUssdConfigurationOptions) }
@@ -297,10 +300,13 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
                         if (isJioSim) {
                             Toast.makeText(context, "Jio does not support *99# USSD payments", Toast.LENGTH_LONG).show()
                         } else if (!ussdTestCompleted && !ussdTesting) {
-                            // Flip the local Compose state immediately so a second tap
-                            // (within the 100ms polling window) cannot pass this guard.
-                            ussdTesting = true
-                            testHelper.initiateCall(CallType.USSD)
+                            // Ask before placing a real *99# call. The consent
+                            // dialog runs this action on confirm; ussdTesting is
+                            // flipped there to guard against a double-dial.
+                            pendingDial = {
+                                ussdTesting = true
+                                testHelper.initiateCall(CallType.USSD)
+                            }
                         }
                     }
                 )
@@ -314,8 +320,10 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
                     isTesting = upi123Testing,
                     onClick = {
                         if (!upi123TestCompleted && !upi123Testing) {
-                            upi123Testing = true
-                            testHelper.initiateUpi123Test()
+                            pendingDial = {
+                                upi123Testing = true
+                                testHelper.initiateUpi123Test()
+                            }
                         }
                     }
                 )
@@ -398,6 +406,39 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
             onNotConfigured = { testHelper.handleUpi123ConfigurationConfirmation(false) },
             onDismiss = { testHelper.dismissUpi123Dialog() }
         )
+
+        // Consent before placing a real test call to the carrier.
+        pendingDial?.let { dial ->
+            AlertDialog(
+                onDismissRequest = { pendingDial = null },
+                containerColor = Color(0xFF1A1A1A),
+                titleContentColor = Color.White,
+                textContentColor = Color(0xFFCCCCCC),
+                title = { Text("Start a real call?", fontWeight = FontWeight.SemiBold, fontSize = 18.sp) },
+                text = {
+                    Text(
+                        "This places a real call to your carrier's *99# / UPI 123 " +
+                            "service to check setup on your SIM. Standard call or USSD " +
+                            "charges from your operator may apply.",
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        pendingDial = null
+                        dial()
+                    }) {
+                        Text("Continue", fontWeight = FontWeight.SemiBold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingDial = null }) {
+                        Text("Cancel", color = Color(0xFF888888))
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -456,7 +497,7 @@ fun TestHeaderCard() {
                         letterSpacing = 0.3.sp
                     )
                     Text(
-                        text = "Step 2 of 3",
+                        text = "Step 2 of 2",
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.7f),
                         fontWeight = FontWeight.Medium
@@ -481,7 +522,6 @@ fun TestHeaderCard() {
             ) {
                 ProgressDot(isActive = false)
                 ProgressDot(isActive = true)
-                ProgressDot(isActive = false)
             }
         }
     }

@@ -786,7 +786,7 @@ class CallOverlayService : Service() {
                 // are driven by the collectors wired up in onCreate()).
                 updateOverlayStatus(
                     status = "Processing Payment",
-                    step = "Connecting to the UPI service…",
+                    step = getString(R.string.overlay_connecting),
                     progressFraction = 0.25f
                 )
 

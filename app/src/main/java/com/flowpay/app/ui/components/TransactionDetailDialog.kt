@@ -40,6 +40,7 @@ fun TransactionDetailDialog(
     val clipboardManager = LocalClipboardManager.current
     val accent = LocalFlowpayAccentTheme.current
     val statusColor = getStatusColor(transaction.status)
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -242,7 +243,7 @@ fun TransactionDetailDialog(
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) { onDelete() }
+                            ) { showDeleteConfirm = true }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -256,6 +257,38 @@ fun TransactionDetailDialog(
                 }
             }
         }
+    }
+
+    // Deletion is permanent, so confirm before removing the record.
+    if (showDeleteConfirm && onDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            containerColor = Color(0xFF1A1A1A),
+            titleContentColor = Color.White,
+            textContentColor = Color(0xFFCCCCCC),
+            title = { Text("Delete this transaction?", fontWeight = FontWeight.SemiBold, fontSize = 18.sp) },
+            text = {
+                Text(
+                    "This removes the record from your history on this device. " +
+                        "It cannot be undone and does not affect the actual payment.",
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    onDelete()
+                }) {
+                    Text("Delete", color = Color(0xFFF44336), fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel", color = Color(0xFF888888))
+                }
+            }
+        )
     }
 }
 
