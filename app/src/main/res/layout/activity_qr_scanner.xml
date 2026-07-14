@@ -80,17 +80,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Kept for code refs; not shown in the minimal design -->
-        <ImageButton
-            android:id="@+id/btnGallery"
-            android:layout_width="1dp"
-            android:layout_height="1dp"
-            android:visibility="gone"
-            android:background="@drawable/bottom_action_button_bg"
-            android:src="@drawable/ic_photo_library"
-            android:contentDescription="@null"
-            app:tint="@color/white" />
-
         <ImageButton
             android:id="@+id/btnFlash"
             android:layout_width="64dp"

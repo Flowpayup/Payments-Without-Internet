@@ -40,22 +40,11 @@
         errorLine2="                                                                          ~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="744"
+            line="678"
             column="75"/>
     </issue>
 
     <issue
-        id="UnspecifiedRegisterReceiverFlag"
-        message="`stopOverlayReceiver` is missing `RECEIVER_EXPORTED` or `RECEIVER_NOT_EXPORTED` flag for unprotected broadcasts registered for STOP_OVERLAY"
-        errorLine1="            registerReceiver(stopOverlayReceiver, filter)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="305"
-            column="13"/>
-    </issue>
-
-    <issue
         id="AndroidGradlePluginVersion"
         message="A newer version of com.android.application than 8.7.2 is available: 9.2.1. (There is also a newer version of 8.7.𝑥 available, if upgrading to 9.2.1 is difficult: 8.7.3)"
         errorLine1="agp = &quot;8.7.2&quot;"
@@ -91,7 +80,7 @@
     <issue
         id="LockedOrientationActivity"
         message="Expecting `android:screenOrientation=&quot;unspecified&quot;` or `&quot;fullSensor&quot;` for this activity so the user can use the application in any orientation and provide a great experience on Chrome OS devices"
-        errorLine1="            android:screenOrientation=&quot;portrait&quot;"
+        errorLine1="            android:screenOrientation=&quot;portrait&quot; />"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
@@ -106,7 +95,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="70"
+            line="68"
             column="13"/>
     </issue>
 
@@ -117,7 +106,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="78"
+            line="76"
             column="13"/>
     </issue>
 
@@ -128,14 +117,14 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="87"
+            line="85"
             column="13"/>
     </issue>
 
     <issue
         id="DiscouragedApi"
         message="Should not restrict activity to fixed orientation. This may not be suitable for different form factors, causing the app to be letterboxed."
-        errorLine1="            android:screenOrientation=&quot;portrait&quot;"
+        errorLine1="            android:screenOrientation=&quot;portrait&quot; />"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
@@ -150,7 +139,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="70"
+            line="68"
             column="13"/>
     </issue>
 
@@ -161,7 +150,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="78"
+            line="76"
             column="13"/>
     </issue>
 
@@ -172,7 +161,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="87"
+            line="85"
             column="13"/>
     </issue>
 
@@ -205,7 +194,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="228"
+            line="231"
             column="17"/>
     </issue>
 
@@ -260,7 +249,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/helpers/AudioStateManager.kt"
-            line="53"
+            line="48"
             column="17"/>
     </issue>
 
@@ -271,7 +260,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="413"
+            line="377"
             column="13"/>
     </issue>
 
@@ -282,7 +271,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="430"
+            line="394"
             column="20"/>
     </issue>
 
@@ -293,7 +282,7 @@
         errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="772"
+            line="706"
             column="28"/>
     </issue>
 
@@ -304,7 +293,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/MainActivity.kt"
-            line="195"
+            line="194"
             column="13"/>
     </issue>
 
@@ -337,7 +326,7 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/ui/activities/SettingsActivity.kt"
-            line="159"
+            line="163"
             column="31"/>
     </issue>
 
@@ -388,7 +377,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="56"
+            line="54"
             column="9"/>
     </issue>
 
@@ -432,7 +421,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle.kts"
-            line="181"
+            line="182"
             column="20"/>
     </issue>
 
@@ -443,7 +432,7 @@
         errorLine2="                                        ^">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="889"
+            line="828"
             column="41"/>
     </issue>
 
@@ -476,7 +465,7 @@
         errorLine2="             ~~~~~~~~~">
         <location
             file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="224"
+            line="227"
             column="14"/>
     </issue>
 
