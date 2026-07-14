@@ -28,20 +28,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowpay.app.FlowpayApplication
-import com.flowpay.app.data.SettingsRepository
-import com.flowpay.app.ui.theme.BlueAccentTheme
-import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
-import androidx.compose.runtime.CompositionLocalProvider
 import com.flowpay.app.R
+import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.data.Transaction
-import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.components.TransactionDetailDialog
+import com.flowpay.app.ui.theme.BlueAccentTheme
+import com.flowpay.app.ui.theme.FlowpayTheme
+import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.viewmodel.TransactionViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -73,6 +73,16 @@ fun getStatusColor(status: String): Color {
         "FAILED", "DECLINED" -> Color(0xFFF44336)
         else -> Color(0xFF9E9E9E)
     }
+}
+
+@androidx.annotation.StringRes
+fun statusLabelRes(status: String): Int = when (status.uppercase()) {
+    "SUCCESS", "SUCCESSFUL", "COMPLETED" -> R.string.status_label_success
+    "UNVERIFIED" -> R.string.status_label_unverified
+    "NEEDS_REVIEW" -> R.string.status_label_needs_review
+    "CANCELLED" -> R.string.status_label_cancelled
+    "FAILED", "DECLINED" -> R.string.status_label_failed
+    else -> R.string.status_label_pending
 }
 
 private fun isSameDay(c1: Calendar, c2: Calendar): Boolean =
@@ -478,21 +488,7 @@ private fun TransactionHistoryItem(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF1A1A1A)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = initial.toString(),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White
-            )
-        }
+        TransactionAvatar(initial)
 
         Spacer(modifier = Modifier.width(12.dp))
 
@@ -517,13 +513,52 @@ private fun TransactionHistoryItem(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Amount only
+        // Amount + status pill: the outcome must be readable at a glance, so
+        // SUCCESS and UNVERIFIED never look identical in the list.
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = formatAmount(transaction.amount.toDoubleOrNull() ?: 0.0),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White,
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            StatusPill(transaction.status)
+        }
+    }
+}
+
+@Composable
+private fun TransactionAvatar(initial: Char) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(Color(0xFF1A1A1A)),
+        contentAlignment = Alignment.Center
+    ) {
         Text(
-            text = formatAmount(transaction.amount.toDoubleOrNull() ?: 0.0),
+            text = initial.toString(),
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.White,
-            maxLines = 1
+            color = Color.White
         )
     }
+}
+
+@Composable
+private fun StatusPill(status: String) {
+    val statusColor = getStatusColor(status)
+    Text(
+        text = stringResource(statusLabelRes(status)),
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Medium,
+        color = statusColor,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(statusColor.copy(alpha = 0.15f))
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+    )
 }

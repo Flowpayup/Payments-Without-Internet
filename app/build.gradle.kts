@@ -120,6 +120,7 @@ android {
 // come in clean rather than growing the baseline.
 detekt {
     buildUponDefaultConfig = true
+    config.setFrom(files("config/detekt/detekt.yml"))
     baseline = file("detekt-baseline.xml")
 }
 

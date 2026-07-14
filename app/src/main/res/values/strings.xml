@@ -45,6 +45,14 @@
     <string name="action_got_it">Got it</string>
     <string name="action_great">Great!</string>
 
+    <!-- Short status labels shown on transaction rows -->
+    <string name="status_label_success">Success</string>
+    <string name="status_label_pending">Pending</string>
+    <string name="status_label_unverified">Unverified</string>
+    <string name="status_label_needs_review">Check</string>
+    <string name="status_label_cancelled">Cancelled</string>
+    <string name="status_label_failed">Failed</string>
+
     <!-- Transaction status explainers -->
     <string name="status_explainer_pending">Waiting for your bank\'s confirmation SMS.</string>
     <string name="status_explainer_unverified">No confirmation SMS arrived. The payment may still have gone through — check your bank statement or SMS inbox before retrying.</string>
