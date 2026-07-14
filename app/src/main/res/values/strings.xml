@@ -41,8 +41,6 @@
     <string name="dialog_failed_message">Your bank reported the payment as failed. Any debited amount is normally reversed automatically — check your bank if it isn\'t.</string>
     <string name="dialog_awaiting_title">Request Sent</string>
     <string name="dialog_awaiting_message">Your payment request was sent to the UPI service.\n\nIf your bank calls back, press 1 to confirm and enter your UPI PIN. Flowpay will show the result as soon as your bank\'s confirmation SMS arrives.</string>
-    <string name="dialog_unverified_title">No Confirmation Received</string>
-    <string name="dialog_unverified_message">Flowpay did not receive a confirmation SMS from your bank. The payment may still have gone through — please check your bank statement or SMS inbox before retrying.</string>
     <string name="action_ok">OK</string>
     <string name="action_got_it">Got it</string>
     <string name="action_great">Great!</string>
@@ -58,6 +56,7 @@
     <string name="payment_status_success">Payment Successful</string>
     <string name="payment_status_failed">Payment Failed</string>
     <string name="payment_status_needs_review">Check This Payment</string>
+    <string name="payment_status_unverified">No Confirmation Received</string>
     <string name="label_bank">Bank</string>
     <string name="label_transaction_id">Transaction ID</string>
     <string name="label_date_time">Date &amp; Time</string>

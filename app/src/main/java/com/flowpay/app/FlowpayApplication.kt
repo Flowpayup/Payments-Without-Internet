@@ -34,6 +34,10 @@ class FlowpayApplication : Application() {
         super.onCreate()
         // Finalise any PENDING rows whose deadline passed while the app was dead.
         paymentSessionManager.reconcileStalePending()
+        // Start surfacing UNVERIFIED outcomes (session timeout with no bank SMS)
+        // from the process scope, so they reach the user even after the overlay
+        // service has stopped.
+        container.unverifiedOutcomeObserver.start()
         Log.d(TAG, "FlowpayApplication initialized")
     }
 }

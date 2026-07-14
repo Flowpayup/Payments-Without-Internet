@@ -129,6 +129,15 @@ class PaymentResultActivity : AppCompatActivity() {
                 tickImageView.setImageResource(R.drawable.ic_error)
                 tickImageView.setColorFilter(ContextCompat.getColor(this, R.color.warning_orange))
             }
+            TransactionStatus.UNVERIFIED -> {
+                // No confirming SMS arrived. The outcome is genuinely unknown —
+                // render it neutral (grey, question glyph), never as a success.
+                statusText.text = getString(R.string.payment_status_unverified)
+                statusExplainerText.text = getString(R.string.status_explainer_unverified)
+                statusExplainerText.visibility = View.VISIBLE
+                tickImageView.setImageResource(R.drawable.ic_unverified)
+                tickImageView.setColorFilter(ContextCompat.getColor(this, R.color.unverified_grey))
+            }
             else -> {
                 statusText.text = getString(R.string.payment_status_success)
             }
@@ -180,6 +189,7 @@ class PaymentResultActivity : AppCompatActivity() {
         val amountColor = when (status) {
             TransactionStatus.FAILED -> R.color.error_red
             TransactionStatus.NEEDS_REVIEW -> R.color.warning_orange
+            TransactionStatus.UNVERIFIED -> R.color.unverified_grey
             else -> R.color.flowpay_green
         }
         amountText.setTextColor(ContextCompat.getColor(this, amountColor))

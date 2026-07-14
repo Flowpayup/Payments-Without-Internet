@@ -3,6 +3,7 @@ package com.flowpay.app.features.qr_scanner.presentation
 import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -14,6 +15,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PersistableBundle
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -83,6 +85,9 @@ class QRScannerActivity : ComponentActivity() {
     // FIX: Ensure USSD is only dialed once per payment flow (prevents loop when returning from dialer)
     @Volatile
     private var hasDialedUSSD = false
+
+    // Whether this flow put a payee VPA on the clipboard (wiped in onDestroy).
+    private var didCopyVpa = false
 
     // Gallery image picker launcher
     private val galleryLauncher = registerForActivityResult(GetContent()) { uri ->
@@ -419,19 +424,10 @@ class QRScannerActivity : ComponentActivity() {
             // Show black screen with status
             showBlackScreenWithStatus("Processing payment...")
 
-            // 1. Copy VPA to clipboard
-            try {
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("VPA", upiData.vpa)
-                clipboard.setPrimaryClip(clip)
-                Log.d("QRScanner", "VPA copied to clipboard successfully")
-
-                // Update status
-                updateBlackScreenStatus("VPA copied to clipboard")
-            } catch (e: Exception) {
-                Log.e("QRScanner", "Failed to copy VPA to clipboard: ${e.message}")
-                // Continue anyway, this is not critical
-            }
+            // 1. Copy VPA to clipboard so the user can paste it into the USSD
+            //    menu. It is a payee identifier (PII), so it is flagged
+            //    sensitive and wiped in onDestroy when the flow ends.
+            copyVpaToClipboard(upiData.vpa)
 
             // 2. Dial USSD code after a short delay (only once per flow)
             mainHandler.postDelayed({
@@ -454,6 +450,47 @@ class QRScannerActivity : ComponentActivity() {
         } catch (e: Exception) {
             Log.e("QRScanner", "Unexpected error in proceedWithPayment: ${e.message}", e)
             showError("An unexpected error occurred: ${e.message}")
+        }
+    }
+
+    /**
+     * Copies the payee VPA to the clipboard so the user can paste it into the
+     * USSD menu. Flagged sensitive on Android 13+ so it stays out of clipboard
+     * previews; [clearVpaClipboard] wipes it when the flow ends.
+     */
+    private fun copyVpaToClipboard(vpa: String) {
+        try {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("VPA", vpa)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                clip.description.extras = PersistableBundle().apply {
+                    putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+                }
+            }
+            clipboard.setPrimaryClip(clip)
+            didCopyVpa = true
+            Log.d("QRScanner", "VPA copied to clipboard successfully")
+            updateBlackScreenStatus("VPA copied to clipboard")
+        } catch (e: SecurityException) {
+            // Not critical — the flow can continue without the clipboard copy.
+            Log.e("QRScanner", "Failed to copy VPA to clipboard: ${e.message}")
+        } catch (e: IllegalStateException) {
+            Log.e("QRScanner", "Failed to copy VPA to clipboard: ${e.message}")
+        }
+    }
+
+    /** Overwrites the clipboard so the payee VPA doesn't linger for other apps. */
+    private fun clearVpaClipboard() {
+        if (!didCopyVpa) return
+        try {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
+            didCopyVpa = false
+            Log.d("QRScanner", "VPA cleared from clipboard")
+        } catch (e: SecurityException) {
+            Log.e("QRScanner", "Error clearing clipboard: ${e.message}")
+        } catch (e: IllegalStateException) {
+            Log.e("QRScanner", "Error clearing clipboard: ${e.message}")
         }
     }
 
@@ -969,6 +1006,9 @@ class QRScannerActivity : ComponentActivity() {
             // FIX: Reset processing flags
             isProcessingQRCode = false
             hasDialedUSSD = false
+
+            // Wipe the payee VPA from the clipboard now the flow is over.
+            clearVpaClipboard()
 
             // Cancel scan line animation
             scanLineAnimator?.cancel()

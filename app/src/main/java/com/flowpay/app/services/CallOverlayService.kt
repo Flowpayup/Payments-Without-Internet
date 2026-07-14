@@ -376,7 +376,10 @@ class CallOverlayService : Service() {
                 }
             }
             is PaymentState.Timeout -> {
-                finishWithResult { dialogManager?.showUnverified() }
+                // The UNVERIFIED result screen is launched by
+                // UnverifiedOutcomeObserver on the process scope, so it reaches
+                // the user even after this service has stopped. No dialog here.
+                finishWithResult { }
             }
             else -> Unit
         }
