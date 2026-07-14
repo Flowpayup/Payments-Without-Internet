@@ -237,8 +237,17 @@ class PaymentSessionManagerTest {
         advanceTimeBy(PaymentSessionManager.DEFAULT_VERIFICATION_DEADLINE_MS + 1_000)
         runCurrent()
 
-        assertTrue(manager.paymentState.value is PaymentState.Timeout)
+        val timeout = manager.paymentState.value
+        assertTrue(timeout is PaymentState.Timeout)
         assertEquals(TransactionStatus.UNVERIFIED, store.rows[txnId]!!.status)
+
+        // The UnverifiedOutcomeObserver relies on this exact state carrying the
+        // fields it forwards to the UNVERIFIED result screen. Lock the contract.
+        val surface = timeout.toUnverifiedSurface()
+        assertNotNull("Timeout must map to an unverified surface", surface)
+        assertEquals(txnId, surface!!.transactionId)
+        assertEquals("100", surface.amount)
+        assertEquals("9876543210", surface.phoneNumber)
     }
 
     @Test

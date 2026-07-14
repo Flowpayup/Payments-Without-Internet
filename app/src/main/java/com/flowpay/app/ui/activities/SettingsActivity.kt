@@ -41,8 +41,12 @@ import com.flowpay.app.R
 import com.flowpay.app.SetupActivity
 import com.flowpay.app.TestConfigurationActivity
 import com.flowpay.app.data.SettingsRepository
+import com.flowpay.app.repository.TransactionRepository
 import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SettingsActivity : ComponentActivity() {
 
@@ -425,7 +429,9 @@ fun SettingsScreen(
             },
             text = {
                 Text(
-                    "This will reset all settings and return you to the setup screen. This action cannot be undone.",
+                    "This permanently deletes your entire transaction history and " +
+                        "resets all settings, then returns you to the setup screen. " +
+                        "This cannot be undone.",
                     fontSize = 14.sp,
                     lineHeight = 20.sp
                 )
@@ -433,14 +439,30 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showClearDataConfirm = false
-                    settingsRepository?.clearAllData()
-                    context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
-                        .edit().clear().apply()
-                    context.startActivity(
-                        Intent(context, SetupActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    // Wipe the encrypted transaction DB before anything else, on
+                    // the process scope so the delete survives the CLEAR_TASK
+                    // relaunch below; only then reset prefs and restart into Setup.
+                    val app = FlowpayApplication.from(context)
+                    val relaunch = {
+                        settingsRepository?.clearAllData()
+                        context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
+                            .edit().clear().apply()
+                        context.startActivity(
+                            Intent(context, SetupActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                        )
+                    }
+                    if (app != null) {
+                        app.appScope.launch {
+                            runCatching {
+                                TransactionRepository.getInstance(context).deleteAllTransactions()
+                            }
+                            withContext(Dispatchers.Main) { relaunch() }
                         }
-                    )
+                    } else {
+                        relaunch()
+                    }
                 }) {
                     Text("Clear", color = Color(0xFFF5576C), fontWeight = FontWeight.SemiBold)
                 }

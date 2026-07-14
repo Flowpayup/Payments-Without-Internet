@@ -16,6 +16,8 @@
     <!-- Feedback Colors -->
     <color name="error_red">#FFF44336</color>
     <color name="warning_orange">#FFFF9800</color>
+    <!-- UNVERIFIED = outcome unknown: neutral grey, never green/red -->
+    <color name="unverified_grey">#FF9E9E9E</color>
 
     <!-- General UI Colors -->
     <color name="background_secondary">#FFF5F5F5</color>

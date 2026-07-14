@@ -198,30 +198,6 @@ class TransactionDialogManager(
     }
 
     /**
-     * No confirmation SMS arrived before the deadline. Honest outcome:
-     * the payment may or may not have gone through.
-     */
-    fun showUnverified() {
-        try {
-            AlertDialog.Builder(context)
-                .setTitle(context.getString(R.string.dialog_unverified_title))
-                .setMessage(context.getString(R.string.dialog_unverified_message))
-                .setPositiveButton(context.getString(R.string.action_ok)) { dialog, _ ->
-                    dialog.dismiss()
-                    dismissed("Unverified")
-                }
-                .setCancelable(false)
-                .create()
-                .prepareForOverlayDisplay()
-                .show()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to show unverified dialog: ${e.message}")
-            Toast.makeText(context, "No bank confirmation received — check your bank", Toast.LENGTH_LONG).show()
-            onAnyDismiss?.invoke()
-        }
-    }
-
-    /**
      * Show a custom dialog with specific title and message
      */
     fun showCustomDialog(title: String, message: String, positiveButton: String = "OK") {
