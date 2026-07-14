@@ -1,12 +1,11 @@
 package com.flowpay.app.services
 
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.os.Binder
 import android.os.Build
 import android.os.Handler
@@ -17,7 +16,6 @@ import android.os.Vibrator
 import android.provider.Settings
 import android.provider.Telephony
 import android.util.Log
-import android.graphics.Rect
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -34,8 +32,8 @@ import com.flowpay.app.payment.PaymentSessionManager
 import com.flowpay.app.states.PaymentState
 import com.flowpay.app.telephony.CallStateCoordinator
 import com.flowpay.app.telephony.DeviceCallState
-import com.flowpay.app.utils.PhoneNumberUtils
 import com.flowpay.app.utils.OverlayLogger
+import com.flowpay.app.utils.PhoneNumberUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -174,8 +172,6 @@ class CallOverlayService : Service() {
     private var isOverlayActive = false
     private var overlayView: View? = null
     private var windowManager: WindowManager? = null
-    private var progressRunnable: Runnable? = null
-    private var currentStep = 0
     private var isOverlayShowing = false
     
     // Timeout management
@@ -200,32 +196,10 @@ class CallOverlayService : Service() {
     // Call management
     private var callManager: com.flowpay.app.managers.CallManager? = null
     
-    // Health monitoring
-    private var lastHealthCheck = System.currentTimeMillis()
-    private val healthCheckInterval = 10000L // 10 seconds
-    private var healthCheckRunnable: Runnable? = null
+    // Retry bookkeeping for overlay creation (see showOverlayWithRetry).
     private var retryCount = 0
     private val maxRetries = 3
-    
-    private val steps = listOf(
-        Step("Connecting to UPI service...", 15),
-        Step("Verifying recipient...", 30),
-        Step("Processing transfer request...", 45),
-        Step("Authenticating transaction...", 60),
-        Step("Confirming with bank...", 75),
-        Step("Finalizing transfer...", 90),
-        Step("Completing transaction...", 100)
-    )
-    
-    data class Step(val description: String, val progress: Int)
-    private val stopOverlayReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ACTION_STOP_OVERLAY) {
-                hideOverlayInternal()
-            }
-        }
-    }
-    
+
     inner class CallOverlayBinder : Binder() {
         fun getService(): CallOverlayService = this@CallOverlayService
     }
@@ -296,19 +270,6 @@ class CallOverlayService : Service() {
                 }
             }
         }
-        
-        // Register broadcast receiver for stop overlay
-        val filter = IntentFilter(ACTION_STOP_OVERLAY)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(stopOverlayReceiver, filter, RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(stopOverlayReceiver, filter)
-        }
-        
-        // SMS detection handled by new system
-        
-        // Start health monitoring
-        startHealthMonitoring()
         
         Log.d(TAG, "CallOverlayService initialization complete")
     }
@@ -447,36 +408,6 @@ class CallOverlayService : Service() {
                 "Overlay permission required for call protection. Please grant permission in Settings.",
                 Toast.LENGTH_LONG
             ).show()
-        }
-    }
-    
-    /**
-     * Start health monitoring to detect service issues
-     */
-    private fun startHealthMonitoring() {
-        Log.d(TAG, "Starting health monitoring")
-        healthCheckRunnable = object : Runnable {
-            override fun run() {
-                val currentTime = System.currentTimeMillis()
-                if (currentTime - lastHealthCheck > healthCheckInterval * 2) {
-                    Log.w(TAG, "Service health check failed - service may be unresponsive")
-                    // Don't restart service automatically, just log the issue
-                    // The service will be restarted by the system if needed
-                }
-                lastHealthCheck = currentTime
-                Handler(Looper.getMainLooper()).postDelayed(this, healthCheckInterval)
-            }
-        }
-        Handler(Looper.getMainLooper()).post(healthCheckRunnable!!)
-    }
-    
-    /**
-     * Stop health monitoring
-     */
-    private fun stopHealthMonitoring() {
-        healthCheckRunnable?.let {
-            Handler(Looper.getMainLooper()).removeCallbacks(it)
-            healthCheckRunnable = null
         }
     }
     
@@ -975,44 +906,6 @@ class CallOverlayService : Service() {
         }
     }
     
-    private fun startProgress() {
-        currentStep = 0
-        updateStep(0)
-    }
-    
-    private fun updateStep(stepIndex: Int) {
-        if (stepIndex >= steps.size) {
-            // Just keep showing the last step - don't auto-hide
-            // The overlay will be hidden when the call ends
-            Log.d(TAG, "Progress complete, keeping overlay visible until call ends")
-            return
-        }
-        
-        currentStep = stepIndex
-        val step = steps[stepIndex]
-        
-        Handler(Looper.getMainLooper()).post {
-            overlayView?.let { view ->
-                val progressBar = view.findViewById<android.widget.ProgressBar>(R.id.progressBar)
-                val stepText = view.findViewById<TextView>(R.id.stepText)
-                val progressPercent = view.findViewById<TextView>(R.id.progressPercent)
-                
-                // Animate progress bar
-                animateProgressBar(progressBar, step.progress * 10) // Scale to 1000 max
-                stepText?.text = step.description
-                progressPercent?.text = getString(R.string.percent_format, step.progress)
-                
-                // Update progress steps - handled by animateProgressBar
-            }
-        }
-        
-        // Schedule next step (distribute steps over ~35 seconds)
-        progressRunnable = Runnable {
-            updateStep(stepIndex + 1)
-        }
-        Handler(Looper.getMainLooper()).postDelayed(progressRunnable!!, 5000) // 5 seconds per step
-    }
-    
     private fun animateProgressBar(progressBar: android.widget.ProgressBar, targetProgress: Int) {
         val animation = android.animation.ObjectAnimator.ofInt(
             progressBar, 
@@ -1034,12 +927,7 @@ class CallOverlayService : Service() {
             }
             
             Log.d(TAG, "Hiding system overlay")
-            
-            // Cancel any pending progress updates
-            progressRunnable?.let {
-                Handler(Looper.getMainLooper()).removeCallbacks(it)
-            }
-            
+
             // Remove the overlay view from window manager
             windowManager?.removeView(overlayView)
             overlayView = null
@@ -1068,16 +956,9 @@ class CallOverlayService : Service() {
                 coordinatorAcquired = false
             }
 
-            // Stop health monitoring
-            stopHealthMonitoring()
-
-            unregisterReceiver(stopOverlayReceiver)
-
-            // SMS receivers handled by new system
-
             hideOverlayInternal() // Clean up overlay if still active
         } catch (e: Exception) {
-            Log.e(TAG, "Error unregistering receiver: ${e.message}")
+            Log.e(TAG, "Error during service teardown: ${e.message}")
         }
         isOverlayActive = false
         isOverlayShowing = false

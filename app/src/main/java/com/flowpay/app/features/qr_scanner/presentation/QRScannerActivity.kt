@@ -534,78 +534,18 @@ class QRScannerActivity : ComponentActivity() {
      * Start extended message sequence during USSD process
      */
     private fun startUSSDProcessMessages() {
-        Log.d("QRScanner", "Starting USSD process message sequence")
+        Log.d("QRScanner", "Entering USSD wait phase")
         isUSSDProcessActive = true
 
-        val ussdMessages = listOf(
-            "Connecting to USSD service...",
-            "Almost there! Setting up payment...",
-            "Great job! Processing transaction...",
-            "Sending transaction details...",
-            "Please wait while we process your payment...",
-            "Transaction in progress...",
-            "Almost done! Finalizing payment...",
-            "Great work! Completing transaction...",
-            "Payment processing... Please hold on...",
-            "Final steps... Almost there!",
-            "Transaction being processed...",
-            "Great job! Payment almost complete...",
-            "Finalizing your payment...",
-            "USSD completed! Waiting for transaction confirmation...",
-            "Please wait for SMS confirmation..."
+        // Honest, static status. Flowpay cannot see the USSD menu or the bank's
+        // progress, so it does not fake step-by-step progress — it states what
+        // the user should do and what it is genuinely waiting for.
+        updateBlackScreenStatus(
+            "Complete the payment in the dialer, then wait for your bank's " +
+                "confirmation SMS. This can take a minute or two."
         )
 
-        val smsWaitingMessages = listOf(
-            "Waiting for transaction confirmation...",
-            "Please wait for SMS from your bank...",
-            "Transaction being processed by bank...",
-            "Almost there! Checking for confirmation...",
-            "Great job! Payment is being verified...",
-            "Please be patient, confirmation coming soon...",
-            "Transaction in final stages...",
-            "Bank is processing your payment...",
-            "Confirmation SMS on the way...",
-            "Almost done! Just a moment more...",
-            "Great work! Payment being finalized...",
-            "Bank is sending confirmation...",
-            "Transaction almost complete...",
-            "Please wait for SMS notification...",
-            "Final verification in progress..."
-        )
-
-        var messageIndex = 0
-        var isWaitingForSMS = false
-
-        // Show messages every 2 seconds
-        messageHandler = object : android.os.Handler(Looper.getMainLooper()) {
-            override fun handleMessage(msg: android.os.Message) {
-                if (!isActivityAlive()) return
-                if (isUSSDProcessActive) {
-                    if (!isWaitingForSMS && messageIndex < ussdMessages.size) {
-                        // Show USSD messages first
-                        updateBlackScreenStatus(ussdMessages[messageIndex])
-                        messageIndex++
-
-                        if (messageIndex >= ussdMessages.size) {
-                            // Switch to SMS waiting messages
-                            isWaitingForSMS = true
-                            messageIndex = 0
-                        }
-                        sendEmptyMessageDelayed(0, 2000)
-                    } else if (isWaitingForSMS) {
-                        // Show SMS waiting messages
-                        updateBlackScreenStatus(smsWaitingMessages[messageIndex % smsWaitingMessages.size])
-                        messageIndex++
-                        sendEmptyMessageDelayed(0, 3000) // Slower for SMS waiting
-                    }
-                }
-            }
-        }
-
-        // Start the message sequence
-        messageHandler?.sendEmptyMessageDelayed(0, 2000)
-
-        // Start SMS timeout (150 seconds)
+        // Wait for the confirmation SMS, giving up after the timeout below.
         startSMSTimeout()
     }
 
