@@ -1,0 +1,6 @@
+# Project detekt overrides, merged on top of the default config
+# (build.gradle.kts sets buildUponDefaultConfig = true).
+naming:
+  FunctionNaming:
+    # @Composable functions are PascalCase by convention; don't flag them.
+    ignoreAnnotated: ['Composable']

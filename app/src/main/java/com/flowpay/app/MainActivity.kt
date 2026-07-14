@@ -8,7 +8,6 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -19,6 +18,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -69,8 +70,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -100,12 +99,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.data.PaymentDetails
-import com.flowpay.app.data.PaymentStatus
 import com.flowpay.app.data.TestResultsManager
 import com.flowpay.app.helpers.MainActivityHelper
 import com.flowpay.app.managers.PermissionManager
@@ -1357,13 +1356,4 @@ fun formatAmount(amount: Double): String {
 fun formatDate(timestamp: Long): String {
     val formatter = SimpleDateFormat("dd MMM, HH:mm", Locale("en", "IN"))
     return formatter.format(Date(timestamp))
-}
-
-fun getStatusColor(status: PaymentStatus): Color {
-    return when (status) {
-        PaymentStatus.COMPLETED -> Color(0xFF1F1F1F)
-        PaymentStatus.PENDING -> Color(0xFF1F1F1F)
-        PaymentStatus.FAILED -> Color(0xFF3D3D3D)
-        PaymentStatus.CANCELLED -> Color(0xFF3D3D3D)
-    }
 }
