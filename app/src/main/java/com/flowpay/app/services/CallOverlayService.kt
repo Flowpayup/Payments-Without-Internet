@@ -796,10 +796,15 @@ class CallOverlayService : Service() {
                 // Setup terminate button
                 setupTerminateButton()
                 
-                // Set call volume to minimum for IVR calls - delay to ensure call is active
+                // Lower the IVR call volume - delay to ensure the call is active.
+                // Only reveal the "Call volume lowered" pill if it actually
+                // worked, so the overlay never claims an action that didn't run.
                 Handler(Looper.getMainLooper()).postDelayed({
                     Log.d(TAG, "Setting call volume to minimum after delay")
-                    callManager?.setCallVolumeToMinimum()
+                    val lowered = callManager?.setCallVolumeToMinimum() ?: false
+                    if (lowered) {
+                        overlayView?.findViewById<View>(R.id.mutedIndicator)?.visibility = View.VISIBLE
+                    }
                 }, 2000) // 2 second delay to ensure call is active
                 
             } catch (e: Exception) {
