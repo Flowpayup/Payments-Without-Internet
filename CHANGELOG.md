@@ -7,15 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### The truth pass — the app's behavior now matches its honesty premise
+
+#### Fixed
+- **UNVERIFIED outcomes now reach the user.** A payment that completes with no
+  confirming bank SMS is surfaced on the result screen at the deadline (neutral
+  grey, never a green "success") via a process-scoped observer, instead of only
+  being written to the row while the user saw a stale "Request Sent" dialog.
+- **"Clear App Data" now clears the transaction database**, not just settings.
+- **The payee VPA is wiped from the clipboard** when the QR flow ends (and
+  flagged sensitive on Android 13+) instead of lingering for other apps.
+- **The audio indicator is truthful**: "Call volume lowered" shown only when the
+  volume change actually succeeds; the post-success mute no longer zeroes (and
+  strands) the ring/notification streams.
+
+#### Changed
+- Transaction history rows show a colored status pill; PaymentStatus no longer
+  collapses UNVERIFIED/NEEDS_REVIEW into PENDING.
+- Honest copy: "Cancel payment" (was "TERMINATE"), "Step N of 2" (was "of 3",
+  with no third step), a single connecting message, delete confirmation on
+  transactions, and consent before the connectivity test places a real call.
+
+#### Removed
+- The uncalled fake-progress engine and no-op health monitor in
+  `CallOverlayService`, the fabricated "Almost there!" QR status messages, the
+  dead `stopOverlayReceiver`, the hidden gallery-import affordance, and the
+  QR activity's unused `showOnLockScreen`/`turnScreenOn` flags.
+
 ## [2.0.0] - 2026-07-13
 
 The quality release: a sustained pass over architecture, testing, build
 engineering, FOSS purity, and documentation. Every dependency is now FOSS,
 the riskiest code (bank-SMS parsing, the payment state machine) is tested
 against production code, the UI is one consistent pattern with no static
-mutable state, all hardcoded strings are extracted, and the whole system is
-documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The versions
-below (1.1.0–1.2.0) chart that pass; 2.0.0 is where it lands.
+mutable state, hardcoded strings in the classic-View screens are extracted,
+and the whole system is documented in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The versions below (1.1.0–1.2.0)
+chart that pass; 2.0.0 is where it lands.
 
 ### Added
 - `docs/ARCHITECTURE.md` (system map), `docs/FAQ.md` (trust/permissions Q&A), `docs/TESTING.md` (four-layer verification), `docs/RELEASE_CHECKLIST.md`, `docs/RELEASING.md`.
@@ -26,16 +54,10 @@ below (1.1.0–1.2.0) chart that pass; 2.0.0 is where it lands.
 
 ### Changed
 - **Zero static mutable state on `MainActivity`'s companion object.** Removed all six `@Volatile` static callback fields and both deprecated result overrides; all permission and activity results go through `ActivityResultContracts` launchers, with one-shot Activity→Compose events flowing through `MainViewModel`.
-- **All hardcoded UI strings extracted** to `strings.xml` across the classic-View screens (layouts, `setText` calls, the manifest label); runtime placeholders became design-time `tools:text`. `HardcodedText`/`SetTextI18n` are now error-level lint checks with zero baselined findings — lint baseline dropped 85 → 45.
+- **Hardcoded UI strings in the classic-View screens extracted** to `strings.xml` (layouts, `setText` calls, the manifest label); runtime placeholders became design-time `tools:text`. `HardcodedText`/`SetTextI18n` are now error-level lint checks with zero baselined findings — lint baseline dropped 85 → 45.
 
 ### Removed
 - Five never-constructed `PaymentState` variants (`Retrying`, all five `QRPayment*`), three dead `CallManager` validation/sanitization methods, unreachable dialogs, and the obsolete permission request-code constants and helper result-handlers.
-
-### Changed
-- **All permission and activity results now go through `ActivityResultContracts` launchers.** Removed every `onActivityResult` / `onRequestPermissionsResult` override and all six static `@Volatile` callback fields on `MainActivity`'s companion object (the headline architecture cleanup); one-shot Activity→Compose events flow through `MainViewModel` instead.
-
-### Removed
-- Five never-constructed `PaymentState` variants (`Retrying`, all five `QRPayment*`), three dead `CallManager` validation/sanitization methods, and the obsolete permission request-code constants and helper result-handlers.
 
 ## [1.2.0] - 2026-07-13
 

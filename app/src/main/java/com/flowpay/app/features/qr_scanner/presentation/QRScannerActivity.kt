@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -24,7 +23,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -60,7 +58,6 @@ class QRScannerActivity : ComponentActivity() {
     private lateinit var instructionsBox: View
     private lateinit var instructionsHeaderInitial: View
     private lateinit var instructionsExpanded: View
-    private lateinit var btnGallery: ImageButton
     private lateinit var btnFlash: ImageButton
     private lateinit var bottomActionBar: View
     private lateinit var scanLine: View
@@ -88,11 +85,6 @@ class QRScannerActivity : ComponentActivity() {
 
     // Whether this flow put a payee VPA on the clipboard (wiped in onDestroy).
     private var didCopyVpa = false
-
-    // Gallery image picker launcher
-    private val galleryLauncher = registerForActivityResult(GetContent()) { uri ->
-        if (uri != null) scanImageFromGallery(uri)
-    }
 
     // Permission launcher for runtime permissions
     private val permissionLauncher = registerForActivityResult(
@@ -166,7 +158,6 @@ class QRScannerActivity : ComponentActivity() {
             instructionsBox = findViewById(R.id.instructionsBox)
             instructionsHeaderInitial = findViewById(R.id.instructionsHeaderInitial)
             instructionsExpanded = findViewById(R.id.instructionsExpanded)
-            btnGallery = findViewById(R.id.btnGallery)
             btnFlash = findViewById(R.id.btnFlash)
             bottomActionBar = findViewById(R.id.bottomActionBar)
             scanLine = findViewById(R.id.scanLine)
@@ -203,9 +194,6 @@ class QRScannerActivity : ComponentActivity() {
                 )
             }
 
-            btnGallery.setOnClickListener {
-                galleryLauncher.launch("image/*")
-            }
 
             // Register broadcast receivers
             val overlayFilter = IntentFilter("DISMISS_OVERLAY")
@@ -817,25 +805,6 @@ class QRScannerActivity : ComponentActivity() {
                     Toast.makeText(this, "Failed to resume scanning. Please restart the app.", Toast.LENGTH_LONG).show()
                 }
             }, 3000)
-        }
-    }
-
-    private fun scanImageFromGallery(uri: Uri) {
-        try {
-            val source = ImageDecoder.createSource(contentResolver, uri)
-            val bitmap = ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
-                // ZXing reads pixels off the CPU; force a software bitmap so
-                // getPixels() doesn't throw on a HARDWARE-config decode.
-                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-            }
-            val qr = QRCodeAnalyzer.decodeBitmap(bitmap)
-            if (qr != null) {
-                processQRCode(qr)
-            } else {
-                Toast.makeText(this, "No QR code found in image", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(this, "Could not load image", Toast.LENGTH_SHORT).show()
         }
     }
 
