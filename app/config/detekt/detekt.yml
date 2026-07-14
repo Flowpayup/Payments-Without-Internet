@@ -4,3 +4,9 @@ naming:
   FunctionNaming:
     # @Composable functions are PascalCase by convention; don't flag them.
     ignoreAnnotated: ['Composable']
+
+style:
+  MagicNumber:
+    # Compose UI is full of literal dp/sp/color/alpha values; flagging them as
+    # "magic numbers" is noise. Design tokens are handled in the Phase 3 pass.
+    ignoreAnnotated: ['Composable']
