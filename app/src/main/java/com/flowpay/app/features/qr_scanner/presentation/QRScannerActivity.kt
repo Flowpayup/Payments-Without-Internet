@@ -631,25 +631,6 @@ class QRScannerActivity : ComponentActivity() {
     }
 
     /**
-     * Navigate to success screen
-     */
-    private fun navigateToSuccessScreen(transactionData: com.flowpay.app.models.TransactionData?) {
-        try {
-            Log.d("QRScanner", "Navigating to success screen")
-            // Payment success handled via callback instead of separate activity
-            Log.d("QRScanner", "Payment success - showing toast instead of separate activity")
-            android.widget.Toast.makeText(this, "Payment successful!", android.widget.Toast.LENGTH_LONG).show()
-            setResult(RESULT_SUCCESS)
-            finish()
-        } catch (e: Exception) {
-            Log.e("QRScanner", "Failed to navigate to success screen: ${e.message}", e)
-            // Fallback: just close the activity
-            setResult(RESULT_ERROR)
-            finish()
-        }
-    }
-
-    /**
      * Terminate USSD process and return to main screen
      */
     private fun terminateUSSDProcess() {
