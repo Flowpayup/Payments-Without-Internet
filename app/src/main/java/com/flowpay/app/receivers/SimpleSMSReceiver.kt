@@ -38,7 +38,7 @@ class SimpleSMSReceiver : BroadcastReceiver() {
 
         // Claim this exact message so the notification-listener pipeline
         // can't process the same SMS a second time.
-        if (!detector.tryClaimSms(sender, body)) {
+        if (!detector.tryClaimSms(body)) {
             Log.d(TAG, "SMS already claimed by another pipeline")
             return
         }

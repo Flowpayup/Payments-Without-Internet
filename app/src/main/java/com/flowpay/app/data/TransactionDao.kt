@@ -107,14 +107,22 @@ interface TransactionDao {
     suspend fun transitionStatus(transactionId: String, expectedStatus: String, newStatus: String): Int
 
     /**
-     * Fill in bank-confirmed details on a session row once the confirming SMS arrives.
+     * Fill in bank-confirmed details on a session row once the confirming SMS
+     * arrives. Values the session already knows are never erased by a sparser
+     * SMS: upiId/recipientName keep their existing value when the parse found
+     * none (COALESCE), and amount is filled only when the row started without
+     * one (the QR flow can begin before the user has entered an amount).
      */
     @Query(
         "UPDATE transactions SET status = :status, bankRef = :bankRef, bankName = :bankName, " +
-            "smsExcerpt = :smsExcerpt, upiId = :upiId, " +
-            "recipientName = COALESCE(:recipientName, recipientName), verifiedAt = :verifiedAt " +
+            "smsExcerpt = :smsExcerpt, upiId = COALESCE(:upiId, upiId), " +
+            "recipientName = COALESCE(:recipientName, recipientName), " +
+            "amount = CASE WHEN amount = '' THEN :amount ELSE amount END, " +
+            "verifiedAt = :verifiedAt " +
             "WHERE transactionId = :transactionId"
     )
+    @Suppress("LongParameterList") // Room @Query binds flat parameters; the
+    // domain seam (PaymentTransactionStore) takes a SimpleTransaction instead.
     suspend fun confirmTransaction(
         transactionId: String,
         status: String,
@@ -123,6 +131,7 @@ interface TransactionDao {
         smsExcerpt: String,
         upiId: String?,
         recipientName: String?,
+        amount: String,
         verifiedAt: Long
     ): Int
 

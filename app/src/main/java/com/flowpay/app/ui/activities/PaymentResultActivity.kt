@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -26,7 +25,6 @@ import com.flowpay.app.MainActivity
 import com.flowpay.app.R
 import com.flowpay.app.data.TransactionStatus
 import com.flowpay.app.helpers.TransactionDetector
-import com.flowpay.app.helpers.AudioStateManager
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -54,10 +52,7 @@ class PaymentResultActivity : AppCompatActivity() {
         setupSystemUI()
         
         setContentView(R.layout.activity_payment_success)
-        
-        // Ensure audio is restored when success screen appears
-        restoreAudioIfNeeded()
-        
+
         initViews()
         loadTransactionData()
         startAnimations()
@@ -335,23 +330,6 @@ class PaymentResultActivity : AppCompatActivity() {
                     or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                     or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                     or View.SYSTEM_UI_FLAG_FULLSCREEN)
-        }
-    }
-    
-    private fun restoreAudioIfNeeded() {
-        // Get operation type
-        val detector = TransactionDetector.getInstance(this)
-        val operationType = detector.getOperationType()
-        
-        // If it was UPI 123 and audio is still muted, wait a bit then restore
-        if (operationType == "UPI_123" && AudioStateManager.isCallAudioMuted()) {
-            // Give user 3 seconds to end the call themselves
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (AudioStateManager.isCallAudioMuted()) {
-                    Log.d("PaymentResultActivity", "Restoring audio after delay")
-                    AudioStateManager.restoreCallAudio(this)
-                }
-            }, 3000)
         }
     }
     

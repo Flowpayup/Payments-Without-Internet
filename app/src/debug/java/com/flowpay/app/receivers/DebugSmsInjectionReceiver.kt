@@ -70,7 +70,7 @@ class DebugSmsInjectionReceiver : BroadcastReceiver() {
             Log.w(TAG, "No active payment operation — send START_OPERATION first")
             return
         }
-        if (!detector.tryClaimSms(sender, body)) {
+        if (!detector.tryClaimSms(body)) {
             Log.w(TAG, "SMS already claimed (duplicate injection?)")
             return
         }

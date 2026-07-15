@@ -1,6 +1,7 @@
 package com.flowpay.app.payment
 
 import com.flowpay.app.data.Transaction
+import com.flowpay.app.data.TransactionSource
 import com.flowpay.app.data.TransactionStatus
 import com.flowpay.app.payment.sms.SimpleTransaction
 import com.flowpay.app.states.PaymentState
@@ -45,7 +46,11 @@ class PaymentSessionManagerTest {
     }
 
     private class FakeStore : PaymentTransactionStore {
-        val rows = LinkedHashMap<String, Transaction>()
+        // synchronizedMap: the concurrency test below drives this store from
+        // real JVM threads on a real dispatcher (not the single-threaded
+        // TestDispatcher every other test uses), so it needs actual
+        // thread-safety, not just single-threaded test-scheduler ordering.
+        val rows = java.util.Collections.synchronizedMap(LinkedHashMap<String, Transaction>())
 
         override suspend fun insertPending(transaction: Transaction) {
             rows[transaction.transactionId] = transaction
@@ -65,21 +70,20 @@ class PaymentSessionManagerTest {
         override suspend fun confirmTransaction(
             transactionId: String,
             status: String,
-            bankRef: String?,
-            bankName: String,
-            smsExcerpt: String,
-            upiId: String?,
-            recipientName: String?,
+            parsed: SimpleTransaction,
             verifiedAt: Long
         ): Int {
             val row = rows[transactionId] ?: return 0
             rows[transactionId] = row.copy(
                 status = status,
-                bankRef = bankRef,
-                bankName = bankName,
-                smsExcerpt = smsExcerpt,
-                upiId = upiId,
-                recipientName = recipientName ?: row.recipientName,
+                bankRef = parsed.transactionId,
+                bankName = parsed.bankName,
+                smsExcerpt = parsed.smsExcerpt,
+                // Mirrors the DAO: sparser SMS data never erases known values;
+                // amount fills only when the row started without one (QR flow).
+                upiId = parsed.upiId ?: row.upiId,
+                recipientName = parsed.recipientName ?: row.recipientName,
+                amount = row.amount.ifEmpty { parsed.amount },
                 verifiedAt = verifiedAt
             )
             return 1
@@ -251,6 +255,39 @@ class PaymentSessionManagerTest {
     }
 
     @Test
+    fun `QR session records VPA and source, and the confirming SMS fills the amount`() = runTest {
+        // The QR flow starts before the user has typed an amount into the
+        // USSD menu, and pays a VPA rather than a phone number. The PENDING
+        // row must still capture what IS known, and the bank's confirmation
+        // must fill the missing amount — QR payments used to bypass the
+        // session entirely and leave no trace when no SMS arrived.
+        val (manager, store, source) = newManager()
+
+        val txnId = manager.begin(
+            phoneNumber = "",
+            amount = "",
+            upiId = "kirana@okhdfcbank",
+            source = TransactionSource.QR
+        )!!
+        runCurrent()
+
+        val pending = store.rows[txnId]!!
+        assertEquals(TransactionStatus.PENDING, pending.status)
+        assertEquals("kirana@okhdfcbank", pending.upiId)
+        assertEquals(TransactionSource.QR, pending.source)
+
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+        manager.onSmsConfirmed(bankSms(amount = "750"))
+        runCurrent()
+
+        val confirmed = store.rows[txnId]!!
+        assertEquals(TransactionStatus.SUCCESS, confirmed.status)
+        assertEquals("SMS amount must fill the empty QR amount", "750", confirmed.amount)
+        assertEquals("VPA must survive a sparser SMS", "kirana@okhdfcbank", confirmed.upiId)
+    }
+
+    @Test
     fun `failed bank SMS yields FAILED row and Failed state`() = runTest {
         val (manager, store, source) = newManager()
         val txnId = manager.begin("9876543210", "100")!!
@@ -270,6 +307,121 @@ class PaymentSessionManagerTest {
         val (manager, _, _) = newManager()
 
         assertNull(manager.onSmsConfirmed(bankSms()))
+    }
+
+    @Test
+    fun `truly concurrent confirmations - exactly one claims the session`() {
+        // The check-and-claim inside onSmsConfirmed is a single atomic step.
+        // Before, the check and the terminal transition sat in two separate
+        // locks, so two near-simultaneous SMS (both pipelines, or a debug
+        // injection racing a real message) could both observe InProgress and
+        // both write a terminal outcome, last-writer-wins.
+        //
+        // Deliberately NOT runTest/backgroundScope: this races real JVM
+        // threads against the manager, and kotlinx-coroutines-test's virtual
+        // TestDispatcher is single-threaded and driven only by the test's
+        // own coroutine (runCurrent()) — calling into it concurrently from
+        // unmanaged threads while the test body blocks on a raw
+        // CountDownLatch previously deadlocked the whole test run. A real
+        // dispatcher exercises the actual production concurrency instead of
+        // fighting the test scheduler, and every wait below is
+        // timeout-bounded so a genuine regression fails this test in seconds
+        // instead of hanging the build again.
+        val store = FakeStore()
+        val source = FakeCallStateSource()
+        val manager = PaymentSessionManager(
+            store = store,
+            coordinator = source,
+            scope = kotlinx.coroutines.CoroutineScope(
+                kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default
+            ),
+            clock = System::currentTimeMillis
+        )
+
+        val txnId = manager.begin("9876543210", "100")!!
+        // begin() subscribes to sessionEvents via scope.launch on the real
+        // dispatcher — that attach is asynchronous. sessionEvents has no
+        // replay buffer, so emitting before the collector subscribes would
+        // silently lose the event. Wait for the subscription before emitting.
+        awaitTrue("session must subscribe to call events") {
+            source.sessionEvents.subscriptionCount.value >= 1
+        }
+        source.callStarted(at = System.currentTimeMillis())
+        awaitTrue("session must reach InProgress") { manager.paymentState.value is PaymentState.InProgress }
+
+        val claimed = raceTwoConfirmations(
+            manager,
+            bankSms(status = TransactionStatus.SUCCESS),
+            bankSms(status = TransactionStatus.FAILED)
+        )
+        assertEquals("exactly one confirmation may claim the session", 1, claimed.size)
+        assertEquals(txnId, claimed.single())
+
+        // The winner's persistence write is fire-and-forget on the manager's
+        // scope; wait for it to land before asserting the stored outcome.
+        awaitTrue("winning confirmation must be persisted") {
+            store.rows[txnId]?.status in setOf(TransactionStatus.SUCCESS, TransactionStatus.FAILED)
+        }
+        val terminal = manager.paymentState.value
+        val expectedRowStatus = if (terminal is PaymentState.Failed) {
+            TransactionStatus.FAILED
+        } else {
+            TransactionStatus.SUCCESS
+        }
+        assertEquals(expectedRowStatus, store.rows[txnId]!!.status)
+    }
+
+    /**
+     * Calls [manager].onSmsConfirmed with [smsA] and [smsB] from two real
+     * threads released simultaneously, and returns the non-null results
+     * (i.e. the winner(s)). Any exception inside a racing thread is
+     * re-thrown here rather than silently swallowed by the thread's default
+     * handler, and every wait is timeout-bounded so a genuine regression
+     * fails this test in seconds instead of hanging the build.
+     */
+    private fun raceTwoConfirmations(
+        manager: PaymentSessionManager,
+        smsA: SimpleTransaction,
+        smsB: SimpleTransaction
+    ): List<String> {
+        // ConcurrentLinkedQueue rejects null elements (throws NPE on
+        // add(null)), and a losing onSmsConfirmed() call correctly returns
+        // null — CopyOnWriteArrayList allows it.
+        val results = java.util.concurrent.CopyOnWriteArrayList<String?>()
+        val failures = java.util.concurrent.CopyOnWriteArrayList<Throwable>()
+        val startGate = java.util.concurrent.CountDownLatch(1)
+        val done = java.util.concurrent.CountDownLatch(2)
+        fun race(sms: SimpleTransaction) = Thread {
+            try {
+                startGate.await()
+                results.add(manager.onSmsConfirmed(sms))
+            } catch (t: Throwable) {
+                failures.add(t)
+            } finally {
+                done.countDown()
+            }
+        }
+        race(smsA).start()
+        race(smsB).start()
+        startGate.countDown()
+        val finished = done.await(5, java.util.concurrent.TimeUnit.SECONDS)
+        assertTrue(
+            "both racing threads must finish within the timeout" +
+                (failures.firstOrNull()?.let { " (threw: $it)" } ?: ""),
+            finished
+        )
+        assertTrue("no exception during the race: ${failures.firstOrNull()}", failures.isEmpty())
+        return results.filterNotNull()
+    }
+
+    /** Polls [condition] until true, failing the test after 5s rather than hanging. */
+    private fun awaitTrue(message: String, condition: () -> Boolean) {
+        val deadlineMs = System.currentTimeMillis() + 5_000
+        while (System.currentTimeMillis() < deadlineMs) {
+            if (condition()) return
+            Thread.sleep(10)
+        }
+        org.junit.Assert.fail("Timed out waiting for: $message")
     }
 
     @Test

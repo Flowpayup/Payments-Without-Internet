@@ -163,15 +163,19 @@ class TransactionRepository private constructor(context: Context) :
     override suspend fun confirmTransaction(
         transactionId: String,
         status: String,
-        bankRef: String?,
-        bankName: String,
-        smsExcerpt: String,
-        upiId: String?,
-        recipientName: String?,
+        parsed: SimpleTransaction,
         verifiedAt: Long
     ): Int {
         return transactionDao.confirmTransaction(
-            transactionId, status, bankRef, bankName, smsExcerpt, upiId, recipientName, verifiedAt
+            transactionId = transactionId,
+            status = status,
+            bankRef = parsed.transactionId,
+            bankName = parsed.bankName,
+            smsExcerpt = parsed.smsExcerpt,
+            upiId = parsed.upiId,
+            recipientName = parsed.recipientName,
+            amount = parsed.amount,
+            verifiedAt = verifiedAt
         )
     }
 

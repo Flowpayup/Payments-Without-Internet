@@ -208,27 +208,51 @@ object SmsTransactionParser {
         return FAILURE_INDICATORS.any { bodyLower.contains(it) }
     }
 
-    /** ±1.0 tolerance absorbs decimal-formatting differences ("100" vs "100.00"). */
+    private const val PAISE_PER_RUPEE = 100
+
+    /**
+     * Paise-exact comparison. "100" vs "100.00" still match (both are 10000
+     * paise), but 500 vs 500.75 is a mismatch — the old ±1.0 tolerance let a
+     * different transaction within ₹0.99 confirm this payment as SUCCESS.
+     */
     internal fun isAmountMatching(extracted: String, expected: String): Boolean {
         val extractedNum = extracted.replace(",", "").toDoubleOrNull() ?: return false
         val expectedNum = expected.replace(",", "").toDoubleOrNull() ?: return false
-        return kotlin.math.abs(extractedNum - expectedNum) < 1.0
+        return Math.round(extractedNum * PAISE_PER_RUPEE) == Math.round(expectedNum * PAISE_PER_RUPEE)
     }
+
+    // Keywords that are also everyday English words. In the BODY these must
+    // appear as the full bank phrase — a promo like "Say YES to win Rs 5000!"
+    // must never be attributed to Yes Bank and enter the payment pipeline.
+    // Sender headers (VM-YESBNK, BOBTXN) still match by substring below.
+    private val AMBIGUOUS_BODY_PHRASES = mapOf(
+        "YES" to Regex("\\bYES\\s+BANK\\b"),
+        "BOB" to Regex("\\bBANK\\s+OF\\s+BARODA\\b|\\bBOB\\s+BANK\\b")
+    )
 
     internal fun detectBank(sender: String, body: String): String? {
         val senderUpper = sender.uppercase(Locale.getDefault())
         val bodyUpper = body.uppercase(Locale.getDefault())
 
-        // Check sender first
+        // Check sender first. DLT headers pack the bank into the code
+        // (VK-HDFCBK, VM-YESBNK), so substring matching is correct here.
         for ((keyword, bankName) in BANK_KEYWORDS) {
             if (senderUpper.contains(keyword.uppercase())) {
                 return bankName
             }
         }
 
-        // Check body for bank names
+        // Check body for bank names. Word-boundary matching, and the
+        // ambiguous keywords ("YES", "BOB") additionally require the full
+        // bank phrase so ordinary English can't smuggle a promo SMS in.
         for ((keyword, bankName) in BANK_KEYWORDS) {
-            if (bodyUpper.contains(keyword.uppercase())) {
+            val ambiguous = AMBIGUOUS_BODY_PHRASES[keyword.uppercase()]
+            val matched = if (ambiguous != null) {
+                ambiguous.containsMatchIn(bodyUpper)
+            } else {
+                Regex("\\b${Regex.escape(keyword.uppercase())}\\b").containsMatchIn(bodyUpper)
+            }
+            if (matched) {
                 return bankName
             }
         }
@@ -253,16 +277,18 @@ object SmsTransactionParser {
     }
 
     /**
-     * Cross-pipeline dedupe key. The notification listener sees a
-     * truncated EXTRA_TEXT while the broadcast receiver sees the full
-     * PDU body, so hashing the full body would give the two pipelines
-     * different keys for the same SMS. Normalising whitespace and
-     * capping at 120 chars (below any plausible notification truncation
-     * point) makes both keys converge.
+     * Cross-pipeline dedupe key, built from the BODY only. The two pipelines
+     * see different sender strings for the same SMS — the broadcast receiver
+     * gets the DLT header ("VK-HDFCBK") while the notification listener gets
+     * the messaging app's display name ("HDFC Bank") — so a sender-qualified
+     * key would never collide across pipelines and the dedup would silently
+     * not deduplicate. The body is also normalised (whitespace collapsed,
+     * capped at 120 chars, below any plausible notification truncation point)
+     * so the listener's truncated EXTRA_TEXT and the receiver's full PDU
+     * converge to the same key.
      */
-    internal fun claimKey(sender: String, body: String): String {
-        val normalisedBody = body.trim().replace(Regex("\\s+"), " ").take(120)
-        return "${sender.trim().uppercase(Locale.ROOT)}|$normalisedBody"
+    internal fun claimKey(body: String): String {
+        return body.trim().replace(Regex("\\s+"), " ").take(120)
     }
 
     internal fun isTransactionMessage(body: String): Boolean {
@@ -292,19 +318,34 @@ object SmsTransactionParser {
         return false
     }
 
-    internal fun extractAmount(body: String): String? {
-        for (pattern in AMOUNT_PATTERNS) {
-            val regex = Regex(pattern, RegexOption.IGNORE_CASE)
-            val match = regex.find(body)
+    // Text immediately before a number that marks it as an account BALANCE,
+    // not the transaction amount ("Avl Bal Rs 34,210.00", "Balance: INR ...").
+    private val BALANCE_CONTEXT =
+        Regex("(?:avl|available|avlbl|a/c|account)?\\s*bal(?:ance)?\\s*[:.]?\\s*$", RegexOption.IGNORE_CASE)
 
-            if (match != null && match.groups.size > 1) {
-                val amount = match.groups[1]?.value?.replace(",", "")
-                if (!amount.isNullOrEmpty()) {
-                    return amount
+    // How far back to look for a balance marker before an amount match.
+    private const val BALANCE_LOOKBEHIND_CHARS = 24
+
+    internal fun extractAmount(body: String): String? {
+        // Collect every amount-shaped match across all patterns, in body
+        // order, then prefer the first that is NOT a balance figure. Banks
+        // order these freely ("Avl Bal Rs X ... debited Rs Y" exists in the
+        // wild), and with no expected amount to cross-check (the QR flow) a
+        // balance picked here would be stored as the payment amount.
+        val candidates = AMOUNT_PATTERNS
+            .flatMap { pattern ->
+                Regex(pattern, RegexOption.IGNORE_CASE).findAll(body).mapNotNull { match ->
+                    val amount = match.groups[1]?.value?.replace(",", "")
+                    if (amount.isNullOrEmpty()) null else match.range.first to amount
                 }
             }
+            .sortedBy { it.first }
+        if (candidates.isEmpty()) return null
+
+        val nonBalance = candidates.filterNot { (start, _) ->
+            BALANCE_CONTEXT.containsMatchIn(body.take(start).takeLast(BALANCE_LOOKBEHIND_CHARS))
         }
-        return null
+        return (nonBalance.ifEmpty { candidates }).first().second
     }
 
     internal fun extractTransactionId(body: String, clock: () -> Long): String? {

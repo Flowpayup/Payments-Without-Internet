@@ -1,20 +1,15 @@
 package com.flowpay.app.services
 
 import android.app.Notification
-import android.content.Intent
-import android.os.Handler
-import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
-import android.widget.Toast
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.flowpay.app.helpers.AudioStateManager
 import com.flowpay.app.helpers.TransactionDetector
-import com.flowpay.app.repository.TransactionRepository
-import com.flowpay.app.ui.activities.PaymentResultActivity
+import com.flowpay.app.receivers.SmsIngestionPipeline
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class FlowpayNotificationListener : NotificationListenerService() {
@@ -32,6 +27,8 @@ class FlowpayNotificationListener : NotificationListenerService() {
             "com.hihonor.messaging"
         )
     }
+
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (sbn.packageName !in SMS_APP_PACKAGES) return
@@ -51,7 +48,7 @@ class FlowpayNotificationListener : NotificationListenerService() {
 
         val extras = sbn.notification.extras
         val sender = extras.getString(Notification.EXTRA_TITLE) ?: return
-        val body   = extras.getString(Notification.EXTRA_TEXT)  ?: return
+        val body = extras.getString(Notification.EXTRA_TEXT) ?: return
 
         Log.d(TAG, "SMS notification received")
 
@@ -64,79 +61,31 @@ class FlowpayNotificationListener : NotificationListenerService() {
 
         // The broadcast receiver is the primary pipeline; skip anything it
         // already claimed so the same SMS is never processed twice.
-        if (!detector.tryClaimSms(sender, body)) {
+        if (!detector.tryClaimSms(body)) {
             Log.d(TAG, "SMS already claimed by another pipeline")
             return
         }
 
-        val transaction = detector.processSMS(sender, body) ?: run {
-            Log.d(TAG, "Not a transaction notification")
-            return
-        }
-
-        Log.d(TAG, "Transaction detected (status=${transaction.status})")
-
-        // For UPI 123 — mute call audio immediately (same as SimpleSMSReceiver)
-        val operationType = detector.getOperationType()
-        // Only a confirmed-successful payment justifies muting the IVR call —
-        // a FAILED or NEEDS_REVIEW confirmation must leave the call audible
-        // so the user can hear the bank's prompts and react.
-        if (operationType == "UPI_123" &&
-            transaction.status == com.flowpay.app.data.TransactionStatus.SUCCESS
-        ) {
-            Log.d(TAG, "UPI 123 transaction — muting call immediately")
-            Handler(Looper.getMainLooper()).post {
-                val muted = AudioStateManager.muteCallAudio(applicationContext)
-                if (muted) {
-                    Log.d(TAG, "Call audio muted successfully")
-                    Toast.makeText(applicationContext, "Call muted - Payment successful", Toast.LENGTH_SHORT).show()
-                } else {
-                    Log.e(TAG, "Failed to mute call audio")
-                }
+        // Same shared pipeline as the broadcast receiver — parsing, session
+        // confirmation / orphaned-row reattach, persistence, broadcasts, and
+        // the result-screen launch. This listener used to reimplement all of
+        // that (with drift: it passed the bank ref instead of the session
+        // txnId to the result screen); now the two pipelines cannot diverge.
+        serviceScope.launch {
+            try {
+                SmsIngestionPipeline.ingest(applicationContext, detector, sender, body)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to process SMS notification", e)
             }
         }
-
-        // An active payment session owns its row — update it in place;
-        // otherwise fall back to inserting a fresh row (QR/legacy flow).
-        val sessionTxnId = com.flowpay.app.FlowpayApplication.from(applicationContext)
-            ?.paymentSessionManager?.onSmsConfirmed(transaction)
-        if (sessionTxnId == null) {
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    TransactionRepository.getInstance(applicationContext).saveTransaction(transaction)
-                    Log.d(TAG, "Transaction saved (no active session)")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to save transaction", e)
-                }
-            }
-        }
-
-        // Broadcast to dismiss USSD overlay
-        LocalBroadcastManager.getInstance(applicationContext)
-            .sendBroadcast(Intent("DISMISS_OVERLAY"))
-
-        // Broadcast for QRScannerActivity
-        LocalBroadcastManager.getInstance(applicationContext)
-            .sendBroadcast(Intent("com.flowpay.app.SMS_RECEIVED"))
-
-        // Launch PaymentResultActivity
-        val intent = Intent(applicationContext, PaymentResultActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("transaction_id",   transaction.transactionId)
-            putExtra("amount",           transaction.amount)
-            putExtra("status",           transaction.status)
-            putExtra("bank_name",        transaction.bankName)
-            putExtra("message",          transaction.smsExcerpt)
-            putExtra("timestamp",        transaction.timestamp)
-            putExtra("upi_id",           transaction.upiId)
-            putExtra("transaction_type", transaction.transactionType)
-            putExtra("recipient_name",   transaction.recipientName)
-            putExtra("phone_number",     transaction.phoneNumber)
-        }
-        applicationContext.startActivity(intent)
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
         // No-op
+    }
+
+    override fun onDestroy() {
+        serviceScope.cancel()
+        super.onDestroy()
     }
 }

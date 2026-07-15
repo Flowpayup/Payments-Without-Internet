@@ -27,15 +27,14 @@ interface PaymentTransactionStore {
     /** Atomically move a row from [expectedStatus] to [newStatus]. Returns rows changed. */
     suspend fun transitionStatus(transactionId: String, expectedStatus: String, newStatus: String): Int
 
-    /** Fill in bank-confirmed details on the session row. Returns rows changed. */
+    /**
+     * Fill in bank-confirmed details from [parsed] on the session row,
+     * recording it as [status] at [verifiedAt]. Returns rows changed.
+     */
     suspend fun confirmTransaction(
         transactionId: String,
         status: String,
-        bankRef: String?,
-        bankName: String,
-        smsExcerpt: String,
-        upiId: String?,
-        recipientName: String?,
+        parsed: SimpleTransaction,
         verifiedAt: Long
     ): Int
 
@@ -89,8 +88,17 @@ class PaymentSessionManager(
     /**
      * Starts a new payment session and records a PENDING row.
      * Returns the client transaction id, or null if a session is already active.
+     *
+     * [upiId] and [source] let the QR flow record what it actually knows (a
+     * payee VPA, provenance QR) — the QR flow used to bypass the session
+     * entirely, so an unconfirmed QR payment left no trace at all.
      */
-    fun begin(phoneNumber: String, amount: String): String? {
+    fun begin(
+        phoneNumber: String,
+        amount: String,
+        upiId: String? = null,
+        source: String = TransactionSource.MANUAL
+    ): String? {
         val initiating: PaymentState.Initiating
         synchronized(sessionLock) {
             if (_paymentState.value.isInProgress()) {
@@ -122,8 +130,9 @@ class PaymentSessionManager(
                     timestamp = now,
                     transactionType = "DEBIT",
                     phoneNumber = phoneNumber,
+                    upiId = upiId,
                     deadlineAt = deadlineAt,
-                    source = TransactionSource.MANUAL
+                    source = source
                 )
             )
             Log.d(TAG, "PENDING row recorded for session")
@@ -186,15 +195,6 @@ class PaymentSessionManager(
             return null
         }
 
-        val current: PaymentState
-        synchronized(sessionLock) {
-            current = _paymentState.value
-            if (!current.isInProgress()) return null
-        }
-        val txnId = current.getTransactionIdValue() ?: return null
-        val phone = current.getPhoneNumberValue() ?: parsed.phoneNumber ?: ""
-        val amount = current.getAmountValue() ?: parsed.amount
-
         val newStatus = when {
             parsed.status.equals(TransactionStatus.FAILED, ignoreCase = true) ->
                 TransactionStatus.FAILED
@@ -204,45 +204,53 @@ class PaymentSessionManager(
         }
         val verifiedAt = clock()
 
+        // Check-and-claim must be one atomic step: with the check in one
+        // lock and the terminal transition in a second, two near-simultaneous
+        // confirming SMS (both pipelines, or a debug injection racing a real
+        // message) could BOTH observe InProgress and both write a terminal
+        // outcome, last-writer-wins. Claiming inside a single lock guarantees
+        // exactly one caller ever owns the confirmation.
+        val txnId: String
+        synchronized(sessionLock) {
+            val current = _paymentState.value
+            if (!current.isInProgress()) return null
+            txnId = current.getTransactionIdValue() ?: return null
+            val phone = current.getPhoneNumberValue() ?: parsed.phoneNumber ?: ""
+            val amount = current.getAmountValue() ?: parsed.amount
+
+            _paymentState.value = when (newStatus) {
+                TransactionStatus.FAILED -> PaymentState.Failed(
+                    error = "Bank reported the payment as failed",
+                    phoneNumber = phone,
+                    amount = amount,
+                    transactionId = txnId,
+                    canRetry = true
+                )
+                TransactionStatus.NEEDS_REVIEW -> PaymentState.NeedsReview(
+                    transactionId = txnId,
+                    phoneNumber = phone,
+                    amount = amount
+                )
+                else -> PaymentState.Success(
+                    transactionId = txnId,
+                    phoneNumber = phone,
+                    amount = amount,
+                    bankReference = parsed.transactionId,
+                    timestamp = verifiedAt
+                )
+            }
+            cleanupLocked()
+        }
+
         scope.launch {
             pendingInsertJob?.join()
             val updated = store.confirmTransaction(
                 transactionId = txnId,
                 status = newStatus,
-                bankRef = parsed.transactionId,
-                bankName = parsed.bankName,
-                smsExcerpt = parsed.smsExcerpt,
-                upiId = parsed.upiId,
-                recipientName = parsed.recipientName,
+                parsed = parsed,
                 verifiedAt = verifiedAt
             )
             Log.d(TAG, "Session row confirmed as $newStatus (rows=$updated)")
-        }
-
-        val terminal = when (newStatus) {
-            TransactionStatus.FAILED -> PaymentState.Failed(
-                error = "Bank reported the payment as failed",
-                phoneNumber = phone,
-                amount = amount,
-                transactionId = txnId,
-                canRetry = true
-            )
-            TransactionStatus.NEEDS_REVIEW -> PaymentState.NeedsReview(
-                transactionId = txnId,
-                phoneNumber = phone,
-                amount = amount
-            )
-            else -> PaymentState.Success(
-                transactionId = txnId,
-                phoneNumber = phone,
-                amount = amount,
-                bankReference = parsed.transactionId,
-                timestamp = verifiedAt
-            )
-        }
-        synchronized(sessionLock) {
-            _paymentState.value = terminal
-            cleanupLocked()
         }
         return txnId
     }

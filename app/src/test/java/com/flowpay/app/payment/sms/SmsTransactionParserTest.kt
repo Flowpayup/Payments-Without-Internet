@@ -241,8 +241,54 @@ class SmsTransactionParserTest {
         val truncated = fullBody.take(140) // simulates a notification EXTRA_TEXT cutoff
 
         assertEquals(
-            SmsTransactionParser.claimKey(bankCorpus.first().sender, fullBody),
-            SmsTransactionParser.claimKey(bankCorpus.first().sender, truncated)
+            SmsTransactionParser.claimKey(fullBody),
+            SmsTransactionParser.claimKey(truncated)
+        )
+    }
+
+    @Test
+    fun `promo SMS containing the word YES never enters the pipeline as Yes Bank`() {
+        // "YES" is an everyday word; only the full bank phrase (or a matching
+        // sender header) may attribute a body to Yes Bank. Before this rule a
+        // promo with an amount could enter the payment pipeline during an
+        // operation window — and with a matching amount, auto-confirm it.
+        val result = SmsTransactionParser.parse(
+            sender = "JD-PROMO4U",
+            body = "Say YES to win Rs 5000! Reply YES to enter the lucky draw today.",
+            expectedAmount = "5000"
+        )
+        assertNull(result)
+
+        // The real thing still matches — by sender header...
+        assertEquals("Yes Bank", SmsTransactionParser.detectBank("YB-YESBNK", "Rs 100 debited"))
+        // ...and by full phrase in the body.
+        assertEquals(
+            "Yes Bank",
+            SmsTransactionParser.detectBank("XX-UNKNOWN", "Rs 100 debited from your Yes Bank A/c")
+        )
+    }
+
+    @Test
+    fun `balance-first template extracts the transaction amount, not the balance`() {
+        // Some banks lead with the balance. With no expected amount (QR flow)
+        // a first-match extraction would store the balance as the payment.
+        val result = SmsTransactionParser.parse(
+            sender = "VK-SBIUPI",
+            body = "Avl Bal Rs 34,210.00 in A/c X1234. Rs 2000 debited for UPI txn 512233440091 -SBI",
+            expectedAmount = null
+        )
+
+        assertNotNull(result)
+        assertEquals("2000", result!!.amount)
+    }
+
+    @Test
+    fun `balance-only body still extracts something rather than nothing`() {
+        // If every amount in the body is a balance figure, fall back to it —
+        // the NEEDS_REVIEW mismatch tier is the safety net in the manual flow.
+        assertEquals(
+            "12345.67",
+            SmsTransactionParser.extractAmount("Avl bal Rs 12,345.67 in your account")
         )
     }
 

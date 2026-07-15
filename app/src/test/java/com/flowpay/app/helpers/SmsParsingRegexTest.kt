@@ -150,13 +150,13 @@ class SmsParsingRegexTest {
             "on 20-MAY-26. Avl bal Rs 12,345.67. Call 18002586161 to report fraud. Never share your UPI PIN with anyone."
         val truncated = fullBody.take(150) // notification EXTRA_TEXT truncation
         assertEquals(
-            SmsTransactionParser.claimKey("VM-HDFCBK", fullBody),
-            SmsTransactionParser.claimKey("VM-HDFCBK", truncated)
+            SmsTransactionParser.claimKey(fullBody),
+            SmsTransactionParser.claimKey(truncated)
         )
         // Different SMS still produce different keys
         assertFalse(
-            SmsTransactionParser.claimKey("VM-HDFCBK", fullBody) ==
-                SmsTransactionParser.claimKey("VM-HDFCBK", "Rs.200.00 sent to SOMEONE ELSE via UPI")
+            SmsTransactionParser.claimKey(fullBody) ==
+                SmsTransactionParser.claimKey("Rs.200.00 sent to SOMEONE ELSE via UPI")
         )
     }
 
@@ -166,6 +166,15 @@ class SmsParsingRegexTest {
         assertTrue(SmsTransactionParser.isAmountMatching("1,250.50", "1250.50"))
         assertFalse("unrelated debit must not match", SmsTransactionParser.isAmountMatching("499", "100"))
         assertFalse("non-numeric never matches", SmsTransactionParser.isAmountMatching("abc", "100"))
+    }
+
+    @Test
+    fun `Amount matching is paise-exact — a nearby amount is a different transaction`() {
+        // The old ±1.0 tolerance let a debit within ₹0.99 confirm this payment.
+        assertFalse(SmsTransactionParser.isAmountMatching("500.75", "500"))
+        assertFalse(SmsTransactionParser.isAmountMatching("500.99", "500"))
+        assertFalse(SmsTransactionParser.isAmountMatching("499.01", "500"))
+        assertTrue(SmsTransactionParser.isAmountMatching("500.00", "500"))
     }
 
     @Test

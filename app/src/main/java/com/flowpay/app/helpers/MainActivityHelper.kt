@@ -186,11 +186,14 @@ class MainActivityHelper(
             return
         }
 
-        // Gate SMS detection to this operation window
+        // Gate SMS detection to this operation window. The session txnId is
+        // persisted so a confirmation arriving after a process death can be
+        // reattached to this payment's row instead of inserting a duplicate.
         TransactionDetector.getInstance(context).startOperation(
             operationType = "UPI_123",
             expectedAmount = amount,
-            phoneNumber = phoneNumber
+            phoneNumber = phoneNumber,
+            sessionTxnId = transactionId
         )
 
         val success = callManager?.initiateUPI123Call(phoneNumber, amount) ?: false
