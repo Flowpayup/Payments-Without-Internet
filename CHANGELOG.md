@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### The hardening pass — money-path edge cases closed and tested
+
+#### Fixed
+- **Keystore key loss no longer crash-loops the app.** If the wrapping key is
+  invalidated (OS update, keystore corruption, some restores) while the
+  wrapped passphrase blob survives, `DatabaseKeyManager` now recovers — stale
+  blob discarded, key regenerated, unreadable database set aside — instead of
+  throwing on the app's first database touch at every launch.
+- **Slow bank SMS no longer produce false UNVERIFIED.** The SMS operation
+  window (was 5 min) is now derived from the 10-minute verification deadline
+  plus a grace margin, so a confirmation at t+6 min still lands.
+- **A process death mid-payment no longer duplicates the record.** The session
+  txnId is persisted with the operation window; a confirmation arriving after
+  restart reattaches to the original PENDING/UNVERIFIED row instead of
+  inserting a second SUCCESS row.
+- **Cross-pipeline SMS dedup actually dedupes.** The claim key is now built
+  from the message body only — the receiver sees the DLT header while the
+  notification listener sees the app display name, so the old sender-qualified
+  keys never collided.
+- **Confirmations claim the session atomically.** The check and terminal
+  transition in `onSmsConfirmed` were two separate locks; two simultaneous
+  SMS could both write an outcome, last-writer-wins.
+- The notification listener now runs the shared `SmsIngestionPipeline`
+  instead of a drifted reimplementation (which passed the bank ref, not the
+  session txnId, to the result screen), and no longer force-mutes call audio
+  post-success (a path that could only fire for the wrong message type).
+- Cold start no longer opens the encrypted database on the main thread: the
+  session store and `TransactionViewModel` resolve it lazily on IO. Debug
+  builds run StrictMode with penaltyLog as a regression tripwire.
+
+#### Changed
+- **The QR flow now runs through the payment session** — PENDING row,
+  verification deadline, UNVERIFIED on silence — instead of bypassing the
+  lifecycle and leaving no trace when no SMS arrived. The bank SMS fills the
+  amount the QR flow didn't know yet; the recorded VPA survives sparser SMS.
+- **Parser hardening:** body bank-keywords match on word boundaries with
+  "YES"/"BOB" requiring the full bank phrase (a promo "Say YES to win Rs
+  5000!" can no longer enter the pipeline); amount matching is paise-exact
+  (was ±₹0.99); amount extraction skips balance figures ("Avl Bal Rs …").
+- **Payment outcomes are also posted as high-priority notifications** — the
+  direct result-screen launch from a background receiver can be silently
+  blocked without the overlay permission; the notification is the
+  guaranteed-reachable path (and doubles as a receipt).
+
+#### Added
+- Tests: Keystore-loss recovery (Robolectric), orphaned-row reattach
+  decision, truly-concurrent confirmation race, QR session lifecycle,
+  promo-"YES" rejection, paise-boundary matching, balance-first extraction,
+  `TransactionDetector` window/dedup/consumption, and `CallStateCoordinator`
+  state/duration/ref-counting suites. The kover floor now also covers
+  `TransactionDetector` and the telephony package.
+
 ### The truth pass — the app's behavior now matches its honesty premise
 
 #### Fixed

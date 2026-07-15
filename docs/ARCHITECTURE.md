@@ -50,7 +50,7 @@ unit-testable without a device (see
 [`PaymentSessionManagerTest`](../app/src/test/java/com/flowpay/app/payment/PaymentSessionManagerTest.kt)).
 
 ```
-begin(phone, amount)
+begin(phone, amount)          [QR: begin("", amount?, upiId, source=QR)]
    │  writes a PENDING row BEFORE anything is dialed, so a process death
    │  mid-call still leaves a record of the attempt
    ▼
@@ -64,14 +64,23 @@ Initiating ──OFFHOOK──▶ InProgress ──call ends──▶ WaitingFor
            Cancelled                         ├── amount mismatch ⇒ NeedsReview  │
                                              └── failure keyword ⇒ Failed       │
    no SMS before the 10-minute deadline ⇒ Timeout, and the PENDING row ⇒ UNVERIFIED
+                                             │
+                    Timeout is surfaced live: UnverifiedOutcomeObserver
+                    (process-scoped) opens the result screen as UNVERIFIED
 ```
 
 Every terminal transition `join()`s the pending-insert coroutine first, so
 the PENDING row always exists before it's updated. Stale PENDING rows left by
 a killed process are reconciled to `UNVERIFIED` lazily (`reconcileStalePending`
-on app start). The `PaymentState` sealed hierarchy carries exactly the states
-the machine emits — dead QR/retry variants were removed so the type reflects
-reality.
+on app start). If the process died mid-payment and the confirming SMS arrives
+after restart, the ingestion pipeline *reattaches* it: the session txnId is
+persisted in the operation window at `begin()`, and a no-live-session
+confirmation updates that row (PENDING or already-expired UNVERIFIED) instead
+of inserting a duplicate. The QR flow runs through the same session lifecycle
+(PENDING row, deadline, UNVERIFIED) — it used to bypass it entirely, leaving
+no trace when no SMS arrived. The `PaymentState` sealed hierarchy carries
+exactly the states the machine emits — dead QR/retry variants were removed so
+the type reflects reality.
 
 ## SMS ingestion — two pipelines, one parser
 
@@ -107,15 +116,21 @@ most careful area.
   holds all the bank-SMS matching logic — pure, Context-free, and tested
   against a per-bank corpus. [`TransactionDetector`](../app/src/main/java/com/flowpay/app/helpers/TransactionDetector.kt)
   is the stateful shell around it: the SharedPreferences-backed *operation
-  window* (only SMS arriving while a payment is in flight are eligible) and
-  the dedup that stops the two pipelines from double-processing one message.
-- **Dedup** is two-layered: `tryClaimSms` (a normalized-key claim, so the
-  notification listener's truncated text and the receiver's full PDU converge
-  to the same key) and `@Synchronized processSMS` re-checking the operation
-  window under lock — whichever pipeline enters first consumes it.
-- Both pipelines share [`SmsIngestionPipeline`](../app/src/main/java/com/flowpay/app/receivers/SmsIngestionPipeline.kt),
-  which is also what the debug SMS-injection tool drives, so tests exercise
-  the exact production path (see [TESTING.md](TESTING.md)).
+  window* (only SMS arriving while a payment is in flight are eligible;
+  sized to the verification deadline plus a grace margin, so a slow bank SMS
+  is never dropped here while the session still awaits it) and the dedup
+  that stops the two pipelines from double-processing one message.
+- **Dedup** is two-layered: `tryClaimSms` (a body-only normalized-key claim —
+  the receiver sees the DLT header while the listener sees the messaging
+  app's display name for the same SMS, and the truncated notification text
+  and full PDU also converge to one key) and `@Synchronized processSMS`
+  re-checking the operation window under lock — whichever pipeline enters
+  first consumes it.
+- Both pipelines share [`SmsIngestionPipeline`](../app/src/main/java/com/flowpay/app/receivers/SmsIngestionPipeline.kt)
+  end-to-end — parsing, session confirmation or orphaned-row reattach,
+  persistence, broadcasts, the result notification, and the result-screen
+  launch. The debug SMS-injection tool drives the same pipeline, so tests
+  exercise the exact production path (see [TESTING.md](TESTING.md)).
 
 ## Telephony and the call overlay
 
@@ -196,8 +211,11 @@ Honest about what isn't consolidated, and why:
   from background receivers with specific window/`singleTask` behavior; a
   blind Compose rewrite of a payment-outcome screen that can't be
   device-tested isn't worth the regression risk for pattern purity alone.
-- The **permissive SMS matcher** (substring bank keywords, generic amount
-  fallback) is intentional — banks phrase confirmations inconsistently, and
-  the downstream tiers (`NeedsReview` on amount mismatch, `Failed` on a
-  failure keyword) are the safety net that keeps permissiveness from ever
-  producing a false SUCCESS. Growing the test corpus is the guardrail.
+- The **permissive SMS matcher** is intentional — banks phrase confirmations
+  inconsistently, and the downstream tiers (`NeedsReview` on amount mismatch,
+  `Failed` on a failure keyword) are the safety net that keeps permissiveness
+  from ever producing a false SUCCESS. It is permissive, not naive: body
+  keywords match on word boundaries (with "YES"/"BOB" requiring the full bank
+  phrase so promo SMS can't enter the pipeline), amount comparison is
+  paise-exact, and extraction skips balance figures ("Avl Bal Rs …") in
+  favour of the transaction amount. Growing the test corpus is the guardrail.
