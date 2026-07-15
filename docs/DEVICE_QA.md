@@ -26,10 +26,11 @@ the change that introduced it.
 - [ ] **"Call volume lowered" pill is truthful.** During a 123Pay call the pill
       appears only after the volume is actually lowered; if the volume change
       fails the pill stays hidden. (Phase 1: honest audio indicator.)
-- [ ] **Ringer/notifications survive a successful payment.** After a confirmed
-      UPI 123 success (notification-listener path), the phone's ring and
-      notification volumes are unchanged — only the in-call voice stream is
-      silenced. (Phase 1: AudioStateManager fix.)
+- [ ] **Ringer/notifications survive a payment.** Across a full payment
+      (including via the notification-listener fallback), the phone's ring and
+      notification volumes are unchanged, and the in-call volume is restored
+      when the call ends. (Phase 1/2: only CallManager touches call audio; the
+      post-success mute path was removed.)
 
 ## QR / clipboard
 
