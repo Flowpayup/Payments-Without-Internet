@@ -17,6 +17,11 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Payment outcomes are also posted as notifications: the direct
+         result-screen launch from a background receiver rides the
+         overlay-permission exemption and can be silently blocked, and a
+         money outcome must never be unreachable. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Camera features for QR code scanning -->
     <uses-feature android:name="android.hardware.camera" />

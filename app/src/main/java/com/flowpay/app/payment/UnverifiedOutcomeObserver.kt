@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.flowpay.app.data.TransactionStatus
+import com.flowpay.app.receivers.PaymentResultNotifier
 import com.flowpay.app.states.PaymentState
 import com.flowpay.app.states.TimeoutType
 import com.flowpay.app.ui.activities.PaymentResultActivity
@@ -59,9 +60,11 @@ class UnverifiedOutcomeObserver(
                 putExtra("transaction_type", "DEBIT")
                 putExtra("timestamp", System.currentTimeMillis())
             }
-            // Background-activity-launch can be blocked without overlay
-            // permission; Phase 2.8 adds a notification fallback. Log so the
-            // row-vs-UI mismatch is at least diagnosable meanwhile.
+            // Notification first: the direct launch below rides the
+            // background-activity-launch exemption and can be silently
+            // blocked without overlay permission — the scariest outcome must
+            // never be unreachable.
+            PaymentResultNotifier.notifyResult(context, intent)
             try {
                 context.startActivity(intent)
             } catch (e: ActivityNotFoundException) {

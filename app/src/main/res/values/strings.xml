@@ -60,6 +60,10 @@
     <string name="status_explainer_failed">Your bank reported this payment as failed. Any debited amount is normally auto-reversed.</string>
     <string name="status_explainer_needs_review">A bank SMS arrived during this payment but its amount didn\'t match. Check your bank statement before retrying.</string>
 
+    <!-- Payment result notifications -->
+    <string name="notif_channel_payment_results">Payment results</string>
+    <string name="notif_channel_payment_results_desc">The outcome of each payment — success, failure, or needs checking</string>
+
     <!-- Payment result screen -->
     <string name="payment_status_success">Payment Successful</string>
     <string name="payment_status_failed">Payment Failed</string>
