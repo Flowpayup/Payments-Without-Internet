@@ -165,15 +165,30 @@ Two screens stay classic Views by design: `QRScannerActivity` (a CameraX
 lifecycle/saved-state owners — a known bug source, unacceptable in the window
 that supervises a live payment).
 
+Colors and copy each have a single source of truth. Compose colors come from
+the tokens in [`ui/theme/Color.kt`](../app/src/main/java/com/flowpay/app/ui/theme/Color.kt)
+(one named value per visual role; `statusColor(status)` maps a transaction
+status to its color everywhere), layout colors from `colors.xml`, and all
+user-visible strings from `strings.xml`. Two CI gates enforce it: no inline
+`Color(0x…)` outside `ui/theme` (or hex in a layout), and no single-line
+hardcoded `Text("…")` — so a new screen can't quietly reintroduce the drift
+that once spread ~14 near-identical greys across the codebase.
+
 ## Persistence
 
 Room, local-only, encrypted at rest with SQLCipher. The database passphrase
 is a random key wrapped by a **non-exportable Android Keystore key**, so it
-never leaves hardware. Schema is at version 3 with exported schemas and
-migration tests (`MIGRATION_1_2`, `MIGRATION_2_3`) run on-device in CI. The
-raw SMS body is never persisted — only a constructively-built, privacy-safe
-excerpt from extracted fields (a CI grep gate blocks reintroducing raw-body
-logging).
+never leaves hardware. If that wrapping key is ever lost or invalidated (OS
+update, keystore corruption, some device restores) while the wrapped blob
+survives, [`DatabaseKeyManager`](../app/src/main/java/com/flowpay/app/data/DatabaseKeyManager.kt)
+recovers rather than throwing — it discards the stale blob, regenerates the
+key, and the migrator sets the now-unreadable database aside so the app
+starts fresh instead of crash-looping on its first database touch. This runs
+lazily on `Dispatchers.IO`, never the main thread. Schema is at version 3
+with exported schemas and migration tests (`MIGRATION_1_2`, `MIGRATION_2_3`)
+run on-device in CI. The raw SMS body is never persisted — only a
+constructively-built, privacy-safe excerpt from extracted fields (a CI grep
+gate blocks reintroducing raw-body logging).
 
 ## Components (AndroidManifest)
 

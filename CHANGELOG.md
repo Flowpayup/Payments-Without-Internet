@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### The interface pass — one design system, and a result screen that never lies
+
+#### Fixed
+- **The result screen re-renders on a new outcome.** It is `singleTask`, so a
+  second confirmation (e.g. a FAILED arriving while a prior SUCCESS is still
+  shown) was delivered to the live instance but never re-read — the screen kept
+  showing the stale, wrong outcome under a fresh, correct notification. It now
+  adopts the new intent and re-renders, and every branch sets all its visuals so
+  a re-render can't inherit the previous status's icon or explainer. (Found on a
+  physical device driving the debug SMS pipeline.)
+
+#### Changed
+- **One design system.** All ~200 inline `Color(0x…)` literals across the
+  Compose screens, and the hex in the three XML layouts, now reference named
+  tokens (`ui/theme/Color.kt` / `colors.xml`); the ~14 near-duplicate greys and
+  the copy-pasted `getStatusColor()` functions collapse to one value / one
+  `statusColor()` each. Remaining hardcoded Compose copy moved to `strings.xml`.
+  New CI gates fail the build on an inline color or a single-line hardcoded
+  `Text("…")`, so it can't drift back.
+- **Result screen styling is status-coherent** — a failed/needs-review/unverified
+  outcome colors its circle, heading and amount together (red / amber / grey)
+  instead of a red error icon inside a blue "success" circle; success keeps the
+  brand-blue circle and blue action button.
+
+#### Removed
+- Two never-instantiated `TransactionData` classes (and a dead
+  `navigateToSuccessScreen`) that still carried the `rawMessage`/`balance` fields
+  the v3 migration removed from storage for privacy.
+
 ### The hardening pass — money-path edge cases closed and tested
 
 #### Fixed
