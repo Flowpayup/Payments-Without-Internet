@@ -21,4 +21,18 @@
 
     <!-- General UI Colors -->
     <color name="background_secondary">#FFF5F5F5</color>
+
+    <!-- Dark-theme View/XML tokens (Compose screens use ui/theme/Color.kt;
+         these mirror the same ramp for the classic-View layouts). -->
+    <color name="surface_card_dark">#FF1A1A1A</color>
+    <color name="surface_deep_dark">#FF0D0D0D</color>
+    <color name="divider_dark">#FF333333</color>
+    <color name="text_secondary_dark">#FF888888</color>
+
+    <!-- In-call overlay card (light "frosted" surface — its own mini palette) -->
+    <color name="overlay_text_primary">#FF2C2C2C</color>
+    <color name="overlay_text_secondary">#FF757575</color>
+    <color name="overlay_icon_gray">#FF424242</color>
+    <color name="overlay_divider_light">#FFE0E0E0</color>
+    <color name="overlay_alert_red">#FFFF6B6B</color>
 </resources>

@@ -10,3 +10,6 @@ style:
     # Compose UI is full of literal dp/sp/color/alpha values; flagging them as
     # "magic numbers" is noise. Design tokens are handled in the Phase 3 pass.
     ignoreAnnotated: ['Composable']
+    # ui/theme is where the literal color/typography tokens are DEFINED — the
+    # one place raw hex belongs.
+    excludes: ['**/ui/theme/**']

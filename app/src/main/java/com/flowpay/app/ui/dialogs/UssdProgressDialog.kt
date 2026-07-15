@@ -15,19 +15,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.flowpay.app.R
+import com.flowpay.app.ui.theme.FlowpayDarkGray
+import com.flowpay.app.ui.theme.FlowpayLightGray
+import com.flowpay.app.ui.theme.FlowpayOutlineGray
+import com.flowpay.app.ui.theme.FlowpayTextGray
+import com.flowpay.app.ui.theme.FlowpayTextLightGray
+import com.flowpay.app.ui.theme.FlowpayTextPale
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import kotlinx.coroutines.delay
 
 @Composable
 fun UssdProgressDialog(
     isVisible: Boolean,
-    progressMessage: String = "Initializing...",
+    progressMessage: String = stringResource(R.string.ussd_dlg_initializing),
     showConfigurationOptions: Boolean = false,
     onConfigured: () -> Unit = {},
     onNotConfigured: () -> Unit = {},
@@ -80,8 +88,8 @@ private fun UssdProgressDialogContent(
             .fillMaxWidth()
             .padding(32.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
-        border = BorderStroke(1.dp, Color(0xFF333333))
+        colors = CardDefaults.cardColors(containerColor = FlowpayDarkGray),
+        border = BorderStroke(1.dp, FlowpayLightGray)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(
@@ -102,7 +110,7 @@ private fun UssdProgressDialogContent(
                 ) {
                     Icon(
                         imageVector = PhoneIcon,
-                        contentDescription = "USSD Setup",
+                        contentDescription = stringResource(R.string.ussd_dlg_cd_ussd_setup),
                         tint = LocalFlowpayAccentTheme.current.accent,
                         modifier = Modifier.size(48.dp)
                     )
@@ -111,7 +119,11 @@ private fun UssdProgressDialogContent(
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 Text(
-                    text = if (showConfigurationOptions) "Setup Complete?" else "Setting Up Your Payment System",
+                    text = if (showConfigurationOptions) {
+                        stringResource(R.string.ussd_dlg_setup_complete_title)
+                    } else {
+                        stringResource(R.string.ussd_dlg_setting_up_title)
+                    },
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -121,13 +133,14 @@ private fun UssdProgressDialogContent(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = if (showConfigurationOptions) 
-                        "Did you complete the *99# setup?\n\nThis enables seamless payment scanning."
-                    else
-                        "We have triggered USSD. It usually takes a few seconds for the data sessions to appear—be patient and don't close the app.",
+                    text = if (showConfigurationOptions) {
+                        stringResource(R.string.ussd_dlg_setup_complete_body)
+                    } else {
+                        stringResource(R.string.ussd_dlg_setting_up_body)
+                    },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF888888),
+                    color = FlowpayTextLightGray,
                     textAlign = TextAlign.Center,
                     lineHeight = 24.sp
                 )
@@ -146,11 +159,11 @@ private fun UssdProgressDialogContent(
                                 .height(50.dp),
                             shape = RoundedCornerShape(15.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF333333)
+                                containerColor = FlowpayLightGray
                             )
                         ) {
                             Text(
-                                text = "Not Yet",
+                                text = stringResource(R.string.ussd_dlg_not_yet),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White,
@@ -169,7 +182,7 @@ private fun UssdProgressDialogContent(
                             )
                         ) {
                             Text(
-                                text = "Yes",
+                                text = stringResource(R.string.ussd_dlg_yes),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White,
@@ -183,7 +196,7 @@ private fun UssdProgressDialogContent(
                             .fillMaxWidth()
                             .height(6.dp),
                         color = LocalFlowpayAccentTheme.current.accent,
-                        trackColor = Color(0xFF333333)
+                        trackColor = FlowpayLightGray
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
@@ -192,7 +205,7 @@ private fun UssdProgressDialogContent(
                         text = progressMessage,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Light,
-                        color = Color(0xFF666666).copy(alpha = alpha),
+                        color = FlowpayTextGray.copy(alpha = alpha),
                         textAlign = TextAlign.Center
                     )
 
@@ -221,7 +234,7 @@ private fun UssdProgressDialogContent(
                             )
                         ) {
                             Text(
-                                text = "I've already set up *99#",
+                                text = stringResource(R.string.ussd_dlg_already_set_up),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -235,13 +248,13 @@ private fun UssdProgressDialogContent(
                                 .fillMaxWidth()
                                 .height(48.dp),
                             shape = RoundedCornerShape(15.dp),
-                            border = BorderStroke(1.dp, Color(0xFF444444)),
+                            border = BorderStroke(1.dp, FlowpayOutlineGray),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFFBBBBBB)
+                                contentColor = FlowpayTextPale
                             )
                         ) {
                             Text(
-                                text = "It doesn't work for me",
+                                text = stringResource(R.string.ussd_dlg_does_not_work),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -259,8 +272,8 @@ private fun UssdProgressDialogContent(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Close",
-                    tint = Color(0xFF888888),
+                    contentDescription = stringResource(R.string.ussd_dlg_cd_close),
+                    tint = FlowpayTextLightGray,
                     modifier = Modifier.size(22.dp)
                 )
             }

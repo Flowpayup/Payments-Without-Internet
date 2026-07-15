@@ -31,7 +31,7 @@
             android:textSize="20sp"
             android:textStyle="normal"
             android:fontFamily="sans-serif-medium"
-            android:textColor="#2C2C2C"
+            android:textColor="@color/overlay_text_primary"
             android:layout_marginTop="28dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -55,7 +55,7 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@drawable/ic_check_circle"
-                android:tint="#4CAF50" />
+                android:tint="@color/flowpay_green" />
             
             <TextView
                 android:layout_width="wrap_content"
@@ -63,7 +63,7 @@
                 android:text="@string/overlay_secure_transfer"
                 android:textSize="13sp"
                 android:textStyle="normal"
-                android:textColor="#4CAF50"
+                android:textColor="@color/flowpay_green"
                 android:layout_marginStart="6dp" />
         </LinearLayout>
 
@@ -74,7 +74,7 @@
             android:layout_height="wrap_content"
             tools:text="Processing Payment"
             android:textSize="24sp"
-            android:textColor="#1A1A1A"
+            android:textColor="@color/surface_card_dark"
             android:textStyle="bold"
             android:gravity="center"
             android:maxLines="2"
@@ -117,7 +117,7 @@
                 tools:text="0%"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#4CAF50"
+                android:textColor="@color/flowpay_green"
                 android:layout_gravity="center" />
         </FrameLayout>
 
@@ -128,7 +128,7 @@
             android:layout_height="wrap_content"
             tools:text="Connecting to bank..."
             android:textSize="16sp"
-            android:textColor="#424242"
+            android:textColor="@color/overlay_icon_gray"
             android:textStyle="normal"
             android:layout_marginTop="16dp"
             app:layout_constraintTop_toBottomOf="@id/progressContainer"
@@ -161,7 +161,7 @@
                     android:layout_height="wrap_content"
                     tools:text="₹0"
                     android:textSize="24sp"
-                    android:textColor="#1A1A1A"
+                    android:textColor="@color/surface_card_dark"
                     android:textStyle="bold" />
                 
                 <TextView
@@ -169,7 +169,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/overlay_amount"
                     android:textSize="13sp"
-                    android:textColor="#757575"
+                    android:textColor="@color/overlay_text_secondary"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
 
@@ -177,7 +177,7 @@
             <View
                 android:layout_width="1dp"
                 android:layout_height="40dp"
-                android:background="#E0E0E0"
+                android:background="@color/overlay_divider_light"
                 android:layout_gravity="center" />
 
             <!-- Recipient -->
@@ -194,7 +194,7 @@
                     android:layout_height="wrap_content"
                     tools:text="••••••0000"
                     android:textSize="20sp"
-                    android:textColor="#1A1A1A"
+                    android:textColor="@color/surface_card_dark"
                     android:textStyle="bold" />
                 
                 <TextView
@@ -202,7 +202,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/overlay_to"
                     android:textSize="13sp"
-                    android:textColor="#757575"
+                    android:textColor="@color/overlay_text_secondary"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
         </LinearLayout>
@@ -228,7 +228,7 @@
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:src="@drawable/ic_volume_off"
-                android:tint="#FF6B6B" />
+                android:tint="@color/overlay_alert_red" />
             
             <TextView
                 android:id="@+id/instructionText"
@@ -237,7 +237,7 @@
                 android:text="@string/overlay_audio_muted"
                 android:textSize="14sp"
                 android:textStyle="normal"
-                android:textColor="#FF6B6B"
+                android:textColor="@color/overlay_alert_red"
                 android:layout_marginStart="8dp" />
         </LinearLayout>
 
@@ -250,7 +250,7 @@
             android:layout_marginBottom="20dp"
             android:background="@drawable/terminate_button_bg"
             android:text="@string/overlay_terminate"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:textAllCaps="false"
             android:textSize="12sp"
             android:textStyle="bold"

@@ -45,6 +45,28 @@ jobs:
             app/src/main/java/com/flowpay/app/{payment,receivers,services,helpers}/ \
             || (echo "::error::Log statement leaks SMS body content" && exit 1)
 
+      - name: Palette gate — no inline colors outside the theme
+        run: |
+          # Every Compose color comes from ui/theme/Color.kt tokens, and every
+          # layout color from colors.xml. Inline literals drift screens apart
+          # (the codebase once had 200 of them across 14 near-identical greys).
+          ! grep -rn 'Color(0x' app/src/main/java/com/flowpay/app \
+            --include='*.kt' | grep -v '/ui/theme/' \
+            || (echo "::error::Inline Color(0x…) outside ui/theme — use a design token" && exit 1)
+          ! grep -rnE '"#[0-9A-Fa-f]{6,8}"' app/src/main/res/layout/ \
+            || (echo "::error::Hex color in a layout — add it to colors.xml and reference @color/…" && exit 1)
+
+      - name: Copy gate — no hardcoded UI strings in Compose
+        run: |
+          # HardcodedText lint only covers XML; this covers Compose. All
+          # user-visible copy lives in strings.xml (stringResource/getString),
+          # which keeps wording reviewable in one place and translation-ready.
+          # Ratchet for the common single-line `Text("literal")` form; the
+          # leading [^A-Za-z0-9_] avoids matching e.g. ClipData.newPlainText(.
+          ! grep -rnE '(^|[^A-Za-z0-9_])Text\(\s*(text\s*=\s*)?"[^"]' \
+            app/src/main/java/com/flowpay/app --include='*.kt' \
+            || (echo "::error::Hardcoded string in a Compose Text(…) — move it to strings.xml" && exit 1)
+
       - name: Run unit tests
         run: ./gradlew test --no-daemon --stacktrace
 

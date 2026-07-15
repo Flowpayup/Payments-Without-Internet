@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +36,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.BlueAccentTheme
+import com.flowpay.app.ui.theme.FlowpayAccentGreen
+import com.flowpay.app.ui.theme.FlowpayDarkGray
+import com.flowpay.app.ui.theme.FlowpayLightGray
+import com.flowpay.app.ui.theme.FlowpayMediumGray
+import com.flowpay.app.ui.theme.FlowpayStatusWarning
+import com.flowpay.app.ui.theme.FlowpaySurfaceDim
+import com.flowpay.app.ui.theme.FlowpayTextGray
+import com.flowpay.app.ui.theme.FlowpayTextLightGray
+import com.flowpay.app.ui.theme.FlowpayTextPale
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.data.SettingsRepository
@@ -249,15 +259,15 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF888888),
+                    contentDescription = stringResource(R.string.testcfg_back),
+                    tint = FlowpayTextLightGray,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Back to Setup",
+                    text = stringResource(R.string.testcfg_back_to_setup),
                     fontSize = 14.sp,
-                    color = Color(0xFF888888),
+                    color = FlowpayTextLightGray,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -285,20 +295,23 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
                 val isJioSim = !SetupHelper.isPrimarySimUssdCapable(context)
                 val userReportedUssdIssue = SetupHelper.hasUserReportedUssdNotWorking(context)
                 TestButton(
-                    title = "Set up",
+                    title = stringResource(R.string.testcfg_set_up),
                     code = "*99#",
                     description = when {
-                        isJioSim -> "Jio does not support *99# USSD payments"
-                        userReportedUssdIssue ->
-                            "You reported USSD didn't work — scan to pay is off. Tap to try setup again."
-                        else -> "Enable pay via scanning payments"
+                        isJioSim -> stringResource(R.string.testcfg_jio_no_ussd)
+                        userReportedUssdIssue -> stringResource(R.string.testcfg_ussd_reported_issue)
+                        else -> stringResource(R.string.testcfg_enable_scan_payments)
                     },
                     isCompleted = ussdTestCompleted || isJioSim || userReportedUssdIssue,
                     isTesting = ussdTesting,
                     isUnsupported = isJioSim,
                     onClick = {
                         if (isJioSim) {
-                            Toast.makeText(context, "Jio does not support *99# USSD payments", Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.testcfg_jio_no_ussd),
+                                Toast.LENGTH_LONG
+                            ).show()
                         } else if (!ussdTestCompleted && !ussdTesting) {
                             // Ask before placing a real *99# call. The consent
                             // dialog runs this action on confirm; ussdTesting is
@@ -313,9 +326,9 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
 
                 // UPI123 Test Button
                 TestButton(
-                    title = "Set up",
+                    title = stringResource(R.string.testcfg_set_up),
                     code = "UPI123",
-                    description = "Enable manual payment entries",
+                    description = stringResource(R.string.testcfg_enable_manual_payments),
                     isCompleted = upi123TestCompleted,
                     isTesting = upi123Testing,
                     onClick = {
@@ -342,14 +355,15 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
                     .height(58.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(
-                        brush = if (canContinue)
+                        brush = if (canContinue) {
                             Brush.horizontalGradient(
                                 colors = listOf(accent.headerGradientStart, accent.headerGradientEnd)
                             )
-                        else
+                        } else {
                             Brush.horizontalGradient(
-                                colors = listOf(Color(0xFF333333), Color(0xFF2A2A2A))
+                                colors = listOf(FlowpayLightGray, FlowpayMediumGray)
                             )
+                        }
                     )
                     .then(
                         if (canContinue) Modifier.clickable { testHelper.continueToMain() }
@@ -365,7 +379,7 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
                     },
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (canContinue) Color.White else Color(0xFF666666)
+                    color = if (canContinue) Color.White else FlowpayTextGray
                 )
             }
 
@@ -376,7 +390,7 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
             Text(
                 text = "Skip for now — payments may not work until tests pass",
                 fontSize = 13.sp,
-                color = Color(0xFF8A8A8A),
+                color = FlowpayTextLightGray,
                 textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
@@ -411,10 +425,16 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
         pendingDial?.let { dial ->
             AlertDialog(
                 onDismissRequest = { pendingDial = null },
-                containerColor = Color(0xFF1A1A1A),
+                containerColor = FlowpayDarkGray,
                 titleContentColor = Color.White,
-                textContentColor = Color(0xFFCCCCCC),
-                title = { Text("Start a real call?", fontWeight = FontWeight.SemiBold, fontSize = 18.sp) },
+                textContentColor = FlowpayTextPale,
+                title = {
+                    Text(
+                        stringResource(R.string.testcfg_consent_title),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp
+                    )
+                },
                 text = {
                     Text(
                         "This places a real call to your carrier's *99# / UPI 123 " +
@@ -429,12 +449,12 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
                         pendingDial = null
                         dial()
                     }) {
-                        Text("Continue", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.action_continue), fontWeight = FontWeight.SemiBold)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { pendingDial = null }) {
-                        Text("Cancel", color = Color(0xFF888888))
+                        Text(stringResource(R.string.action_cancel), color = FlowpayTextLightGray)
                     }
                 }
             )
@@ -546,7 +566,7 @@ fun TestInstructions() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .background(Color(0xFF0A0A0A), RoundedCornerShape(20.dp))
+            .background(FlowpaySurfaceDim, RoundedCornerShape(20.dp))
             .padding(16.dp)
     ) {
         Column(
@@ -566,7 +586,7 @@ fun TestInstructions() {
             Text(
                 text = "We'll test both scanning and manual payment methods to ensure everything works smoothly",
                 fontSize = 13.sp,
-                color = Color(0xFF888888),
+                color = FlowpayTextLightGray,
                 lineHeight = 19.sp,
                 textAlign = TextAlign.Center
             )
@@ -587,13 +607,13 @@ fun TestButton(
     val accent = LocalFlowpayAccentTheme.current
 
     val iconBgColor = when {
-        isUnsupported -> Color(0xFFFF9800).copy(alpha = 0.15f)
-        isCompleted -> Color(0xFF4CAF50).copy(alpha = 0.15f)
+        isUnsupported -> FlowpayStatusWarning.copy(alpha = 0.15f)
+        isCompleted -> FlowpayAccentGreen.copy(alpha = 0.15f)
         else -> accent.primary.copy(alpha = 0.15f)
     }
     val iconTint = when {
-        isUnsupported -> Color(0xFFFF9800)
-        isCompleted -> Color(0xFF4CAF50)
+        isUnsupported -> FlowpayStatusWarning
+        isCompleted -> FlowpayAccentGreen
         else -> accent.primary
     }
 
@@ -602,7 +622,7 @@ fun TestButton(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
+        colors = CardDefaults.cardColors(containerColor = FlowpaySurfaceDim),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -642,13 +662,13 @@ fun TestButton(
                         text = title,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (isUnsupported) Color(0xFFFF9800) else Color.White
+                        color = if (isUnsupported) FlowpayStatusWarning else Color.White
                     )
                     Text(
                         text = code,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isUnsupported) Color(0xFFFF9800) else accent.accent,
+                        color = if (isUnsupported) FlowpayStatusWarning else accent.accent,
                         fontFamily = FontFamily.Monospace
                     )
                 }
@@ -658,7 +678,7 @@ fun TestButton(
                 Text(
                     text = description,
                     fontSize = 13.sp,
-                    color = if (isUnsupported) Color(0xFFFF9800).copy(alpha = 0.8f) else Color(0xFF888888),
+                    color = if (isUnsupported) FlowpayStatusWarning.copy(alpha = 0.8f) else FlowpayTextLightGray,
                     lineHeight = 18.sp
                 )
             }
@@ -674,14 +694,14 @@ fun TestButton(
                             modifier = Modifier.size(22.dp),
                             color = accent.primary,
                             strokeWidth = 2.5.dp,
-                            trackColor = Color(0xFF333333)
+                            trackColor = FlowpayLightGray
                         )
                     }
                     isUnsupported -> {
                         Box(
                             modifier = Modifier
                                 .size(24.dp)
-                                .background(Color(0xFFFF9800), CircleShape),
+                                .background(FlowpayStatusWarning, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -696,7 +716,7 @@ fun TestButton(
                         Box(
                             modifier = Modifier
                                 .size(24.dp)
-                                .background(Color(0xFF4CAF50), CircleShape),
+                                .background(FlowpayAccentGreen, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -711,7 +731,7 @@ fun TestButton(
                         Box(
                             modifier = Modifier
                                 .size(24.dp)
-                                .border(1.5.dp, Color(0xFF333333), CircleShape)
+                                .border(1.5.dp, FlowpayLightGray, CircleShape)
                         )
                     }
                 }

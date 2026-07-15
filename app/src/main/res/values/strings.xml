@@ -44,6 +44,11 @@
     <string name="action_ok">OK</string>
     <string name="action_got_it">Got it</string>
     <string name="action_great">Great!</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_not_now">Not now</string>
 
     <!-- Short status labels shown on transaction rows -->
     <string name="status_label_success">Success</string>
@@ -103,5 +108,81 @@
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_not_set">Not set</string>
+    <string name="settings_clear_data_title">Clear App Data</string>
+
+    <!-- Contact picker -->
+    <string name="contacts_search_hint">Search contacts…</string>
+
+    <!-- Home screen -->
+    <string name="home_field_mobile_label">Mobile Number</string>
+    <string name="home_field_mobile_hint">10 digits</string>
+    <string name="home_field_amount_label">Amount (₹)</string>
+    <string name="home_field_amount_hint">Enter amount</string>
+
+    <!-- Setup screen -->
+    <string name="setup_step_1_of_2">Step 1 of 2</string>
+    <string name="setup_select_bank">Select Bank</string>
+    <string name="setup_choose_your_bank">Choose your bank</string>
+    <string name="setup_primary_sim">Primary SIM</string>
+    <string name="setup_select_primary_sim">Select your primary SIM</string>
+    <string name="setup_select_secondary_sim">Select your secondary SIM</string>
+    <string name="setup_please_read_before_continuing">Please read before continuing</string>
+    <string name="setup_show_less">Show less ▲</string>
+    <string name="setup_show_more">Show more ▼</string>
+
+    <!-- Connectivity test screen -->
+    <string name="testcfg_consent_title">Start a real call?</string>
+    <string name="testcfg_back">Back</string>
+    <string name="testcfg_back_to_setup">Back to Setup</string>
+    <string name="testcfg_set_up">Set up</string>
+    <string name="testcfg_jio_no_ussd">Jio does not support *99# USSD payments</string>
+    <string name="testcfg_ussd_reported_issue">You reported USSD didn\'t work — scan to pay is off. Tap to try setup again.</string>
+    <string name="testcfg_enable_scan_payments">Enable pay via scanning payments</string>
+    <string name="testcfg_enable_manual_payments">Enable manual payment entries</string>
+
+    <!-- Transaction history screen -->
+    <string name="history_title">Transactions</string>
+    <string name="history_back">Back</string>
+    <string name="history_search">Search</string>
+    <string name="history_search_placeholder">Search by name or number…</string>
+    <string name="history_group_today">Today</string>
+    <string name="history_group_yesterday">Yesterday</string>
+    <string name="history_group_this_week">This Week</string>
+
+    <!-- Transaction detail dialog -->
+    <string name="detail_title">Transaction Details</string>
+    <string name="detail_delete_confirm_title">Delete this transaction?</string>
+    <string name="detail_close">Close</string>
+    <string name="detail_label_recipient">Recipient</string>
+    <string name="detail_label_phone_number">Phone Number</string>
+    <string name="detail_bank_confirmation">Bank Confirmation</string>
+    <string name="detail_delete_transaction">Delete Transaction</string>
+
+    <!-- USSD setup progress dialog -->
+    <string name="ussd_dlg_initializing">Initializing…</string>
+    <string name="ussd_dlg_cd_ussd_setup">USSD Setup</string>
+    <string name="ussd_dlg_cd_close">Close</string>
+    <string name="ussd_dlg_setup_complete_title">Setup Complete?</string>
+    <string name="ussd_dlg_setting_up_title">Setting Up Your Payment System</string>
+    <string name="ussd_dlg_setup_complete_body">Did you complete the *99# setup?\n\nThis enables seamless payment scanning.</string>
+    <string name="ussd_dlg_setting_up_body">We have triggered USSD. It usually takes a few seconds for the data sessions to appear—be patient and don\'t close the app.</string>
+    <string name="ussd_dlg_not_yet">Not Yet</string>
+    <string name="ussd_dlg_yes">Yes</string>
+    <string name="ussd_dlg_already_set_up">I\'ve already set up *99#</string>
+    <string name="ussd_dlg_does_not_work">It doesn\'t work for me</string>
+
+    <!-- UPI 123 setup progress dialog -->
+    <string name="upi123_dlg_setup_icon_desc">UPI123 Setup</string>
+    <string name="upi123_dlg_close">Close</string>
+    <string name="upi123_dlg_setup_complete_title">Setup Complete?</string>
+    <string name="upi123_dlg_setting_up_title">Setting Up UPI123</string>
+    <string name="upi123_dlg_setup_complete_message">Did you complete the UPI123 setup?\n\nThis enables manual payment entries.</string>
+    <string name="upi123_dlg_ivr_triggered_message">The UPI 123 IVR call has been triggered. Go through the steps it asks you to complete—when you\'re done, end the call and we\'ll ask you to confirm.</string>
+    <string name="upi123_dlg_configuring">Configuring UPI123…</string>
+    <string name="upi123_dlg_not_yet">Not Yet</string>
+    <string name="upi123_dlg_yes">Yes</string>
+    <string name="upi123_dlg_already_set_up">I\'ve already set up UPI 123</string>
 
 </resources>
