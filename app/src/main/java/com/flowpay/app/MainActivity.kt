@@ -92,6 +92,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -102,6 +103,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.flowpay.app.R
 import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.data.PaymentDetails
@@ -112,6 +114,14 @@ import com.flowpay.app.ui.activities.SettingsActivity
 import com.flowpay.app.ui.activities.TransactionHistoryActivity
 import com.flowpay.app.ui.dialogs.ContactPickerDialog
 import com.flowpay.app.ui.theme.BlueAccentTheme
+import com.flowpay.app.ui.theme.FlowpayDarkGray
+import com.flowpay.app.ui.theme.FlowpayLightGray
+import com.flowpay.app.ui.theme.FlowpayMediumGray
+import com.flowpay.app.ui.theme.FlowpayOutlineGray
+import com.flowpay.app.ui.theme.FlowpaySurfaceDim
+import com.flowpay.app.ui.theme.FlowpayTextGray
+import com.flowpay.app.ui.theme.FlowpayTextLightGray
+import com.flowpay.app.ui.theme.FlowpayTextPale
 import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.utils.findComponentActivity
@@ -469,7 +479,7 @@ fun PaymentActionButtons(
                             )
                         } else {
                             Brush.linearGradient(
-                                colors = listOf(Color(0xFF2A2A2A), Color(0xFF1E1E1E)),
+                                colors = listOf(FlowpayMediumGray, FlowpayDarkGray),
                                 start = Offset(0f, 0f),
                                 end = Offset(1f, 1f)
                             )
@@ -501,7 +511,7 @@ fun PaymentActionButtons(
                 text = if (isUpi123Ready) "Pay Contact" else "Set up UPI 123 IVR",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isUpi123Ready) Color.White else Color(0xFF888888),
+                color = if (isUpi123Ready) Color.White else FlowpayTextLightGray,
                 textAlign = TextAlign.Center,
                 style = TextStyle(
                     shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 1f), 3f)
@@ -841,7 +851,7 @@ fun MainScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
+                    colors = CardDefaults.cardColors(containerColor = FlowpaySurfaceDim),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
@@ -854,7 +864,7 @@ fun MainScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
-                                        .background(Color(0xFF0A0A0A), CircleShape),
+                                        .background(FlowpaySurfaceDim, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -875,7 +885,7 @@ fun MainScreen(
                                     Text(
                                         text = "Your latest transactions",
                                         fontSize = 12.sp,
-                                        color = Color(0xFF888888)
+                                        color = FlowpayTextLightGray
                                     )
                                 }
                             }
@@ -913,7 +923,7 @@ fun MainScreen(
                                         text = "Loading transactions...",
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF888888)
+                                        color = FlowpayTextLightGray
                                     )
                                 }
                             }
@@ -935,7 +945,7 @@ fun MainScreen(
                                     Text(
                                         text = error ?: "Unknown error",
                                         fontSize = 13.sp,
-                                        color = Color(0xFF888888),
+                                        color = FlowpayTextLightGray,
                                         textAlign = TextAlign.Center
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
@@ -960,14 +970,14 @@ fun MainScreen(
                                     Box(
                                         modifier = Modifier
                                             .size(64.dp)
-                                            .background(Color(0xFF2A2A2A), CircleShape),
+                                            .background(FlowpayMediumGray, CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.History,
                                             contentDescription = "No transactions",
                                             modifier = Modifier.size(32.dp),
-                                            tint = Color(0xFF888888)
+                                            tint = FlowpayTextLightGray
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(20.dp))
@@ -981,7 +991,7 @@ fun MainScreen(
                                     Text(
                                         text = "Your payment history will appear here",
                                         fontSize = 13.sp,
-                                        color = Color(0xFF888888),
+                                        color = FlowpayTextLightGray,
                                         textAlign = TextAlign.Center
                                     )
                                 }
@@ -1065,7 +1075,7 @@ fun TransactionItem(payment: PaymentDetails) {
             .fillMaxWidth()
             .height(90.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
+        colors = CardDefaults.cardColors(containerColor = FlowpaySurfaceDim),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -1093,7 +1103,7 @@ fun TransactionItem(payment: PaymentDetails) {
                 Text(
                     text = formatDate(payment.timestamp),
                     fontSize = 14.sp,
-                    color = Color(0xFFAAAAAA),
+                    color = FlowpayTextPale,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Medium
@@ -1148,7 +1158,7 @@ fun PayContactDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A1A),
+        containerColor = FlowpayDarkGray,
         title = {
             Text(
                 text = "Pay Contact",
@@ -1203,16 +1213,20 @@ fun PayContactDialog(
                                 selectedContactName = null
                             }
                         },
-                        label = { Text("Mobile Number", color = Color(0xFF8A8A8A)) },
-                        placeholder = { Text("10 digits", color = Color(0xFF6A6A6A)) },
+                        label = {
+                            Text(stringResource(R.string.home_field_mobile_label), color = FlowpayTextLightGray)
+                        },
+                        placeholder = {
+                            Text(stringResource(R.string.home_field_mobile_hint), color = FlowpayTextGray)
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
-                            focusedBorderColor = Color(0xFF4A4A4A),
-                            unfocusedBorderColor = Color(0xFF3A3A3A),
+                            focusedBorderColor = FlowpayOutlineGray,
+                            unfocusedBorderColor = FlowpayLightGray,
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent
                         )
@@ -1258,16 +1272,20 @@ fun PayContactDialog(
                             amount = it
                         }
                     },
-                    label = { Text("Amount (₹)", color = Color(0xFF8A8A8A)) },
-                    placeholder = { Text("Enter amount", color = Color(0xFF6A6A6A)) },
+                    label = {
+                        Text(stringResource(R.string.home_field_amount_label), color = FlowpayTextLightGray)
+                    },
+                    placeholder = {
+                        Text(stringResource(R.string.home_field_amount_hint), color = FlowpayTextGray)
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFF4A4A4A),
-                        unfocusedBorderColor = Color(0xFF3A3A3A),
+                        focusedBorderColor = FlowpayOutlineGray,
+                        unfocusedBorderColor = FlowpayLightGray,
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent
                     )
@@ -1281,14 +1299,17 @@ fun PayContactDialog(
             ) {
                 Text(
                     "Transfer",
-                    color = if (phoneNumber.length == 10 && amount.isNotEmpty())
-                        LocalFlowpayAccentTheme.current.accent else Color(0xFF6A6A6A)
+                    color = if (phoneNumber.length == 10 && amount.isNotEmpty()) {
+                        LocalFlowpayAccentTheme.current.accent
+                    } else {
+                        FlowpayTextGray
+                    }
                 )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color(0xFF8A8A8A))
+                Text(stringResource(R.string.action_cancel), color = FlowpayTextLightGray)
             }
         }
     )
@@ -1328,7 +1349,7 @@ fun PermissionExplanationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1A1A1A),
+        containerColor = FlowpayDarkGray,
         title = {
             Text(
                 text = title,
@@ -1341,7 +1362,7 @@ fun PermissionExplanationDialog(
             Text(
                 text = message,
                 fontSize = 14.sp,
-                color = Color(0xFFCCCCCC),
+                color = FlowpayTextPale,
                 lineHeight = 20.sp
             )
         },
@@ -1357,7 +1378,7 @@ fun PermissionExplanationDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Not now", color = Color(0xFF8A8A8A))
+                Text(stringResource(R.string.action_not_now), color = FlowpayTextLightGray)
             }
         }
     )

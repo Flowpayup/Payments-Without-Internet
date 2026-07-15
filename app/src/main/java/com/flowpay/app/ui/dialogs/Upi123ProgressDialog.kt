@@ -15,12 +15,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.flowpay.app.R
+import com.flowpay.app.ui.theme.FlowpayAccentGreen
+import com.flowpay.app.ui.theme.FlowpayDarkGray
+import com.flowpay.app.ui.theme.FlowpayLightGray
+import com.flowpay.app.ui.theme.FlowpayTextGray
+import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import kotlinx.coroutines.delay
 
 @Composable
@@ -73,8 +80,8 @@ private fun Upi123ProgressDialogContent(
             .fillMaxWidth()
             .padding(32.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
-        border = BorderStroke(1.dp, Color(0xFF333333))
+        colors = CardDefaults.cardColors(containerColor = FlowpayDarkGray),
+        border = BorderStroke(1.dp, FlowpayLightGray)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(
@@ -88,15 +95,15 @@ private fun Upi123ProgressDialogContent(
                     modifier = Modifier
                         .size(80.dp)
                         .background(
-                            color = Color(0xFF4CAF50).copy(alpha = alpha * 0.2f),
+                            color = FlowpayAccentGreen.copy(alpha = alpha * 0.2f),
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = UpiIcon,
-                        contentDescription = "UPI123 Setup",
-                        tint = Color(0xFF4CAF50),
+                        contentDescription = stringResource(R.string.upi123_dlg_setup_icon_desc),
+                        tint = FlowpayAccentGreen,
                         modifier = Modifier.size(48.dp)
                     )
                 }
@@ -104,7 +111,11 @@ private fun Upi123ProgressDialogContent(
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 Text(
-                    text = if (showConfigurationOptions) "Setup Complete?" else "Setting Up UPI123",
+                    text = if (showConfigurationOptions) {
+                        stringResource(R.string.upi123_dlg_setup_complete_title)
+                    } else {
+                        stringResource(R.string.upi123_dlg_setting_up_title)
+                    },
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -114,13 +125,14 @@ private fun Upi123ProgressDialogContent(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = if (showConfigurationOptions) 
-                        "Did you complete the UPI123 setup?\n\nThis enables manual payment entries."
-                    else
-                        "The UPI 123 IVR call has been triggered. Go through the steps it asks you to complete—when you're done, end the call and we'll ask you to confirm.",
+                    text = if (showConfigurationOptions) {
+                        stringResource(R.string.upi123_dlg_setup_complete_message)
+                    } else {
+                        stringResource(R.string.upi123_dlg_ivr_triggered_message)
+                    },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF888888),
+                    color = FlowpayTextLightGray,
                     textAlign = TextAlign.Center,
                     lineHeight = 24.sp
                 )
@@ -139,11 +151,11 @@ private fun Upi123ProgressDialogContent(
                                 .height(50.dp),
                             shape = RoundedCornerShape(15.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF333333)
+                                containerColor = FlowpayLightGray
                             )
                         ) {
                             Text(
-                                text = "Not Yet",
+                                text = stringResource(R.string.upi123_dlg_not_yet),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White,
@@ -158,11 +170,11 @@ private fun Upi123ProgressDialogContent(
                                 .height(50.dp),
                             shape = RoundedCornerShape(15.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF4CAF50)
+                                containerColor = FlowpayAccentGreen
                             )
                         ) {
                             Text(
-                                text = "Yes",
+                                text = stringResource(R.string.upi123_dlg_yes),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White,
@@ -175,17 +187,17 @@ private fun Upi123ProgressDialogContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp),
-                        color = Color(0xFF4CAF50),
-                        trackColor = Color(0xFF333333)
+                        color = FlowpayAccentGreen,
+                        trackColor = FlowpayLightGray
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Configuring UPI123...",
+                        text = stringResource(R.string.upi123_dlg_configuring),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Light,
-                        color = Color(0xFF666666).copy(alpha = alpha),
+                        color = FlowpayTextGray.copy(alpha = alpha),
                         textAlign = TextAlign.Center
                     )
 
@@ -206,13 +218,13 @@ private fun Upi123ProgressDialogContent(
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(15.dp),
-                            border = BorderStroke(1.dp, Color(0xFF4CAF50)),
+                            border = BorderStroke(1.dp, FlowpayAccentGreen),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFF4CAF50)
+                                contentColor = FlowpayAccentGreen
                             )
                         ) {
                             Text(
-                                text = "I've already set up UPI 123",
+                                text = stringResource(R.string.upi123_dlg_already_set_up),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Center
@@ -231,8 +243,8 @@ private fun Upi123ProgressDialogContent(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Close",
-                    tint = Color(0xFF888888),
+                    contentDescription = stringResource(R.string.upi123_dlg_close),
+                    tint = FlowpayTextLightGray,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -251,7 +263,7 @@ val UpiIcon: ImageVector
             viewportHeight = 24f
         ).apply {
             path(
-                fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF4CAF50)),
+                fill = androidx.compose.ui.graphics.SolidColor(FlowpayAccentGreen),
                 fillAlpha = 1f,
                 stroke = null,
                 strokeAlpha = 1f,

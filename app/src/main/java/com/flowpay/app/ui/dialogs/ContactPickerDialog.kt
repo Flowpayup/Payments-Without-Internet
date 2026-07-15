@@ -10,20 +10,28 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flowpay.app.R
+import com.flowpay.app.ui.theme.FlowpayDarkGray
+import com.flowpay.app.ui.theme.FlowpayLightGray
+import com.flowpay.app.ui.theme.FlowpayMediumGray
+import com.flowpay.app.ui.theme.FlowpayOutlineGray
+import com.flowpay.app.ui.theme.FlowpayTextGray
+import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -84,7 +92,7 @@ fun ContactPickerDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxHeight(0.8f),
-        containerColor = Color(0xFF1A1A1A),
+        containerColor = FlowpayDarkGray,
         title = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -101,7 +109,7 @@ fun ContactPickerDialog(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = Color(0xFF8A8A8A)
+                        tint = FlowpayTextLightGray
                     )
                 }
             }
@@ -118,20 +126,20 @@ fun ContactPickerDialog(
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
                     placeholder = { 
-                        Text("Search contacts...", color = Color(0xFF6A6A6A)) 
+                        Text(stringResource(R.string.contacts_search_hint), color = FlowpayTextGray) 
                     },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "Search",
-                            tint = Color(0xFF8A8A8A)
+                            tint = FlowpayTextLightGray
                         )
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFF4A4A4A),
-                        unfocusedBorderColor = Color(0xFF3A3A3A),
+                        focusedBorderColor = FlowpayOutlineGray,
+                        unfocusedBorderColor = FlowpayLightGray,
                         cursorColor = LocalFlowpayAccentTheme.current.accent,
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent
@@ -159,7 +167,7 @@ fun ContactPickerDialog(
                         Text(
                             text = if (searchQuery.isEmpty()) "No contacts found" 
                                    else "No matches for \"$searchQuery\"",
-                            color = Color(0xFF6A6A6A),
+                            color = FlowpayTextGray,
                             fontSize = 16.sp
                         )
                     }
@@ -201,7 +209,7 @@ fun ContactItem(
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF2A2A2A)
+            containerColor = FlowpayMediumGray
         )
     ) {
         Row(
@@ -245,7 +253,7 @@ fun ContactItem(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = contact.phoneNumber,
-                    color = Color(0xFF8A8A8A),
+                    color = FlowpayTextLightGray,
                     fontSize = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

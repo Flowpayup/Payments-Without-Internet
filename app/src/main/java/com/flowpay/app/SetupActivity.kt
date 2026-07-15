@@ -40,6 +40,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.BlueAccentTheme
+import com.flowpay.app.ui.theme.FlowpayDarkGray
+import com.flowpay.app.ui.theme.FlowpayDisabledGray
+import com.flowpay.app.ui.theme.FlowpayLightGray
+import com.flowpay.app.ui.theme.FlowpayMediumGray
+import com.flowpay.app.ui.theme.FlowpaySurfaceDim
+import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.helpers.SetupHelper
 import com.flowpay.app.FlowpayApplication
@@ -244,7 +250,7 @@ fun HeaderCard() {
                             )
                         )
                         Text(
-                            text = "Step 1 of 2",
+                            text = stringResource(R.string.setup_step_1_of_2),
                             fontSize = 14.sp,
                             color = Color.White.copy(alpha = 0.7f),
                             fontWeight = FontWeight.Medium
@@ -309,7 +315,7 @@ private fun SetupSectionHeader(
             Text(
                 text = subtitle,
                 fontSize = 12.sp,
-                color = Color(0xFF888888)
+                color = FlowpayTextLightGray
             )
         }
     }
@@ -321,7 +327,7 @@ private fun SetupFieldLabel(text: String) {
         text = text,
         fontSize = 13.sp,
         fontWeight = FontWeight.Medium,
-        color = Color(0xFF888888),
+        color = FlowpayTextLightGray,
         modifier = Modifier.padding(bottom = 8.dp)
     )
 }
@@ -336,7 +342,7 @@ fun BankSelectionSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF0A0A0A), RoundedCornerShape(20.dp))
+            .background(FlowpaySurfaceDim, RoundedCornerShape(20.dp))
             .padding(18.dp)
     ) {
         SetupSectionHeader(
@@ -347,7 +353,7 @@ fun BankSelectionSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SetupFieldLabel("Select Bank")
+        SetupFieldLabel(stringResource(R.string.setup_select_bank))
 
         var expanded by remember { mutableStateOf(false) }
 
@@ -356,7 +362,8 @@ fun BankSelectionSection(
             onExpandedChange = { expanded = !expanded }
         ) {
             OutlinedTextField(
-                value = banks.find { it.first == selectedBank }?.second ?: "Choose your bank",
+                value = banks.find { it.first == selectedBank }?.second
+                    ?: stringResource(R.string.setup_choose_your_bank),
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = {
@@ -366,10 +373,10 @@ fun BankSelectionSection(
                     .fillMaxWidth()
                     .menuAnchor(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF555555),
-                    unfocusedBorderColor = Color(0xFF333333),
-                    focusedContainerColor = Color(0xFF222222),
-                    unfocusedContainerColor = Color(0xFF1A1A1A),
+                    focusedBorderColor = FlowpayDisabledGray,
+                    unfocusedBorderColor = FlowpayLightGray,
+                    focusedContainerColor = FlowpayMediumGray,
+                    unfocusedContainerColor = FlowpayDarkGray,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     focusedTrailingIconColor = Color.White,
@@ -382,7 +389,7 @@ fun BankSelectionSection(
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.background(Color(0xFF2A2A2A))
+                modifier = Modifier.background(FlowpayMediumGray)
             ) {
                 banks.forEach { (value, label) ->
                     DropdownMenuItem(
@@ -397,7 +404,7 @@ fun BankSelectionSection(
                             onBankSelected(value)
                             expanded = false
                         },
-                        modifier = Modifier.background(Color(0xFF2A2A2A))
+                        modifier = Modifier.background(FlowpayMediumGray)
                     )
                 }
             }
@@ -422,7 +429,7 @@ fun SimCardSelectionSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF0A0A0A), RoundedCornerShape(20.dp))
+            .background(FlowpaySurfaceDim, RoundedCornerShape(20.dp))
             .padding(18.dp)
     ) {
         SetupSectionHeader(
@@ -433,7 +440,7 @@ fun SimCardSelectionSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SetupFieldLabel("Primary SIM")
+        SetupFieldLabel(stringResource(R.string.setup_primary_sim))
 
         // Primary SIM Selection
         var primaryExpanded by remember { mutableStateOf(false) }
@@ -443,7 +450,8 @@ fun SimCardSelectionSection(
             onExpandedChange = { primaryExpanded = !primaryExpanded }
         ) {
             OutlinedTextField(
-                value = simCarriers.find { it.first == selectedPrimarySim }?.second ?: "Select your primary SIM",
+                value = simCarriers.find { it.first == selectedPrimarySim }?.second
+                    ?: stringResource(R.string.setup_select_primary_sim),
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = {
@@ -453,10 +461,10 @@ fun SimCardSelectionSection(
                     .fillMaxWidth()
                     .menuAnchor(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF555555),
-                    unfocusedBorderColor = Color(0xFF333333),
-                    focusedContainerColor = Color(0xFF222222),
-                    unfocusedContainerColor = Color(0xFF1A1A1A),
+                    focusedBorderColor = FlowpayDisabledGray,
+                    unfocusedBorderColor = FlowpayLightGray,
+                    focusedContainerColor = FlowpayMediumGray,
+                    unfocusedContainerColor = FlowpayDarkGray,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     focusedTrailingIconColor = Color.White,
@@ -469,7 +477,7 @@ fun SimCardSelectionSection(
             ExposedDropdownMenu(
                 expanded = primaryExpanded,
                 onDismissRequest = { primaryExpanded = false },
-                modifier = Modifier.background(Color(0xFF2A2A2A))
+                modifier = Modifier.background(FlowpayMediumGray)
             ) {
                 simCarriers.forEach { (value, label) ->
                     DropdownMenuItem(
@@ -484,7 +492,7 @@ fun SimCardSelectionSection(
                             onPrimarySimSelected(value)
                             primaryExpanded = false
                         },
-                        modifier = Modifier.background(Color(0xFF2A2A2A))
+                        modifier = Modifier.background(FlowpayMediumGray)
                     )
                 }
             }
@@ -507,7 +515,7 @@ fun SimCardSelectionSection(
                     .size(22.dp)
                     .border(
                         width = 2.dp,
-                        color = if (isDualSimEnabled) accent.accent else Color(0xFF555555),
+                        color = if (isDualSimEnabled) accent.accent else FlowpayDisabledGray,
                         shape = CircleShape
                     )
                     .background(
@@ -540,7 +548,7 @@ fun SimCardSelectionSection(
             Spacer(modifier = Modifier.height(16.dp))
 
             HorizontalDivider(
-                color = Color(0xFF2A2A2A),
+                color = FlowpayMediumGray,
                 thickness = 0.5.dp
             )
 
@@ -556,7 +564,8 @@ fun SimCardSelectionSection(
                 onExpandedChange = { secondaryExpanded = !secondaryExpanded }
             ) {
                 OutlinedTextField(
-                    value = secondarySimOptions.find { it.first == selectedSecondarySim }?.second ?: "Select your secondary SIM",
+                    value = secondarySimOptions.find { it.first == selectedSecondarySim }?.second
+                        ?: stringResource(R.string.setup_select_secondary_sim),
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = {
@@ -566,10 +575,10 @@ fun SimCardSelectionSection(
                         .fillMaxWidth()
                         .menuAnchor(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF555555),
-                        unfocusedBorderColor = Color(0xFF333333),
-                        focusedContainerColor = Color(0xFF222222),
-                        unfocusedContainerColor = Color(0xFF1A1A1A),
+                        focusedBorderColor = FlowpayDisabledGray,
+                        unfocusedBorderColor = FlowpayLightGray,
+                        focusedContainerColor = FlowpayMediumGray,
+                        unfocusedContainerColor = FlowpayDarkGray,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         focusedTrailingIconColor = Color.White,
@@ -582,7 +591,7 @@ fun SimCardSelectionSection(
                 ExposedDropdownMenu(
                     expanded = secondaryExpanded,
                     onDismissRequest = { secondaryExpanded = false },
-                    modifier = Modifier.background(Color(0xFF2A2A2A))
+                    modifier = Modifier.background(FlowpayMediumGray)
                 ) {
                     secondarySimOptions.forEach { (value, label) ->
                         DropdownMenuItem(
@@ -597,7 +606,7 @@ fun SimCardSelectionSection(
                                 onSecondarySimSelected(value)
                                 secondaryExpanded = false
                             },
-                            modifier = Modifier.background(Color(0xFF2A2A2A))
+                            modifier = Modifier.background(FlowpayMediumGray)
                         )
                     }
                 }
@@ -617,13 +626,13 @@ fun DisclaimerSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF0A0A0A), RoundedCornerShape(20.dp))
+            .background(FlowpaySurfaceDim, RoundedCornerShape(20.dp))
             .padding(18.dp)
     ) {
         SetupSectionHeader(
             icon = Icons.Outlined.Info,
             title = stringResource(R.string.disclaimer),
-            subtitle = "Please read before continuing"
+            subtitle = stringResource(R.string.setup_please_read_before_continuing)
         )
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -644,7 +653,7 @@ fun DisclaimerSection(
                         ) { onAcceptedChange(!isAccepted) }
                         .border(
                             width = 2.dp,
-                            color = if (isAccepted) accent.accent else Color(0xFF555555),
+                            color = if (isAccepted) accent.accent else FlowpayDisabledGray,
                             shape = CircleShape
                         )
                         .background(
@@ -684,7 +693,13 @@ fun DisclaimerSection(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = if (isExpanded) "Show less ▲" else "Show more ▼",
+                        text = stringResource(
+                            if (isExpanded) {
+                                R.string.setup_show_less
+                            } else {
+                                R.string.setup_show_more
+                            }
+                        ),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = accent.accent
@@ -706,7 +721,7 @@ fun CompleteSetupButton(
     val gradientColors = if (enabled) {
         listOf(accent.headerGradientStart, accent.headerGradientEnd)
     } else {
-        listOf(Color(0xFF333333), Color(0xFF2A2A2A))
+        listOf(FlowpayLightGray, FlowpayMediumGray)
     }
 
     Box(

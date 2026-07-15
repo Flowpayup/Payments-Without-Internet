@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -43,6 +44,16 @@ import com.flowpay.app.TestConfigurationActivity
 import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.repository.TransactionRepository
 import com.flowpay.app.ui.theme.BlueAccentTheme
+import com.flowpay.app.ui.theme.FlowpayAccentGreenBright
+import com.flowpay.app.ui.theme.FlowpayDarkGray
+import com.flowpay.app.ui.theme.FlowpayDisabledGray
+import com.flowpay.app.ui.theme.FlowpayLightGray
+import com.flowpay.app.ui.theme.FlowpayMediumGray
+import com.flowpay.app.ui.theme.FlowpayStatusError
+import com.flowpay.app.ui.theme.FlowpaySurfaceDim
+import com.flowpay.app.ui.theme.FlowpayTextGray
+import com.flowpay.app.ui.theme.FlowpayTextLightGray
+import com.flowpay.app.ui.theme.FlowpayTextPale
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -91,8 +102,8 @@ fun FlowpaySettingsTheme(content: @Composable () -> Unit) {
         colorScheme = darkColorScheme(
             primary = accentTheme.primary,
             secondary = accentTheme.accent,
-            background = Color(0xFF0A0A0A),
-            surface = Color(0xFF1A1A1A),
+            background = FlowpaySurfaceDim,
+            surface = FlowpayDarkGray,
             onBackground = Color.White,
             onSurface = Color.White
         )
@@ -219,7 +230,7 @@ fun SettingsScreen(
         "airtel" -> "Airtel"
         "vodafone" -> "Vodafone"
         "bsnl" -> "BSNL"
-        else -> "Not set"
+        else -> stringResource(R.string.settings_not_set)
     }
 
     // Dialog states
@@ -230,14 +241,14 @@ fun SettingsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A0A))
+            .background(FlowpaySurfaceDim)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Top Bar
             TopAppBar(
                 title = {
                     Text(
-                        "Settings",
+                        stringResource(R.string.settings_title),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.White
@@ -247,13 +258,13 @@ fun SettingsScreen(
                     IconButton(onClick = onBackPressed) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.settings_back),
                             tint = Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0A0A0A)
+                    containerColor = FlowpaySurfaceDim
                 )
             )
 
@@ -421,11 +432,15 @@ fun SettingsScreen(
     if (showClearDataConfirm) {
         AlertDialog(
             onDismissRequest = { showClearDataConfirm = false },
-            containerColor = Color(0xFF1A1A1A),
+            containerColor = FlowpayDarkGray,
             titleContentColor = Color.White,
-            textContentColor = Color(0xFFCCCCCC),
+            textContentColor = FlowpayTextPale,
             title = {
-                Text("Clear App Data", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                Text(
+                    stringResource(R.string.settings_clear_data_title),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp
+                )
             },
             text = {
                 Text(
@@ -464,12 +479,16 @@ fun SettingsScreen(
                         relaunch()
                     }
                 }) {
-                    Text("Clear", color = Color(0xFFF5576C), fontWeight = FontWeight.SemiBold)
+                    Text(
+                        stringResource(R.string.action_clear),
+                        color = FlowpayStatusError,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDataConfirm = false }) {
-                    Text("Cancel", color = Color(0xFF888888))
+                    Text(stringResource(R.string.action_cancel), color = FlowpayTextLightGray)
                 }
             }
         )
@@ -486,7 +505,7 @@ private fun SectionHeader(title: String) {
         text = title,
         fontSize = 12.sp,
         fontWeight = FontWeight.Medium,
-        color = Color(0xFF666666),
+        color = FlowpayTextGray,
         letterSpacing = 1.sp,
         modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp)
     )
@@ -497,7 +516,7 @@ private fun GroupCard(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = Color(0xFF1A1A1A)
+        color = FlowpayDarkGray
     ) {
         Column(content = content)
     }
@@ -506,7 +525,7 @@ private fun GroupCard(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun GroupDivider() {
     HorizontalDivider(
-        color = Color(0xFF2A2A2A),
+        color = FlowpayMediumGray,
         thickness = 0.5.dp,
         modifier = Modifier.padding(start = 56.dp)
     )
@@ -521,9 +540,9 @@ private fun SettingsRow(
     onClick: (() -> Unit)? = null
 ) {
     val accent = LocalFlowpayAccentTheme.current
-    val iconColor = if (destructive) Color(0xFFF5576C) else accent.primary
-    val iconBg = if (destructive) Color(0xFFF5576C).copy(alpha = 0.12f) else accent.primary.copy(alpha = 0.12f)
-    val titleColor = if (destructive) Color(0xFFF5576C) else Color.White
+    val iconColor = if (destructive) FlowpayStatusError else accent.primary
+    val iconBg = if (destructive) FlowpayStatusError.copy(alpha = 0.12f) else accent.primary.copy(alpha = 0.12f)
+    val titleColor = if (destructive) FlowpayStatusError else Color.White
 
     Row(
         modifier = Modifier
@@ -564,7 +583,7 @@ private fun SettingsRow(
             Text(
                 text = value,
                 fontSize = 14.sp,
-                color = Color(0xFF888888),
+                color = FlowpayTextLightGray,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.widthIn(max = 160.dp)
@@ -573,14 +592,14 @@ private fun SettingsRow(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = Color(0xFF555555),
+                tint = FlowpayDisabledGray,
                 modifier = Modifier.size(20.dp)
             )
         } else {
             Text(
                 text = value,
                 fontSize = 14.sp,
-                color = Color(0xFF888888),
+                color = FlowpayTextLightGray,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -633,7 +652,7 @@ private fun PermissionRow(
             Text(
                 text = subtitle,
                 fontSize = 12.sp,
-                color = Color(0xFF888888)
+                color = FlowpayTextLightGray
             )
         }
 
@@ -641,11 +660,11 @@ private fun PermissionRow(
         if (granted) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFF43E97B).copy(alpha = 0.12f)
+                color = FlowpayAccentGreenBright.copy(alpha = 0.12f)
             ) {
                 Text(
                     text = "Granted",
-                    color = Color(0xFF43E97B),
+                    color = FlowpayAccentGreenBright,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -714,7 +733,7 @@ private fun ToggleRow(
             Text(
                 text = subtitle,
                 fontSize = 12.sp,
-                color = Color(0xFF888888)
+                color = FlowpayTextLightGray
             )
         }
 
@@ -725,8 +744,8 @@ private fun ToggleRow(
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = accent.primary,
-                uncheckedThumbColor = Color(0xFF666666),
-                uncheckedTrackColor = Color(0xFF333333),
+                uncheckedThumbColor = FlowpayTextGray,
+                uncheckedTrackColor = FlowpayLightGray,
                 uncheckedBorderColor = Color.Transparent
             )
         )
@@ -744,7 +763,7 @@ private fun BankPickerDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(20.dp),
-            color = Color(0xFF1A1A1A)
+            color = FlowpayDarkGray
         ) {
             Column(
                 modifier = Modifier.padding(vertical = 20.dp)
@@ -787,7 +806,7 @@ private fun BankPickerDialog(
                         }
                         if (bank != banks.last()) {
                             HorizontalDivider(
-                                color = Color(0xFF2A2A2A),
+                                color = FlowpayMediumGray,
                                 thickness = 0.5.dp,
                                 modifier = Modifier.padding(horizontal = 20.dp)
                             )
@@ -803,7 +822,7 @@ private fun BankPickerDialog(
                         .align(Alignment.End)
                         .padding(horizontal = 12.dp)
                 ) {
-                    Text("Cancel", color = Color(0xFF888888))
+                    Text(stringResource(R.string.action_cancel), color = FlowpayTextLightGray)
                 }
             }
         }
@@ -827,7 +846,7 @@ private fun SimPickerDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(20.dp),
-            color = Color(0xFF1A1A1A)
+            color = FlowpayDarkGray
         ) {
             Column(modifier = Modifier.padding(vertical = 20.dp)) {
                 Text(
@@ -865,7 +884,7 @@ private fun SimPickerDialog(
                     }
                     if (index < sims.lastIndex) {
                         HorizontalDivider(
-                            color = Color(0xFF2A2A2A),
+                            color = FlowpayMediumGray,
                             thickness = 0.5.dp,
                             modifier = Modifier.padding(horizontal = 20.dp)
                         )
@@ -880,7 +899,7 @@ private fun SimPickerDialog(
                         .align(Alignment.End)
                         .padding(horizontal = 12.dp)
                 ) {
-                    Text("Cancel", color = Color(0xFF888888))
+                    Text(stringResource(R.string.action_cancel), color = FlowpayTextLightGray)
                 }
             }
         }

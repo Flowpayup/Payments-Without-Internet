@@ -40,8 +40,13 @@ import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.ui.components.TransactionDetailDialog
 import com.flowpay.app.ui.theme.BlueAccentTheme
+import com.flowpay.app.ui.theme.FlowpayDarkGray
+import com.flowpay.app.ui.theme.FlowpayMediumGray
+import com.flowpay.app.ui.theme.FlowpayStatusError
+import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
+import com.flowpay.app.ui.theme.statusColor
 import com.flowpay.app.viewmodel.TransactionViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -61,18 +66,6 @@ fun formatDate(timestamp: Long): String {
 fun formatTime(timestamp: Long): String {
     val formatter = SimpleDateFormat("hh:mm a", Locale("en", "IN"))
     return formatter.format(Date(timestamp))
-}
-
-fun getStatusColor(status: String): Color {
-    return when (status.uppercase()) {
-        "SUCCESS", "SUCCESSFUL", "COMPLETED" -> Color(0xFF4CAF50)
-        "PENDING" -> Color(0xFFFF9800)
-        "UNVERIFIED" -> Color(0xFFFFC107)   // needs the user's attention: outcome unknown
-        "NEEDS_REVIEW" -> Color(0xFFFF9800) // an SMS arrived but didn't match — verify it
-        "CANCELLED" -> Color(0xFF9E9E9E)    // nothing happened — neutral, not alarming red
-        "FAILED", "DECLINED" -> Color(0xFFF44336)
-        else -> Color(0xFF9E9E9E)
-    }
 }
 
 @androidx.annotation.StringRes
@@ -137,6 +130,9 @@ fun TransactionHistoryScreen(
     }
 
     // Group by date
+    val groupToday = stringResource(R.string.history_group_today)
+    val groupYesterday = stringResource(R.string.history_group_yesterday)
+    val groupThisWeek = stringResource(R.string.history_group_this_week)
     val groupedTransactions = remember(filteredTransactions) {
         val today = Calendar.getInstance()
         val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
@@ -149,9 +145,9 @@ fun TransactionHistoryScreen(
             .groupBy { transaction ->
                 val txCal = Calendar.getInstance().apply { timeInMillis = transaction.timestamp }
                 when {
-                    isSameDay(txCal, today) -> "Today"
-                    isSameDay(txCal, yesterday) -> "Yesterday"
-                    txCal.after(weekAgo) -> "This Week"
+                    isSameDay(txCal, today) -> groupToday
+                    isSameDay(txCal, yesterday) -> groupYesterday
+                    txCal.after(weekAgo) -> groupThisWeek
                     else -> dateFormat.format(Date(transaction.timestamp))
                 }
             }
@@ -215,7 +211,7 @@ fun TransactionHistoryScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(R.string.history_back),
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -224,7 +220,7 @@ fun TransactionHistoryScreen(
                         Spacer(modifier = Modifier.width(12.dp))
 
                         Text(
-                            text = "Transactions",
+                            text = stringResource(R.string.history_title),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
@@ -249,7 +245,7 @@ fun TransactionHistoryScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
+                                contentDescription = stringResource(R.string.history_search),
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -270,8 +266,8 @@ fun TransactionHistoryScreen(
                         onValueChange = { searchQuery = it },
                         placeholder = {
                             Text(
-                                "Search by name or number...",
-                                color = Color(0xFF888888),
+                                stringResource(R.string.history_search_placeholder),
+                                color = FlowpayTextLightGray,
                                 fontSize = 14.sp
                             )
                         },
@@ -283,7 +279,7 @@ fun TransactionHistoryScreen(
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = null,
-                                tint = Color(0xFF888888),
+                                tint = FlowpayTextLightGray,
                                 modifier = Modifier.size(20.dp)
                             )
                         },
@@ -293,7 +289,7 @@ fun TransactionHistoryScreen(
                                     Icon(
                                         imageVector = Icons.Default.Close,
                                         contentDescription = "Clear",
-                                        tint = Color(0xFF888888),
+                                        tint = FlowpayTextLightGray,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -304,8 +300,8 @@ fun TransactionHistoryScreen(
                             unfocusedTextColor = Color.White,
                             focusedBorderColor = accent.primary,
                             unfocusedBorderColor = Color.Transparent,
-                            focusedContainerColor = Color(0xFF1A1A1A),
-                            unfocusedContainerColor = Color(0xFF1A1A1A)
+                            focusedContainerColor = FlowpayDarkGray,
+                            unfocusedContainerColor = FlowpayDarkGray
                         ),
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true
@@ -340,13 +336,13 @@ fun TransactionHistoryScreen(
                                     modifier = Modifier
                                         .size(64.dp)
                                         .clip(CircleShape)
-                                        .background(Color(0xFF2A2A2A)),
+                                        .background(FlowpayMediumGray),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.History,
                                         contentDescription = null,
-                                        tint = Color(0xFFFF6B6B),
+                                        tint = FlowpayStatusError,
                                         modifier = Modifier.size(32.dp)
                                     )
                                 }
@@ -381,13 +377,13 @@ fun TransactionHistoryScreen(
                                     modifier = Modifier
                                         .size(64.dp)
                                         .clip(CircleShape)
-                                        .background(Color(0xFF2A2A2A)),
+                                        .background(FlowpayMediumGray),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.History,
                                         contentDescription = null,
-                                        tint = Color(0xFF888888),
+                                        tint = FlowpayTextLightGray,
                                         modifier = Modifier.size(32.dp)
                                     )
                                 }
@@ -404,7 +400,7 @@ fun TransactionHistoryScreen(
                                     text = if (searchQuery.isNotEmpty())
                                         "Try a different search" else "Transactions will appear here",
                                     fontSize = 13.sp,
-                                    color = Color(0xFF888888)
+                                    color = FlowpayTextLightGray
                                 )
                             }
                         }
@@ -421,7 +417,7 @@ fun TransactionHistoryScreen(
                                         text = dateLabel,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFF888888),
+                                        color = FlowpayTextLightGray,
                                         letterSpacing = 0.5.sp,
                                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                                     )
@@ -440,7 +436,7 @@ fun TransactionHistoryScreen(
                                         HorizontalDivider(
                                             modifier = Modifier.padding(start = 52.dp),
                                             thickness = 0.5.dp,
-                                            color = Color(0xFF1A1A1A)
+                                            color = FlowpayDarkGray
                                         )
                                     }
                                 }
@@ -506,7 +502,7 @@ private fun TransactionHistoryItem(
             Text(
                 text = formatTime(transaction.timestamp),
                 fontSize = 13.sp,
-                color = Color(0xFF888888),
+                color = FlowpayTextLightGray,
                 maxLines = 1
             )
         }
@@ -535,7 +531,7 @@ private fun TransactionAvatar(initial: Char) {
         modifier = Modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(Color(0xFF1A1A1A)),
+            .background(FlowpayDarkGray),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -549,7 +545,7 @@ private fun TransactionAvatar(initial: Char) {
 
 @Composable
 private fun StatusPill(status: String) {
-    val statusColor = getStatusColor(status)
+    val statusColor = statusColor(status)
     Text(
         text = stringResource(statusLabelRes(status)),
         fontSize = 11.sp,
