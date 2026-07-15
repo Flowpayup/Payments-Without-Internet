@@ -236,11 +236,27 @@ class MainActivity : ComponentActivity() {
 
         helper.initialize()
 
-        if (!helper.isSetupCompleted()) {
+        // The launch gate must know which screen to show before rendering, so
+        // these two SharedPreferences flags are read synchronously. Reading
+        // them faults the prefs file in once (a small, one-time disk read);
+        // annotate it as permitted so the debug StrictMode tripwire stays
+        // sharp for genuinely unexpected main-thread disk I/O instead of
+        // crying wolf on this known-safe read every launch.
+        val setupCompleted: Boolean
+        val testCompleted: Boolean
+        val oldPolicy = android.os.StrictMode.allowThreadDiskReads()
+        try {
+            setupCompleted = helper.isSetupCompleted()
+            testCompleted = helper.isTestCompleted()
+        } finally {
+            android.os.StrictMode.setThreadPolicy(oldPolicy)
+        }
+
+        if (!setupCompleted) {
             helper.navigateToSetup()
             return
         }
-        if (!helper.isTestCompleted()) {
+        if (!testCompleted) {
             helper.navigateToTestConfiguration()
             return
         }
