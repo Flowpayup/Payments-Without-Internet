@@ -30,6 +30,7 @@ import java.util.*
 
 class PaymentResultActivity : AppCompatActivity() {
     
+    private lateinit var statusCircle: View
     private lateinit var tickImageView: ImageView
     private lateinit var statusText: TextView
     private lateinit var statusExplainerText: TextView
@@ -62,8 +63,22 @@ class PaymentResultActivity : AppCompatActivity() {
             navigateToMain()
         }
     }
-    
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // launchMode is singleTask, so a newer payment outcome (e.g. a FAILED
+        // confirmation arriving while this screen still shows the previous
+        // SUCCESS) is delivered here instead of creating a new instance.
+        // Without re-rendering, the screen would keep showing the stale, wrong
+        // outcome — contradicting the freshly-posted result notification.
+        setIntent(intent)
+        resetViewsForAnimation()
+        loadTransactionData()
+        startAnimations()
+    }
+
     private fun initViews() {
+        statusCircle = findViewById(R.id.iv_status_circle)
         tickImageView = findViewById(R.id.iv_success_tick)
         statusText = findViewById(R.id.tv_status)
         statusExplainerText = findViewById(R.id.tv_status_explainer)
@@ -78,18 +93,22 @@ class PaymentResultActivity : AppCompatActivity() {
         recipientLabel = findViewById(R.id.tv_recipient_label) // NEW
         recipientText = findViewById(R.id.tv_recipient_name)   // NEW
         doneButton = findViewById(R.id.btn_done)
-        
-        // Initially hide views for animation
+
+        resetViewsForAnimation()
+
+        doneButton.setOnClickListener {
+            navigateToMain()
+        }
+    }
+
+    /** Return the animated views to their pre-animation (hidden) state. */
+    private fun resetViewsForAnimation() {
         tickImageView.alpha = 0f
         statusText.alpha = 0f
         statusExplainerText.alpha = 0f
         amountText.alpha = 0f
         detailsCard.alpha = 0f
         doneButton.alpha = 0f
-        
-        doneButton.setOnClickListener {
-            navigateToMain()
-        }
     }
     
     private fun loadTransactionData() {
@@ -108,21 +127,28 @@ class PaymentResultActivity : AppCompatActivity() {
         val operationType = detector.getOperationType() ?: ""
 
         // Render the outcome the bank actually reported — this screen is
-        // launched for every parsed confirmation, not only successes.
+        // launched for every parsed confirmation, not only successes. Every
+        // property is set explicitly (never relying on layout defaults) so an
+        // onNewIntent re-render from a different status resets cleanly.
+        //
+        // Color language: SUCCESS wears the brand look (blue gradient circle,
+        // blue heading, green amount). Non-success outcomes wear their status
+        // color on circle + heading + amount so a FAILED result can never be
+        // mistaken for a success at a glance. The glyph is always white.
         when (status) {
             TransactionStatus.FAILED -> {
                 statusText.text = getString(R.string.payment_status_failed)
                 statusExplainerText.text = getString(R.string.status_explainer_failed)
                 statusExplainerText.visibility = View.VISIBLE
                 tickImageView.setImageResource(R.drawable.ic_error)
-                tickImageView.setColorFilter(ContextCompat.getColor(this, R.color.error_red))
+                applyStatusAccent(R.color.error_red)
             }
             TransactionStatus.NEEDS_REVIEW -> {
                 statusText.text = getString(R.string.payment_status_needs_review)
                 statusExplainerText.text = getString(R.string.status_explainer_needs_review)
                 statusExplainerText.visibility = View.VISIBLE
                 tickImageView.setImageResource(R.drawable.ic_error)
-                tickImageView.setColorFilter(ContextCompat.getColor(this, R.color.warning_orange))
+                applyStatusAccent(R.color.warning_orange)
             }
             TransactionStatus.UNVERIFIED -> {
                 // No confirming SMS arrived. The outcome is genuinely unknown —
@@ -131,12 +157,16 @@ class PaymentResultActivity : AppCompatActivity() {
                 statusExplainerText.text = getString(R.string.status_explainer_unverified)
                 statusExplainerText.visibility = View.VISIBLE
                 tickImageView.setImageResource(R.drawable.ic_unverified)
-                tickImageView.setColorFilter(ContextCompat.getColor(this, R.color.unverified_grey))
+                applyStatusAccent(R.color.unverified_grey)
             }
             else -> {
                 statusText.text = getString(R.string.payment_status_success)
+                statusExplainerText.visibility = View.GONE
+                tickImageView.setImageResource(R.drawable.ic_check_white)
+                applySuccessAccent()
             }
         }
+        tickImageView.setColorFilter(ContextCompat.getColor(this, android.R.color.white))
         amountText.text = getString(R.string.amount_rupees, formatAmount(amount))
         
         // Handle recipient/sender display - UPDATED LOGIC
@@ -178,18 +208,25 @@ class PaymentResultActivity : AppCompatActivity() {
         } else {
             upiIdLayout.visibility = View.GONE
         }
-        
-        // Amount color tracks the outcome: green for success, red for
-        // failure, amber for an unmatched confirmation
-        val amountColor = when (status) {
-            TransactionStatus.FAILED -> R.color.error_red
-            TransactionStatus.NEEDS_REVIEW -> R.color.warning_orange
-            TransactionStatus.UNVERIFIED -> R.color.unverified_grey
-            else -> R.color.flowpay_green
-        }
-        amountText.setTextColor(ContextCompat.getColor(this, amountColor))
     }
-    
+
+    /** SUCCESS look: brand-blue gradient circle, blue heading, green amount. */
+    private fun applySuccessAccent() {
+        statusCircle.backgroundTintList = null
+        statusCircle.background = ContextCompat.getDrawable(this, R.drawable.circle_success_bg)
+        statusText.setTextColor(ContextCompat.getColor(this, R.color.transaction_primary))
+        amountText.setTextColor(ContextCompat.getColor(this, R.color.flowpay_green))
+    }
+
+    /** Non-success look: one status colour across circle, heading and amount. */
+    private fun applyStatusAccent(colorRes: Int) {
+        val color = ContextCompat.getColor(this, colorRes)
+        statusCircle.background = ContextCompat.getDrawable(this, R.drawable.circle_status_bg)
+        statusCircle.backgroundTintList = android.content.res.ColorStateList.valueOf(color)
+        statusText.setTextColor(color)
+        amountText.setTextColor(color)
+    }
+
     private fun formatAmount(amount: String): String {
         return try {
             val value = amount.toDouble()

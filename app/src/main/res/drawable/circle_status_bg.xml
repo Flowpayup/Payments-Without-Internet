@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Solid white oval, tinted per NON-SUCCESS payment outcome at runtime
+     (PaymentResultActivity): red failure, amber review, grey unverified.
+     Success keeps the brand-blue gradient (circle_success_bg) instead of a
+     flat tint. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@android:color/white" />
+</shape>
