@@ -11,14 +11,3 @@ data class UPIData(
     val transactionNote: String,
     val currency: String
 ) : Parcelable
-
-@Parcelize
-data class TransactionData(
-    val amount: String,
-    val upiId: String,
-    val balance: String,
-    val recipient: String,
-    val status: String,
-    val rawMessage: String,
-    val timestamp: Long = System.currentTimeMillis()
-) : Parcelable
