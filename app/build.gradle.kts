@@ -124,15 +124,21 @@ detekt {
     baseline = file("detekt-baseline.xml")
 }
 
-// Coverage floor scoped to the payment lifecycle + SMS-parsing packages —
-// the riskiest code in the app, where an untested regression can silently
-// misreport a payment outcome. No app-wide threshold: a blanket UI-coverage
-// number would just reward screenshot-test theater, not payment safety.
+// Coverage floor scoped to the money-critical code — the payment lifecycle,
+// SMS parsing, the operation-window/dedup orchestrator, and the telephony
+// authority — where an untested regression can silently misreport a payment
+// outcome. No app-wide threshold: a blanket UI-coverage number would just
+// reward screenshot-test theater, not payment safety.
 kover {
     reports {
         filters {
             includes {
-                packages("com.flowpay.app.payment", "com.flowpay.app.payment.sms")
+                packages(
+                    "com.flowpay.app.payment",
+                    "com.flowpay.app.payment.sms",
+                    "com.flowpay.app.telephony"
+                )
+                classes("com.flowpay.app.helpers.TransactionDetector*")
             }
         }
         verify {
