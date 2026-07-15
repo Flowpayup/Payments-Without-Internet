@@ -2,6 +2,7 @@ package com.flowpay.app
 
 import android.app.Application
 import android.content.Context
+import android.os.StrictMode
 import android.util.Log
 import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.di.AppContainer
@@ -32,7 +33,23 @@ class FlowpayApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // Finalise any PENDING rows whose deadline passed while the app was dead.
+        // Debug-only tripwire: the first database materialisation (SQLCipher
+        // open, Keystore unwrap, upgrade migration) must never run on the
+        // main thread — it once did, from this very method. penaltyLog keeps
+        // debug builds usable while making any regression loudly visible.
+        if (BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .detectNetwork()
+                    .penaltyLog()
+                    .build()
+            )
+        }
+        // Finalise any PENDING rows whose deadline passed while the app was
+        // dead. The store resolves lazily on IO (see LazyTransactionStore),
+        // so this no longer opens the database on the main thread.
         paymentSessionManager.reconcileStalePending()
         // Start surfacing UNVERIFIED outcomes (session timeout with no bank SMS)
         // from the process scope, so they reach the user even after the overlay
