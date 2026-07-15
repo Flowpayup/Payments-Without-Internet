@@ -28,4 +28,5 @@ object TransactionSource {
     const val SMS = "SMS"
     const val NOTIFICATION = "NOTIFICATION"
     const val MANUAL = "MANUAL"
+    const val QR = "QR"
 }

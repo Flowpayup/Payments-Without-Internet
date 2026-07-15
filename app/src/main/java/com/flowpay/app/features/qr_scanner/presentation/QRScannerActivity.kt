@@ -31,7 +31,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.R
+import com.flowpay.app.data.TransactionSource
 import com.flowpay.app.data.UPIData
 import com.flowpay.app.features.qr_scanner.domain.QRCodeAnalyzer
 import com.flowpay.app.helpers.SetupHelper
@@ -396,18 +398,7 @@ class QRScannerActivity : ComponentActivity() {
                 return
             }
 
-            // Start SMS monitoring for QR payment
-            try {
-                TransactionDetector.getInstance(this).startOperation(
-                    operationType = "QR_SCAN",
-                    expectedAmount = upiData.amount
-                )
-                Log.d("QRScanner", "SMS monitoring started for QR payment")
-            } catch (e: Exception) {
-                Log.e("QRScanner", "Failed to start SMS monitoring: ${e.message}")
-                showError("Failed to initialize payment system. Please try again.")
-                return
-            }
+            if (!beginQrPaymentSession(upiData)) return
 
             // Show black screen with status
             showBlackScreenWithStatus("Processing payment...")
@@ -438,6 +429,42 @@ class QRScannerActivity : ComponentActivity() {
         } catch (e: Exception) {
             Log.e("QRScanner", "Unexpected error in proceedWithPayment: ${e.message}", e)
             showError("An unexpected error occurred: ${e.message}")
+        }
+    }
+
+    /**
+     * Starts the payment session (PENDING row + verification deadline, same
+     * lifecycle as the manual flow) and opens the SMS operation window for
+     * it. Returns false — after showing the user why — when the payment must
+     * not proceed. The QR flow used to bypass the session manager entirely,
+     * so an unconfirmed QR payment left no trace at all.
+     */
+    private fun beginQrPaymentSession(upiData: UPIData): Boolean {
+        val sessionManager = FlowpayApplication.from(this)?.paymentSessionManager
+        val sessionTxnId = sessionManager?.begin(
+            phoneNumber = "",
+            amount = upiData.amount ?: "",
+            upiId = upiData.vpa,
+            source = TransactionSource.QR
+        )
+        if (sessionManager != null && sessionTxnId == null) {
+            showError("A payment is already in progress. Finish it before starting another.")
+            return false
+        }
+
+        return try {
+            TransactionDetector.getInstance(this).startOperation(
+                operationType = "QR_SCAN",
+                expectedAmount = upiData.amount,
+                sessionTxnId = sessionTxnId
+            )
+            Log.d("QRScanner", "SMS monitoring started for QR payment")
+            true
+        } catch (e: IllegalStateException) {
+            Log.e("QRScanner", "Failed to start SMS monitoring: ${e.message}")
+            sessionManager?.onDialFailed("Could not start SMS monitoring")
+            showError("Failed to initialize payment system. Please try again.")
+            false
         }
     }
 
@@ -647,6 +674,10 @@ class QRScannerActivity : ComponentActivity() {
             } catch (e: Exception) {
                 Log.e("QRScanner", "Failed to stop SMS monitoring: ${e.message}")
             }
+
+            // The user explicitly aborted: mark the session row CANCELLED so
+            // it doesn't linger PENDING and later surface as UNVERIFIED.
+            FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
 
             // Show termination message briefly
             runOnUiThread {

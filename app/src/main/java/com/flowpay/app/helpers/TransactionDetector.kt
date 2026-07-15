@@ -3,6 +3,7 @@ package com.flowpay.app.helpers
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.flowpay.app.payment.PaymentSessionManager
 import com.flowpay.app.payment.sms.SimpleTransaction
 import com.flowpay.app.payment.sms.SmsTransactionParser
 
@@ -26,7 +27,18 @@ class TransactionDetector private constructor(context: Context) {
         private const val KEY_OPERATION_TYPE = "operation_type"
         private const val KEY_EXPECTED_AMOUNT = "expected_amount"
         private const val KEY_PHONE_NUMBER = "phone_number"
-        private const val TIMEOUT_MILLIS = 5 * 60 * 1000L // 5 minutes
+        private const val KEY_SESSION_TXN_ID = "session_txn_id"
+
+        /**
+         * How long after a payment starts an incoming SMS is still eligible.
+         * Derived from the session verification deadline (plus a grace margin
+         * for a confirmation racing the deadline) — it must never be shorter,
+         * or a slow-but-genuine bank SMS would be dropped here while the
+         * session was still waiting for it, producing a false UNVERIFIED.
+         */
+        internal const val OPERATION_WINDOW_MILLIS =
+            PaymentSessionManager.DEFAULT_VERIFICATION_DEADLINE_MS + 30_000L
+
         private const val SMS_CLAIM_WINDOW_MILLIS = 60 * 1000L // dedupe window across pipelines
 
         @Volatile
@@ -52,8 +64,11 @@ class TransactionDetector private constructor(context: Context) {
     }
 
     @Synchronized
-    fun tryClaimSms(sender: String, body: String): Boolean {
-        val key = SmsTransactionParser.claimKey(sender, body).hashCode().toString()
+    fun tryClaimSms(body: String): Boolean {
+        // Key is body-only: the two pipelines see different sender strings
+        // for the same SMS (DLT header vs messaging-app display name), so a
+        // sender-qualified key would never dedupe across them.
+        val key = SmsTransactionParser.claimKey(body).hashCode().toString()
         val now = System.currentTimeMillis()
         val lastClaim = recentSmsClaims[key]
         if (lastClaim != null && now - lastClaim < SMS_CLAIM_WINDOW_MILLIS) {
@@ -63,8 +78,19 @@ class TransactionDetector private constructor(context: Context) {
         return true
     }
 
-    // Start monitoring for a payment operation
-    fun startOperation(operationType: String, expectedAmount: String? = null, phoneNumber: String? = null) {
+    /**
+     * Start monitoring for a payment operation. [sessionTxnId] is the
+     * PaymentSessionManager transaction id (the PENDING row's key), persisted
+     * here so a confirming SMS that arrives AFTER a process death — when the
+     * in-memory session is gone — can still be matched back to its row
+     * instead of inserting a duplicate.
+     */
+    fun startOperation(
+        operationType: String,
+        expectedAmount: String? = null,
+        phoneNumber: String? = null,
+        sessionTxnId: String? = null
+    ) {
         Log.d(TAG, "Starting operation: $operationType")
 
         prefs.edit().apply {
@@ -73,6 +99,7 @@ class TransactionDetector private constructor(context: Context) {
             putString(KEY_OPERATION_TYPE, operationType)
             expectedAmount?.let { putString(KEY_EXPECTED_AMOUNT, it) }
             phoneNumber?.let { putString(KEY_PHONE_NUMBER, it) }
+            sessionTxnId?.let { putString(KEY_SESSION_TXN_ID, it) }
             apply()
         }
     }
@@ -98,7 +125,7 @@ class TransactionDetector private constructor(context: Context) {
         val startTime = prefs.getLong(KEY_START_TIME, 0)
         val elapsed = System.currentTimeMillis() - startTime
 
-        if (elapsed > TIMEOUT_MILLIS) {
+        if (elapsed > OPERATION_WINDOW_MILLIS) {
             Log.d(TAG, "Operation timed out after ${elapsed / 1000} seconds")
             stopOperation()
             return false
@@ -116,6 +143,13 @@ class TransactionDetector private constructor(context: Context) {
 
     fun getOperationType(): String? = prefs.getString(KEY_OPERATION_TYPE, null)
     fun getPhoneNumber(): String? = prefs.getString(KEY_PHONE_NUMBER, null)
+
+    /**
+     * The session transaction id recorded at [startOperation], or null. Read
+     * BEFORE [processSMS] (which clears the window on a consuming match) by
+     * callers that need to reattach an orphaned confirmation to its row.
+     */
+    fun getSessionTxnId(): String? = prefs.getString(KEY_SESSION_TXN_ID, null)
 
     // Synchronized so that when both ingestion pipelines race past
     // shouldProcessSMS(), only the first one inside consumes the active
