@@ -73,7 +73,7 @@ app/src/main/java/com/flowpay/app/
 ├── services/
 │   ├── CallOverlayService.kt    # 40s on-call confirmation overlay
 │   └── FlowpayNotificationListener.kt  # supplemental SMS detection
-├── features/qr_scanner/         # CameraX + ML Kit Barcode QR scanner
+├── features/qr_scanner/         # CameraX + ZXing QR scanner
 ├── data/                        # Room entities + repositories (local-only)
 ├── constants/                   # app-wide constants
 └── ui/                          # remaining Compose screens (transactions, settings, …)
@@ -84,14 +84,14 @@ The pieces worth reading if you're poking around:
 - **`managers/CallManager.kt`** — handles the dialer interaction with `*99#`, including call-state monitoring and the timeout/retry logic that ended up being most of the complexity.
 - **`helpers/TransactionDetector.kt`** + **`receivers/SimpleSMSReceiver.kt`** — the bank-SMS regex parsers. The hardest part of the project; every bank's receipt format is different.
 - **`services/CallOverlayService.kt`** — the floating overlay shown during a USSD call so the user has a UI anchor instead of just the system dialer.
-- **`AndroidManifest.xml`** — the permission set is deliberately small: phone, SMS, camera, overlay. Nothing else.
+- **`AndroidManifest.xml`** — the permission set is deliberately small and payment-scoped: phone (call + phone state + answer, for the overlay's End-call button), SMS, camera, contacts, overlay, notifications, plus vibrate and modify-audio-settings. No location, no storage, and — notably — **no INTERNET permission**.
 
 ## Stack
 
 - **Kotlin 2.1**, Jetpack Compose (Material 3)
 - **Min SDK 29** (Android 10), **target/compile SDK 35**
 - **Local-only persistence** in SQLite via Room
-- **QR scanning** via Google ML Kit Barcode + CameraX
+- **QR scanning** via ZXing (`com.google.zxing:core`, Apache-2.0) + CameraX
 - No backend, no analytics, no telemetry, no third-party SDKs that talk to the internet
 
 ## Running it

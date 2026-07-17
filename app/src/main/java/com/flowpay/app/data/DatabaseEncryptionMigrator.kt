@@ -96,11 +96,45 @@ internal object DatabaseEncryptionMigrator {
             ).close()
         } catch (e: Exception) {
             Log.w(TAG, "Encrypted DB unreadable with current key - starting fresh (history lost)", e)
-            val setAside = File(dbFile.parentFile, "${dbFile.name}.unreadable")
-            if (setAside.exists()) setAside.delete()
-            if (!dbFile.renameTo(setAside)) dbFile.delete()
+            if (isPlaintextSqlite(dbFile)) {
+                // A failed plaintext -> SQLCipher migration can leave the
+                // ORIGINAL UNENCRYPTED database here. Never retain plaintext on
+                // disk (it would also escape the backup exclusion by filename) —
+                // delete it outright. The bank remains the source of truth.
+                Log.w(TAG, "Set-aside database is plaintext - deleting rather than retaining")
+                dbFile.delete()
+            } else {
+                // Encrypted but unreadable (Keystore key lost). Keep it set
+                // aside for diagnostics; it stays out of backups by filename
+                // (see backup_rules.xml / data_extraction_rules.xml).
+                val setAside = File(dbFile.parentFile, "${dbFile.name}.unreadable")
+                if (setAside.exists()) setAside.delete()
+                if (!dbFile.renameTo(setAside)) dbFile.delete()
+            }
             File(dbFile.parentFile, "${dbFile.name}-shm").delete()
             File(dbFile.parentFile, "${dbFile.name}-wal").delete()
         }
     }
+
+    /**
+     * True when the file begins with the ASCII "SQLite format 3" magic —
+     * i.e. an UNENCRYPTED SQLite database. A SQLCipher-encrypted file has a
+     * random-looking header and returns false, so this cleanly separates a
+     * plaintext leftover (must be deleted) from an encrypted-but-unreadable one.
+     */
+    private fun isPlaintextSqlite(file: File): Boolean {
+        return try {
+            file.inputStream().use { stream ->
+                val header = ByteArray(SQLITE_MAGIC_PREFIX.size)
+                stream.read(header) == SQLITE_MAGIC_PREFIX.size && header.contentEquals(SQLITE_MAGIC_PREFIX)
+            }
+        } catch (e: Exception) {
+            // Can't read the header — treat as not-plaintext so the caller
+            // keeps (rather than deletes) the file; err on the safe side.
+            Log.w(TAG, "Could not read DB header to classify plaintext vs encrypted", e)
+            false
+        }
+    }
+
+    private val SQLITE_MAGIC_PREFIX = "SQLite format 3".toByteArray(Charsets.US_ASCII)
 }

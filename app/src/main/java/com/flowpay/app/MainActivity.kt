@@ -587,6 +587,33 @@ fun MainScreen(
         pendingSmsAction = null
     }
 
+    // POST_NOTIFICATIONS backs the payment-outcome notification — the
+    // fallback the result screen relies on when its direct background launch
+    // is blocked (see PaymentResultNotifier). It is best-effort, not a
+    // prerequisite, so we ask ONCE at the first payment and never block on the
+    // result: the payment proceeds whether granted or not. Settings offers a
+    // later toggle for anyone who declines.
+    val postNotificationsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* best-effort: outcome recorded by the OS; nothing to do here */ }
+    val maybeAskNotifications = remember(context) {
+        {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val alreadyAsked = sharedPreferences.getBoolean(AppConstants.KEY_NOTIFICATIONS_ASKED, false)
+                val granted = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+                if (!alreadyAsked && !granted) {
+                    sharedPreferences.edit()
+                        .putBoolean(AppConstants.KEY_NOTIFICATIONS_ASKED, true)
+                        .apply()
+                    postNotificationsLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        }
+    }
+
     // One-shot events from MainActivity (launchers + business-logic helper),
     // replacing the former static @Volatile callbacks on its companion.
     val mainViewModel: MainViewModel = viewModel()
@@ -799,6 +826,7 @@ fun MainScreen(
 
                 PaymentActionButtons(
                     onQRScanClick = {
+                        maybeAskNotifications()
                         val hasSms = ContextCompat.checkSelfPermission(
                             context, Manifest.permission.RECEIVE_SMS
                         ) == PackageManager.PERMISSION_GRANTED
@@ -814,6 +842,7 @@ fun MainScreen(
                         }
                     },
                     onPayContactClick = {
+                        maybeAskNotifications()
                         val hasSms = ContextCompat.checkSelfPermission(
                             context, Manifest.permission.RECEIVE_SMS
                         ) == PackageManager.PERMISSION_GRANTED

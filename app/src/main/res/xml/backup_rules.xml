@@ -9,6 +9,13 @@
     <exclude domain="database" path="flowpay_database" />
     <exclude domain="database" path="flowpay_database-shm" />
     <exclude domain="database" path="flowpay_database-wal" />
+    <exclude domain="database" path="flowpay_database-journal" />
+    <!-- Migration set-aside/temp files: .unreadable can be the ORIGINAL
+         PLAINTEXT db (failed encryption migration), so it must never be
+         backed up; .encrypting is an encrypted temp. Path matching is exact,
+         not prefixed, so these need their own entries. -->
+    <exclude domain="database" path="flowpay_database.unreadable" />
+    <exclude domain="database" path="flowpay_database.encrypting" />
     <exclude domain="sharedpref" path="payment_operation.xml" />
     <exclude domain="sharedpref" path="flowpay_db_key.xml" />
     <exclude domain="sharedpref" path="FlowpayPrefs.xml" />

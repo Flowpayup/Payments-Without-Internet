@@ -200,19 +200,49 @@ class SmsTransactionParserTest {
     }
 
     @Test
-    fun `expected-amount mismatch is recorded as NEEDS_REVIEW, not silently dropped`() {
+    fun `mismatched-amount debit is not this payment's confirmation and is dropped`() {
+        // The window is waiting for a Rs.500 confirmation; a Rs.100 debit is a
+        // different transaction. Returning null leaves the window open for the
+        // real confirmation instead of consuming it or mis-recording this one.
         val result = SmsTransactionParser.parse(
             sender = "VK-HDFCBK",
-            body = "Rs.500.00 sent to KIRANA STORE from HDFC Bank A/c **1234 via UPI ref 512233440091",
-            expectedAmount = "100"
+            body = "Rs.100.00 sent to KIRANA STORE from HDFC Bank A/c **1234 via UPI ref 512233440091",
+            expectedAmount = "500"
         )
 
-        assertNotNull("a mismatched amount must still be recorded, not dropped", result)
-        assertEquals(TransactionStatus.NEEDS_REVIEW, result!!.status)
+        assertNull("a debit for a different amount is not our confirmation", result)
     }
 
     @Test
-    fun `expected-amount match within tolerance is SUCCESS`() {
+    fun `unrelated failure alert with a mismatched amount never confirms this payment`() {
+        // The money-loss blocker: while a Rs.500 payment is pending, an
+        // unrelated Rs.200 decline must NOT be recorded as this payment's
+        // FAILED (which would offer a retry of money that already moved).
+        val result = SmsTransactionParser.parse(
+            sender = "VK-HDFCBK",
+            body = "HDFC Bank card txn of Rs.200.00 at AMAZON declined: insufficient balance. Ref 700000000001",
+            expectedAmount = "500"
+        )
+
+        assertNull("a mismatched-amount failure alert is not this payment's failure", result)
+    }
+
+    @Test
+    fun `failure alert with a matching amount is recorded as this payment's FAILED`() {
+        // A genuine failure of THIS payment (amount matches) must still surface
+        // as FAILED — the failure keyword wins over the success wording.
+        val result = SmsTransactionParser.parse(
+            sender = "VK-HDFCBK",
+            body = "Payment of Rs.500.00 to KIRANA STORE failed. UPI ref 512233440091 -HDFC Bank",
+            expectedAmount = "500"
+        )
+
+        assertNotNull(result)
+        assertEquals(TransactionStatus.FAILED, result!!.status)
+    }
+
+    @Test
+    fun `expected-amount match is SUCCESS`() {
         val result = SmsTransactionParser.parse(
             sender = "VK-HDFCBK",
             body = "Rs.500.00 sent to KIRANA STORE from HDFC Bank A/c **1234 via UPI ref 512233440091",

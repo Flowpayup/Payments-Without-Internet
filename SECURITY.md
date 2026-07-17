@@ -61,14 +61,14 @@ What the app stores, where, and for how long:
 |------|-------|----------|--------------------|
 | Transaction rows (amount, status, bank, bank ref, counterparty name, privacy-safe summary) | Room DB `flowpay_database`, app-private storage | Until the user deletes them or uninstalls | **Never** — excluded from cloud backup and device transfer (`backup_rules.xml`, `data_extraction_rules.xml`) |
 | Raw bank SMS bodies | **Not stored** (since schema v3) | — | The verbatim SMS stays in the user's SMS inbox app only |
-| Active payment-operation window (expected amount, recipient number, 5-min deadline) | `payment_operation` SharedPreferences | Cleared on confirmation or timeout | Never — excluded from backup |
+| Active payment-operation window (expected amount, recipient number, ~10-min deadline) | `payment_operation` SharedPreferences | Cleared on confirmation or timeout | Never — excluded from backup |
 | UPI PIN | **Never seen by the app** — entered into the bank's IVR/dialer flow | — | — |
 
 Design rules the code enforces:
 
 - **No INTERNET permission.** The app cannot transmit anything, by construction.
 - **`READ_SMS` is not requested.** The app only receives incoming SMS (`RECEIVE_SMS`) while a payment operation is active; it never reads the inbox.
-- **SMS are only inspected inside an explicit payment window** — a 5-minute operation started when the user initiates a transfer; outside it, incoming messages are never read. Bank matching itself is deliberately permissive keyword matching (field-proven against real bank templates), so the operation window — not sender authentication — is the primary control.
+- **SMS are only inspected inside an explicit payment window** — a ~10-minute operation (a 10-minute verification deadline plus a 30-second grace margin) started when the user initiates a transfer; outside it, incoming messages are never read. Bank matching itself is deliberately permissive keyword matching (field-proven against real bank templates), so the operation window — not sender authentication — is the primary control.
 - **Stored summaries are built constructively** from parsed fields (amount/status/bank/ref), so account numbers and balances in message prose can never reach the database.
 - **The notification-listener fallback is opt-in** when `RECEIVE_SMS` is granted, halving the SMS ingestion surface by default.
 - CI rejects log statements that interpolate SMS bodies in payment-critical packages.

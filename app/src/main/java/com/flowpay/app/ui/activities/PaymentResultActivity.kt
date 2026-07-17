@@ -150,20 +150,22 @@ class PaymentResultActivity : AppCompatActivity() {
                 tickImageView.setImageResource(R.drawable.ic_error)
                 applyStatusAccent(R.color.warning_orange)
             }
-            TransactionStatus.UNVERIFIED -> {
-                // No confirming SMS arrived. The outcome is genuinely unknown —
-                // render it neutral (grey, question glyph), never as a success.
+            TransactionStatus.SUCCESS -> {
+                statusText.text = getString(R.string.payment_status_success)
+                statusExplainerText.visibility = View.GONE
+                tickImageView.setImageResource(R.drawable.ic_check_white)
+                applySuccessAccent()
+            }
+            else -> {
+                // UNVERIFIED, or any unexpected status — the outcome is not a
+                // confirmed success, so render it neutral (grey, question glyph)
+                // and NEVER fall open to the green success look. Only an explicit
+                // SUCCESS above earns the success styling.
                 statusText.text = getString(R.string.payment_status_unverified)
                 statusExplainerText.text = getString(R.string.status_explainer_unverified)
                 statusExplainerText.visibility = View.VISIBLE
                 tickImageView.setImageResource(R.drawable.ic_unverified)
                 applyStatusAccent(R.color.unverified_grey)
-            }
-            else -> {
-                statusText.text = getString(R.string.payment_status_success)
-                statusExplainerText.visibility = View.GONE
-                tickImageView.setImageResource(R.drawable.ic_check_white)
-                applySuccessAccent()
             }
         }
         tickImageView.setColorFilter(ContextCompat.getColor(this, android.R.color.white))
