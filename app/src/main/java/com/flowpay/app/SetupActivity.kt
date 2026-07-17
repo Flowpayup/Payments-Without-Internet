@@ -111,9 +111,12 @@ fun SetupScreen(setupHelper: SetupHelper) {
                 .fillMaxSize()
                 .widthIn(max = 420.dp)
                 .align(Alignment.Center)
-                .verticalScroll(rememberScrollState())
+                // Insets must sit outside verticalScroll so they pad the
+                // viewport, not the scrolling content — otherwise the nav bar
+                // overlays the content at every offset but the very bottom.
                 .statusBarsPadding()
                 .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Spacer(modifier = Modifier.height(24.dp))

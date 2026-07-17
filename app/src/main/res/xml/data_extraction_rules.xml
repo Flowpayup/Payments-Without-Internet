@@ -8,6 +8,12 @@
         <exclude domain="database" path="flowpay_database" />
         <exclude domain="database" path="flowpay_database-shm" />
         <exclude domain="database" path="flowpay_database-wal" />
+        <exclude domain="database" path="flowpay_database-journal" />
+        <!-- .unreadable may be the ORIGINAL PLAINTEXT db from a failed
+             encryption migration; .encrypting is an encrypted temp. Exact
+             path matching means each needs its own exclude. -->
+        <exclude domain="database" path="flowpay_database.unreadable" />
+        <exclude domain="database" path="flowpay_database.encrypting" />
         <exclude domain="sharedpref" path="payment_operation.xml" />
         <exclude domain="sharedpref" path="flowpay_db_key.xml" />
         <exclude domain="sharedpref" path="FlowpayPrefs.xml" />
@@ -16,6 +22,9 @@
         <exclude domain="database" path="flowpay_database" />
         <exclude domain="database" path="flowpay_database-shm" />
         <exclude domain="database" path="flowpay_database-wal" />
+        <exclude domain="database" path="flowpay_database-journal" />
+        <exclude domain="database" path="flowpay_database.unreadable" />
+        <exclude domain="database" path="flowpay_database.encrypting" />
         <exclude domain="sharedpref" path="payment_operation.xml" />
         <exclude domain="sharedpref" path="flowpay_db_key.xml" />
         <exclude domain="sharedpref" path="FlowpayPrefs.xml" />

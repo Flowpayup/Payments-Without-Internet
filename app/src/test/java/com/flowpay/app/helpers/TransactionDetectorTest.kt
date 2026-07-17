@@ -185,4 +185,30 @@ class TransactionDetectorTest {
         assertEquals("DEBIT", debit!!.transactionType)
         assertFalse("the debit, not the credit, consumes the window", detector.shouldProcessSMS())
     }
+
+    @Test
+    fun `an unrelated debit alert leaves the window open for the real confirmation`() {
+        // The interference scenario end-to-end: while a Rs.500 payment is
+        // pending, an unrelated Rs.200 card decline from the same bank arrives.
+        // It is NOT this payment's confirmation, so it must be dropped without
+        // consuming the one-shot window — otherwise the genuine Rs.500
+        // confirmation arriving moments later is lost and the payment is
+        // mis-recorded (as FAILED-with-retry, the money-loss bug).
+        detector.startOperation("SEND_MONEY", expectedAmount = "500")
+
+        val interfering = detector.processSMS(
+            "VK-HDFCBK",
+            "Your HDFC Bank card txn of Rs.200.00 at AMAZON was declined due to insufficient balance. Ref 700000000001"
+        )
+        assertNull("a mismatched-amount alert is not our confirmation", interfering)
+        assertTrue("the window must stay open for the real confirmation", detector.shouldProcessSMS())
+
+        val real = detector.processSMS(
+            "VK-HDFCBK",
+            "Rs 500 sent to JOHN via UPI Ref 998877665544 -HDFC Bank"
+        )
+        assertNotNull("the genuine confirmation must still land", real)
+        assertEquals(TransactionStatus.SUCCESS, real!!.status)
+        assertFalse("the real confirmation consumes the window", detector.shouldProcessSMS())
+    }
 }

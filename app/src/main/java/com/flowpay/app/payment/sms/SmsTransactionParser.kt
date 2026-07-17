@@ -167,26 +167,27 @@ object SmsTransactionParser {
         if (!isTransactionMessage(body)) return null
         val amount = extractAmount(body) ?: return null
 
-        // Compare against the expected amount (if any). The message is
-        // still accepted either way — permissive matching preserved — but
-        // a mismatch is no longer silently auto-confirmed: it is recorded
-        // as NEEDS_REVIEW so an unrelated debit SMS in the operation window
-        // (e.g. an auto-debit) can never masquerade as this payment.
-        val amountMatches = expectedAmount.isNullOrEmpty() || isAmountMatching(amount, expectedAmount)
-
         val transactionId = extractTransactionId(body, clock) ?: generateTransactionId(clock, randomSuffix)
         val upiId = extractUPIId(body)
         val transactionType = detectTransactionType(body)
         val (recipientName, phoneNumber) = extractRecipientInfo(body, transactionType)
 
-        // Derive the outcome from the SMS itself. A failure keyword wins
-        // over everything: banks send "Payment of Rs 500 failed" messages
-        // that would otherwise qualify via "payment of" + an amount.
-        val status = when {
-            detectsFailure(body) -> TransactionStatus.FAILED
-            !amountMatches -> TransactionStatus.NEEDS_REVIEW
-            else -> TransactionStatus.SUCCESS
+        // A confirmation for our outgoing payment is a DEBIT whose amount
+        // matches this payment. A mismatched debit isn't our confirmation —
+        // return null so the operation window stays open for the real one,
+        // instead of consuming the window or misattributing an unrelated bank
+        // alert (an auto-debit, a card decline) to this payment. Credits are
+        // never a debit's confirmation and are left to the downstream path.
+        if (transactionType != "CREDIT" &&
+            !expectedAmount.isNullOrEmpty() &&
+            !isAmountMatching(amount, expectedAmount)
+        ) {
+            return null
         }
+
+        // Derive the outcome from the SMS itself: a failure keyword records
+        // FAILED (banks send "Payment of Rs 500 failed"), otherwise SUCCESS.
+        val status = if (detectsFailure(body)) TransactionStatus.FAILED else TransactionStatus.SUCCESS
 
         return SimpleTransaction(
             transactionId = transactionId,

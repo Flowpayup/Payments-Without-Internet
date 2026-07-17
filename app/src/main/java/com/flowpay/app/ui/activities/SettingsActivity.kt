@@ -165,13 +165,22 @@ class SettingsViewModel : androidx.lifecycle.ViewModel() {
     }
 
     fun refreshPermissions(context: Context) {
+        // Runtime-gated only on API 33+; below that, notifications post freely.
+        val notificationsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
         val perms = mapOf(
             "phone" to (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED &&
                     ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED),
             "camera" to (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED),
             "sms" to (ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED),
             "contacts" to (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED),
-            "overlay" to (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(context) else true)
+            "overlay" to (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(context) else true),
+            "notifications" to notificationsGranted
         )
         state = state.copy(permissions = perms)
     }
@@ -354,6 +363,18 @@ fun SettingsScreen(
                                 onRequestPermissions(arrayOf(Manifest.permission.READ_CONTACTS))
                             }
                         )
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            GroupDivider()
+                            PermissionRow(
+                                icon = Icons.Default.Notifications,
+                                title = "Notifications",
+                                subtitle = "Payment outcome alerts",
+                                granted = state.permissions["notifications"] ?: false,
+                                onRequest = {
+                                    onRequestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
+                                }
+                            )
+                        }
                     }
                 }
 

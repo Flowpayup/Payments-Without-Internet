@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-07-17
+
+### The publish-readiness pass — one money-path correctness fix, and three release blockers closed
+
+#### Fixed
+- **A bank SMS is reflected only when it is genuinely this payment's confirmation.**
+  Previously, an unrelated failure alert arriving in the operation window (e.g. a
+  card decline for a different amount) was recorded as *this* payment's FAILED
+  with a retry offered — inviting a double payment — and it also consumed the
+  window, so the genuine confirmation was dropped. `SmsTransactionParser` now
+  drops any debit whose amount doesn't match the expected amount (it isn't our
+  confirmation), leaving the window open for the real one; only a matching debit
+  is reflected, as SUCCESS or FAILED. `NEEDS_REVIEW` is no longer produced from
+  the SMS path. (Found on a physical device driving the debug SMS pipeline.)
+- **`POST_NOTIFICATIONS` is now actually requested at runtime.** It was declared
+  and relied on as the "guaranteed-reachable" payment-outcome path, but never
+  requested, so on Android 13+ the fallback silently no-opped for fresh users.
+  It is now asked once, contextually and non-blocking, at the first payment, with
+  a Settings toggle for later recovery.
+- **A failed database-encryption migration can no longer leak a plaintext copy.**
+  The set-aside `.unreadable` file (and `.encrypting` temp) are now excluded from
+  cloud backup and device transfer, and a plaintext leftover is deleted outright
+  rather than retained on disk.
+- **The result screen no longer fails open to "success"** — an unexpected status
+  now renders neutral (unverified) instead of the green success look.
+
+#### Added
+- Third-party attribution in `NOTICE` for SQLCipher (BSD-3-Clause), the bundled
+  OpenSSL, ZXing, and the Apache-2.0 AndroidX/Kotlin/Material set.
+
+#### Changed
+- Docs corrected: README's permission list and the QR stack (ZXing, not ML Kit);
+  SECURITY.md's operation-window duration (~10 minutes, not 5).
+
 ### The interface pass — one design system, and a result screen that never lies
 
 #### Fixed

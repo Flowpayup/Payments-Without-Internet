@@ -28,8 +28,8 @@ android {
         applicationId = "com.flowpay.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 3
-        versionName = "2.0.0"
+        versionCode = 4
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -112,6 +112,22 @@ android {
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
+    }
+}
+
+// Fail an actual RELEASE build when it would be silently UNSIGNED, unless the
+// caller explicitly opts in with -PallowUnsigned. This fires only when a
+// release-packaging task actually runs — a configuration-time throw would break
+// debug/test builds (e.g. CI) that legitimately run without a keystore.
+tasks.matching { it.name == "packageRelease" }.configureEach {
+    doFirst {
+        if (!keystorePropertiesFile.exists() && !project.hasProperty("allowUnsigned")) {
+            throw GradleException(
+                "Release build would be UNSIGNED and uninstallable: keystore.properties is missing. " +
+                    "Copy keystore.properties.example and fill it in to sign the release, or pass " +
+                    "-PallowUnsigned to build an intentionally unsigned APK."
+            )
+        }
     }
 }
 

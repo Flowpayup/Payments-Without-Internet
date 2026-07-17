@@ -26,6 +26,10 @@ object AppConstants {
     const val KEY_TEST_COMPLETED = "test_configuration_completed"
     const val KEY_SELECTED_BANK = "selected_bank"
 
+    // Set once we've asked for POST_NOTIFICATIONS at a payment, so the
+    // contextual one-shot request never re-prompts on later payments.
+    const val KEY_NOTIFICATIONS_ASKED = "notifications_permission_asked"
+
     // Regex patterns
     const val PHONE_NUMBER_PATTERN = "^[1-9][0-9]{9}$"
 }
