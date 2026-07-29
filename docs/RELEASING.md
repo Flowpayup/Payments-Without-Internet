@@ -26,7 +26,14 @@ byte-identical modulo the signature block.
    heading with today's date.
 3. **Run the local gate**:
    ```bash
-   ./gradlew test :app:lintDebug detekt assembleRelease
+   ./gradlew test :app:lintDebug detekt koverVerify assembleRelease
+   ```
+   With `keystore.properties` in place this produces the signed APK directly.
+   Without it, `assembleRelease` fails by design rather than emitting an
+   uninstallable unsigned APK — add `-PallowUnsigned` if you only want to
+   check that the release variant compiles and shrinks:
+   ```bash
+   ./gradlew test :app:lintDebug detekt koverVerify assembleRelease -PallowUnsigned
    ```
 4. **Run the on-device release checklist**: [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)
    (real *99# and 123Pay transactions on physical hardware).
@@ -58,6 +65,14 @@ apksigner verify --print-certs flowpay-vX.Y.Z.apk   # fingerprint must match rel
 shasum -a 256 -c SHA-256SUMS                        # checksum must match
 ```
 
-To reproduce the build: check out the tag, build `assembleRelease` with the
-pinned toolchain above, and compare everything but `META-INF/` against the
-released APK.
+To reproduce the build: check out the tag and build with the pinned toolchain
+above. A third-party reproducer has no signing key, so pass `-PallowUnsigned`
+to opt out of the signed-release guard:
+
+```bash
+./gradlew assembleRelease -PallowUnsigned
+```
+
+Then compare everything but `META-INF/` against the released APK — that
+directory holds the signature block, which only the maintainer's key can
+produce.
