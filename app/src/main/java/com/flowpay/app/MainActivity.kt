@@ -112,6 +112,7 @@ import com.flowpay.app.helpers.MainActivityHelper
 import com.flowpay.app.managers.PermissionManager
 import com.flowpay.app.ui.activities.SettingsActivity
 import com.flowpay.app.ui.activities.TransactionHistoryActivity
+import com.flowpay.app.ui.components.TransactionDetailDialog
 import com.flowpay.app.ui.dialogs.ContactPickerDialog
 import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.FlowpayDarkGray
@@ -555,6 +556,7 @@ fun MainScreen(
 
     val transactionViewModel: TransactionViewModel = viewModel()
     val recentPayments by transactionViewModel.recentTransactions.collectAsState()
+    val selectedTransaction by transactionViewModel.selectedTransaction.collectAsState()
     val isLoading by transactionViewModel.isLoading.collectAsState()
     val error by transactionViewModel.error.collectAsState()
 
@@ -1032,7 +1034,12 @@ fun MainScreen(
                                     verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
                                     items(recentPayments) { payment ->
-                                        TransactionItem(payment = payment)
+                                        TransactionItem(
+                                            payment = payment,
+                                            onClick = {
+                                                transactionViewModel.selectTransaction(payment.id)
+                                            }
+                                        )
                                     }
                                 }
                             }
@@ -1041,6 +1048,19 @@ fun MainScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // Detail dialog for a tapped Recent Payments row — the same
+            // surface the history screen shows.
+            selectedTransaction?.let { transaction ->
+                TransactionDetailDialog(
+                    transaction = transaction,
+                    onDismiss = { transactionViewModel.clearSelectedTransaction() },
+                    onDelete = {
+                        transactionViewModel.deleteTransaction(transaction)
+                        transactionViewModel.clearSelectedTransaction()
+                    }
+                )
             }
 
             // Dialogs
@@ -1098,11 +1118,12 @@ fun MainScreen(
 }
 
 @Composable
-fun TransactionItem(payment: PaymentDetails) {
+fun TransactionItem(payment: PaymentDetails, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(90.dp),
+            .height(90.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = FlowpaySurfaceDim),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -1139,28 +1160,33 @@ fun TransactionItem(payment: PaymentDetails) {
                 )
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Text(
-                    text = formatAmount(payment.amount),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = LocalFlowpayAccentTheme.current.headerGradientStart,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.Default.ArrowOutward,
-                    contentDescription = "Outgoing",
-                    modifier = Modifier.size(18.dp),
-                    tint = LocalFlowpayAccentTheme.current.headerGradientStart
-                )
-            }
+            TransactionItemAmount(amount = payment.amount)
         }
+    }
+}
+
+@Composable
+private fun TransactionItemAmount(amount: Double) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End,
+        modifier = Modifier.padding(start = 8.dp)
+    ) {
+        Text(
+            text = formatAmount(amount),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = LocalFlowpayAccentTheme.current.headerGradientStart,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.Default.ArrowOutward,
+            contentDescription = "Outgoing",
+            modifier = Modifier.size(18.dp),
+            tint = LocalFlowpayAccentTheme.current.headerGradientStart
+        )
     }
 }
 

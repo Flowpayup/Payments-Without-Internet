@@ -4,6 +4,7 @@ import android.content.Context
 import com.flowpay.app.data.AppDatabase
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.data.TransactionDao
+import com.flowpay.app.data.TransactionStatus
 import com.flowpay.app.payment.sms.SimpleTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -48,7 +49,7 @@ class TransactionRepository private constructor(context: Context) :
      * Get recent transactions as PaymentDetails for UI compatibility
      */
     fun getRecentPaymentDetails(limit: Int = 10): Flow<List<com.flowpay.app.data.PaymentDetails>> {
-        return transactionDao.getRecentTransactions(limit)
+        return transactionDao.getRecentConfirmedTransactions(limit)
             .map { transactions ->
                 transactions.map { it.toPaymentDetails() }
             }
@@ -175,12 +176,17 @@ class TransactionRepository private constructor(context: Context) :
             upiId = parsed.upiId,
             recipientName = parsed.recipientName,
             amount = parsed.amount,
-            verifiedAt = verifiedAt
+            verifiedAt = verifiedAt,
+            expectedStatus = TransactionStatus.PENDING
         )
     }
 
-    override suspend fun expireStalePending(now: Long): Int {
-        return transactionDao.expireStalePending(now)
+    override suspend fun deleteStalePending(now: Long): Int {
+        return transactionDao.deleteStalePending(now)
+    }
+
+    override suspend fun deletePending(transactionId: String): Int {
+        return transactionDao.deletePending(transactionId)
     }
 }
 

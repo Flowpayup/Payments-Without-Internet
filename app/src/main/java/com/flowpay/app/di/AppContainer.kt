@@ -5,7 +5,7 @@ import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.payment.PaymentSessionManager
 import com.flowpay.app.payment.PaymentTransactionStore
-import com.flowpay.app.payment.UnverifiedOutcomeObserver
+import com.flowpay.app.payment.PaymentWindowObserver
 import com.flowpay.app.payment.sms.SimpleTransaction
 import com.flowpay.app.repository.TransactionRepository
 import com.flowpay.app.telephony.CallStateCoordinator
@@ -52,12 +52,12 @@ class AppContainer(context: Context) {
     }
 
     /**
-     * Surfaces the UNVERIFIED outcome to the user when a session times out
-     * without a confirming SMS. Process-scoped so it outlives the overlay
-     * service that showed the earlier "Request Sent" dialog.
+     * Closes the SMS operation window when a payment is cancelled.
+     * Process-scoped so it outlives the overlay service the user cancelled
+     * from.
      */
-    val unverifiedOutcomeObserver: UnverifiedOutcomeObserver by lazy {
-        UnverifiedOutcomeObserver(
+    val paymentWindowObserver: PaymentWindowObserver by lazy {
+        PaymentWindowObserver(
             appContext = appContext,
             paymentState = paymentSessionManager.paymentState,
             scope = appScope
@@ -99,5 +99,8 @@ private class LazyTransactionStore(private val appContext: Context) : PaymentTra
         verifiedAt = verifiedAt
     )
 
-    override suspend fun expireStalePending(now: Long): Int = repo().expireStalePending(now)
+    override suspend fun deleteStalePending(now: Long): Int = repo().deleteStalePending(now)
+
+    override suspend fun deletePending(transactionId: String): Int =
+        repo().deletePending(transactionId)
 }

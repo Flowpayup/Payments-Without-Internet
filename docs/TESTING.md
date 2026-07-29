@@ -25,7 +25,9 @@ Pure logic, no Android framework, no device. Runs in seconds via
   ([PaymentSessionManager.kt](../app/src/main/java/com/flowpay/app/payment/PaymentSessionManager.kt)),
   driven with `kotlinx-coroutines-test` and fakes for the call-state source
   and the persistence layer. Covers the PENDING-before-dial invariant,
-  every terminal transition (Success/Failed/Cancelled/NeedsReview/Timeout),
+  every terminal transition (Success/Failed/Cancelled/Timeout — where a
+  Timeout discards the unconfirmed row and a later SMS cannot resurrect a
+  cancelled one),
   and — since Phase 3 — that `onUserCancelled`/`onCallNeverStarted` reach a
   correct, idempotent terminal state even when called defensively more than
   once (the scenario `CallOverlayService`'s exception-handling paths rely on).
@@ -63,26 +65,64 @@ from release APKs. It is not gated by a runtime check; it does not exist in
 a release build to gate.
 
 ```bash
-# 1. Install a debug build
+# 1. Install a debug build and launch the app (a force-stopped app
+#    receives no broadcasts at all)
 ./gradlew installDebug
+adb shell am start -n com.flowpay.app/.MainActivity
 
 # 2. Start a payment operation window (same as tapping "Pay" in the app)
-adb shell am broadcast -a com.flowpay.app.debug.START_OPERATION \
+adb shell "am broadcast -n com.flowpay.app/.receivers.DebugSmsInjectionReceiver \
+  -a com.flowpay.app.debug.START_OPERATION \
   --es operation_type UPI_123 \
   --es expected_amount 500 \
-  --es phone_number 9876543210
+  --es phone_number 9876543210"
 
 # 3. Inject a bank confirmation SMS — any redacted sample from the
 #    SmsTransactionParserTest corpus works
-adb shell am broadcast -a com.flowpay.app.debug.INJECT_SMS \
+adb shell "am broadcast -n com.flowpay.app/.receivers.DebugSmsInjectionReceiver \
+  -a com.flowpay.app.debug.INJECT_SMS \
   --es sender VK-HDFCBK \
-  --es body "Rs.500.00 sent to KIRANA STORE from HDFC Bank A/c **1234 via UPI ref 512233440091"
+  --es body 'Rs.500.00 sent to KIRANA STORE from HDFC Bank A/c **1234 via UPI ref 512233440091'"
 ```
+
+Two details in those commands are load-bearing, both learned the hard way
+on real hardware:
+
+- **The `-n` component targeting is mandatory.** Android does not deliver
+  *implicit* broadcasts (`am broadcast -a …` alone) to manifest-declared
+  receivers — the command completes, prints a result, and the app never
+  hears it. There is no error to notice; the injection just silently
+  doesn't happen.
+- **The whole `am` command is quoted** so it reaches the *device* shell as
+  one string. Unquoted, the spaces in the SMS body are split into separate
+  arguments on the device side and the broadcast carries a truncated body.
 
 Step 3 should launch `PaymentResultActivity` showing a successful ₹500
 payment, and the transaction should appear in Transaction History — the
 same result a real bank SMS produces, reached without a SIM, a bank, or a
 phone call.
+
+### Money-path scenarios worth re-running
+
+The same two broadcasts cover the cases that are easy to regress:
+
+- **Dual-verb template.** Inject `AD-ICICIB` / *"ICICI Bank Acct XX556
+  debited for Rs 500.00 on 29-Jul-26; KIRANA STORE credited. UPI:512233440091"*
+  into a ₹500 window. It must confirm. Read as an incoming credit (the bug
+  this guards) it would be dropped as unrelated and the payment would never
+  appear.
+- **Mismatched amount.** The same template for ₹900 against a ₹500 window
+  must produce nothing and leave the window open, so a following ₹500
+  confirmation still lands.
+- **Unrelated incoming credit.** A genuine `credited`-only body during an
+  open window must be ignored without closing the window.
+- **Cancel really cancels.** Start a payment from the app, hit *Cancel
+  payment* on the overlay, then inject a matching debit. Nothing should
+  surface, and the row must stay CANCELLED —
+  `adb shell run-as com.flowpay.app cat shared_prefs/payment_operation.xml`
+  should show the window cleared.
+- **No SMS, no record.** Open a window, inject nothing, and let the deadline
+  pass: no result screen, no notification, and no row in either list.
 
 ## Layer 4 — Physical-device release gate (human, per release)
 

@@ -73,7 +73,10 @@ class PaymentSessionManagerTest {
             parsed: SimpleTransaction,
             verifiedAt: Long
         ): Int {
-            val row = rows[transactionId] ?: return 0
+            // Mirrors the DAO's status guard: a confirmation only lands on a
+            // row still awaiting one, never on a cancelled or settled row.
+            val row = rows[transactionId]?.takeIf { it.status == TransactionStatus.PENDING }
+                ?: return 0
             rows[transactionId] = row.copy(
                 status = status,
                 bankRef = parsed.transactionId,
@@ -89,15 +92,19 @@ class PaymentSessionManagerTest {
             return 1
         }
 
-        override suspend fun expireStalePending(now: Long): Int {
-            var changed = 0
-            rows.replaceAll { _, row ->
-                if (row.status == TransactionStatus.PENDING && row.deadlineAt != null && row.deadlineAt < now) {
-                    changed++
-                    row.copy(status = TransactionStatus.UNVERIFIED)
-                } else row
-            }
-            return changed
+        override suspend fun deleteStalePending(now: Long): Int {
+            val stale = rows.filterValues { row ->
+                row.status == TransactionStatus.PENDING &&
+                    row.deadlineAt != null && row.deadlineAt < now
+            }.keys
+            stale.forEach { rows.remove(it) }
+            return stale.size
+        }
+
+        override suspend fun deletePending(transactionId: String): Int {
+            val pending = rows[transactionId]?.status == TransactionStatus.PENDING
+            if (pending) rows.remove(transactionId)
+            return if (pending) 1 else 0
         }
     }
 
@@ -228,8 +235,11 @@ class PaymentSessionManagerTest {
         assertEquals(TransactionStatus.SUCCESS, store.rows[txnId]!!.status)
     }
 
+    // No confirming SMS means there is no payment to report: the row is
+    // discarded rather than left behind as an outcome the user can't act on.
+    // The Timeout state is still emitted so collectors wind themselves down.
     @Test
-    fun `no SMS before deadline yields UNVERIFIED row and Timeout state`() = runTest {
+    fun `no SMS before deadline discards the row and emits Timeout`() = runTest {
         val (manager, store, source) = newManager()
         val txnId = manager.begin("9876543210", "100")!!
         runCurrent()
@@ -241,17 +251,8 @@ class PaymentSessionManagerTest {
         advanceTimeBy(PaymentSessionManager.DEFAULT_VERIFICATION_DEADLINE_MS + 1_000)
         runCurrent()
 
-        val timeout = manager.paymentState.value
-        assertTrue(timeout is PaymentState.Timeout)
-        assertEquals(TransactionStatus.UNVERIFIED, store.rows[txnId]!!.status)
-
-        // The UnverifiedOutcomeObserver relies on this exact state carrying the
-        // fields it forwards to the UNVERIFIED result screen. Lock the contract.
-        val surface = timeout.toUnverifiedSurface()
-        assertNotNull("Timeout must map to an unverified surface", surface)
-        assertEquals(txnId, surface!!.transactionId)
-        assertEquals("100", surface.amount)
-        assertEquals("9876543210", surface.phoneNumber)
+        assertTrue(manager.paymentState.value is PaymentState.Timeout)
+        assertNull("An unconfirmed payment must leave no row behind", store.rows[txnId])
     }
 
     @Test
@@ -606,7 +607,7 @@ class PaymentSessionManagerTest {
     }
 
     @Test
-    fun `stale PENDING rows are expired on next begin`() = runTest {
+    fun `stale PENDING rows are discarded on next begin`() = runTest {
         val store = FakeStore()
         // A leftover PENDING row from a killed process, deadline long past.
         store.rows["stale"] = Transaction(
@@ -624,6 +625,37 @@ class PaymentSessionManagerTest {
         manager.begin("9876543210", "100")
         runCurrent()
 
-        assertEquals(TransactionStatus.UNVERIFIED, store.rows["stale"]!!.status)
+        assertNull("Stale unconfirmed rows must be removed", store.rows["stale"])
+    }
+
+    // A cancelled payment must stay cancelled. The user may well re-pay the
+    // same amount through another app minutes later; that bank SMS must not
+    // be able to rewrite this row into a success.
+    @Test
+    fun `a confirming SMS cannot resurrect a cancelled row`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "500")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+        manager.onUserCancelled()
+        runCurrent()
+        assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
+
+        val claimed = manager.onSmsConfirmed(
+            SimpleTransaction(
+                transactionId = "BANKREF999",
+                amount = "500",
+                status = TransactionStatus.SUCCESS,
+                bankName = "HDFC Bank",
+                smsExcerpt = "₹500 debited — HDFC Bank",
+                timestamp = 0L,
+                transactionType = "DEBIT"
+            )
+        )
+        runCurrent()
+
+        assertNull("A cancelled session must not claim a later SMS", claimed)
+        assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
     }
 }

@@ -38,8 +38,11 @@ interface PaymentTransactionStore {
         verifiedAt: Long
     ): Int
 
-    /** PENDING rows past their deadline become UNVERIFIED. Returns rows changed. */
-    suspend fun expireStalePending(now: Long): Int
+    /** Discards PENDING rows past their deadline. Returns rows removed. */
+    suspend fun deleteStalePending(now: Long): Int
+
+    /** Discards one row, only while it is still PENDING. Returns rows removed. */
+    suspend fun deletePending(transactionId: String): Int
 }
 
 /**
@@ -54,10 +57,11 @@ interface PaymentTransactionStore {
  *     normal call end -> WaitingForVerification.
  *  3. A confirming bank SMS ([onSmsConfirmed]) is the only path to SUCCESS.
  *     Call duration is never treated as proof of payment.
- *  4. If no SMS arrives before the deadline the row becomes UNVERIFIED —
- *     visibly distinct from both success and failure.
+ *  4. If no SMS arrives before the deadline the row is discarded. A payment
+ *     the bank never confirmed is one this app cannot report on, so it
+ *     leaves no record rather than an outcome the user can't act on.
  *
- * Stale PENDING rows from a killed process are finalised lazily via
+ * Stale PENDING rows from a killed process are discarded lazily via
  * [reconcileStalePending] (app start, history open, next begin()).
  */
 class PaymentSessionManager(
@@ -118,8 +122,8 @@ class PaymentSessionManager(
         val deadlineAt = now + verificationDeadlineMs
 
         pendingInsertJob = scope.launch {
-            // Older stale sessions are finalised before a new one starts.
-            runCatching { store.expireStalePending(now) }
+            // Older stale sessions are discarded before a new one starts.
+            runCatching { store.deleteStalePending(now) }
             store.insertPending(
                 Transaction(
                     transactionId = txnId,
@@ -265,12 +269,12 @@ class PaymentSessionManager(
         }
     }
 
-    /** Finalises PENDING rows whose deadline passed while we weren't running. */
+    /** Discards PENDING rows whose deadline passed while we weren't running. */
     fun reconcileStalePending() {
         scope.launch {
-            val expired = runCatching { store.expireStalePending(clock()) }.getOrDefault(0)
-            if (expired > 0) {
-                Log.d(TAG, "Marked $expired stale PENDING transaction(s) as UNVERIFIED")
+            val discarded = runCatching { store.deleteStalePending(clock()) }.getOrDefault(0)
+            if (discarded > 0) {
+                Log.d(TAG, "Discarded $discarded unconfirmed stale PENDING transaction(s)")
             }
         }
     }
@@ -322,6 +326,13 @@ class PaymentSessionManager(
         }
     }
 
+    /**
+     * The deadline passed with no confirming bank SMS, so the row is
+     * discarded and nothing is shown: no confirmation means no payment to
+     * report. A genuine confirmation arriving in the SMS window's remaining
+     * grace still surfaces — with the row gone there is nothing to adopt, so
+     * the ingestion pipeline records it as a standalone transaction.
+     */
     private fun onVerificationDeadline() {
         val state = synchronized(sessionLock) { _paymentState.value }
         if (!state.isInProgress()) return
@@ -329,7 +340,7 @@ class PaymentSessionManager(
 
         scope.launch {
             pendingInsertJob?.join()
-            store.transitionStatus(txnId, TransactionStatus.PENDING, TransactionStatus.UNVERIFIED)
+            store.deletePending(txnId)
         }
         synchronized(sessionLock) {
             val s = _paymentState.value
@@ -343,7 +354,7 @@ class PaymentSessionManager(
                 cleanupLocked()
             }
         }
-        Log.w(TAG, "No bank SMS before deadline - session marked UNVERIFIED")
+        Log.w(TAG, "No bank SMS before deadline - unconfirmed session discarded")
     }
 
     private fun finishSession(

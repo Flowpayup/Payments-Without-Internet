@@ -47,14 +47,13 @@ class FlowpayApplication : Application() {
                     .build()
             )
         }
-        // Finalise any PENDING rows whose deadline passed while the app was
+        // Discard any PENDING rows whose deadline passed while the app was
         // dead. The store resolves lazily on IO (see LazyTransactionStore),
         // so this no longer opens the database on the main thread.
         paymentSessionManager.reconcileStalePending()
-        // Start surfacing UNVERIFIED outcomes (session timeout with no bank SMS)
-        // from the process scope, so they reach the user even after the overlay
-        // service has stopped.
-        container.unverifiedOutcomeObserver.start()
+        // Close the SMS operation window on cancellation from the process
+        // scope, so it still happens after the overlay service has stopped.
+        container.paymentWindowObserver.start()
         Log.d(TAG, "FlowpayApplication initialized")
     }
 }

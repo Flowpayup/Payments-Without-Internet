@@ -33,8 +33,8 @@ class TransactionDetector private constructor(context: Context) {
          * How long after a payment starts an incoming SMS is still eligible.
          * Derived from the session verification deadline (plus a grace margin
          * for a confirmation racing the deadline) — it must never be shorter,
-         * or a slow-but-genuine bank SMS would be dropped here while the
-         * session was still waiting for it, producing a false UNVERIFIED.
+         * or a slow-but-genuine bank SMS would be dropped here and a payment
+         * that did go through would never be recorded.
          */
         internal const val OPERATION_WINDOW_MILLIS =
             PaymentSessionManager.DEFAULT_VERIFICATION_DEADLINE_MS + 30_000L

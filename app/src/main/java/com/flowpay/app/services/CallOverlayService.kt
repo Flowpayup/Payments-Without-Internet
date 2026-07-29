@@ -337,9 +337,9 @@ class CallOverlayService : Service() {
                 }
             }
             is PaymentState.Timeout -> {
-                // The UNVERIFIED result screen is launched by
-                // UnverifiedOutcomeObserver on the process scope, so it reaches
-                // the user even after this service has stopped. No dialog here.
+                // No bank SMS by the deadline means there is no confirmed
+                // payment to report: the row is discarded and nothing is
+                // shown. Just wind the overlay down.
                 finishWithResult { }
             }
             else -> Unit

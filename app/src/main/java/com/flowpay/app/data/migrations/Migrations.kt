@@ -15,7 +15,7 @@ object Migrations {
      * v1 -> v2: transaction lifecycle fields.
      *  - bankRef:    the bank's own reference number from the confirming SMS
      *                (the primary key is now a client-generated UUID)
-     *  - deadlineAt: when a PENDING row should be considered UNVERIFIED
+     *  - deadlineAt: when a PENDING row stops waiting for its confirmation
      *  - source:     SMS / NOTIFICATION / MANUAL
      *  - verifiedAt: when the confirming SMS arrived
      * plus indexes on the two columns every history query filters/sorts by.
