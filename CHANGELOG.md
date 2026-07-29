@@ -5,7 +5,65 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-07-30
+
+The first published release.
+
+Everything below this entry is **pre-release history**: internal milestones
+built and versioned locally while the app was still private, never tagged and
+never distributed. The `1.x`/`2.x` numbers in that history were working
+labels, not releases, which is why the public version line restarts here.
+`versionCode` does not restart — it continues upward from those builds, since
+Android refuses to install a lower one.
+
+### One rule for confirmations: the bank's SMS decides
+
+#### Fixed
+- **A genuine confirmation is no longer discarded when the bank names both
+  sides of the payment.** Many banks write one payment as *"A/c XX556 debited
+  for Rs 500.00; KIRANA STORE credited"*. Direction was read on the first
+  credit word found, so these outgoing confirmations looked like incoming
+  money, and the pipeline dropped them as unrelated — the SMS arrived and the
+  payment still never appeared, leaving the user to retry a payment that had
+  already gone through. Direction is now read debit-first, and the dual-verb
+  templates are in the parser corpus.
+- **Cancelling a payment now closes the SMS window with it.** Cancelling ended
+  the session but left the window armed for the rest of its 10.5 minutes, so a
+  later debit for the same amount — the user re-paying through another app,
+  say — was adopted onto the cancelled row and reported as a success. Every
+  cancel route now closes the window (`PaymentWindowObserver`), and, as a
+  backstop, a confirmation can only ever land on a row still awaiting one.
+- **An unrelated incoming credit during a payment can no longer surface as
+  that payment's success.** A credit arriving in the window (salary, refund,
+  someone paying you) was saved and flashed a "Payment successful" screen for
+  its own amount while the real payment was still pending. It is now ignored,
+  and the window stays open for the genuine confirmation.
+- **Abandoning the QR flow no longer leaves a payment live.** A failed dial or
+  leaving the scanner mid-payment kept the session running, which also refused
+  the next scan as "a payment is already in progress".
+
+#### Changed
+- **No confirmation means no record.** A payment the bank never confirmed is
+  discarded rather than kept as `UNVERIFIED` — the old behavior fired a
+  full-screen "we couldn't verify this, check your bank" result and a
+  notification some ten minutes after the fact, about a payment the app knew
+  nothing about. A confirmation arriving a little late is still recorded.
+  Existing `UNVERIFIED` rows keep rendering as before.
+- In-flight payments no longer appear under Recent Payments on the home
+  screen, where they read as completed. Transaction History still shows them.
+
+#### Added
+- Tapping a row under Recent Payments opens its detail dialog — the same
+  surface Transaction History already offered.
+
+---
+
+## Pre-release history (never published)
+
+Local development milestones, kept for provenance. None of these were tagged
+or distributed; see the note under `[1.0.0]` above. The earliest entry is
+labelled `0.1.0-dev` — it was written as `1.0.0` at the time, renamed here so
+the published `1.0.0` above is unambiguous.
 
 ## [2.1.0] - 2026-07-17
 
@@ -212,7 +270,7 @@ chart that pass; 2.0.0 is where it lands.
 ### Fixed
 - Stale clone-directory name in CONTRIBUTING.md.
 
-## [1.0.0] - 2026-07-12
+## [0.1.0-dev] - 2026-07-12
 
 Baseline — the state of the app when this changelog was introduced.
 
