@@ -5,8 +5,10 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
+import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.KeyStore
+import java.security.ProviderException
 import java.security.SecureRandom
 import java.security.UnrecoverableKeyException
 import javax.crypto.Cipher
@@ -34,6 +36,10 @@ import javax.crypto.spec.GCMParameterSpec
  * generated; [DatabaseEncryptionMigrator.recoverIfUnreadable] then sets the
  * now-unreadable database aside and the app starts with an empty history.
  * History is convenience data; the bank remains the source of truth.
+ *
+ * "Never propagate" covers *wrapping* as well as unwrapping, and covers the
+ * unchecked failures too — see [recoverable]. Both directions go through it,
+ * so there is no path from a sick Keystore to a launch crash.
  */
 internal object DatabaseKeyManager {
 
@@ -78,34 +84,89 @@ internal object DatabaseKeyManager {
         val wrapped = prefs.getString(PREF_WRAPPED, null)
         val iv = prefs.getString(PREF_IV, null)
         if (wrapped != null && iv != null) {
-            try {
-                return String(
+            val existing = recoverable("passphrase unwrap") {
+                String(
                     wrapper.unwrap(
                         Base64.decode(wrapped, Base64.NO_WRAP),
                         Base64.decode(iv, Base64.NO_WRAP)
                     ),
                     Charsets.UTF_8
                 )
-            } catch (e: GeneralSecurityException) {
-                // Keystore key lost/invalidated (or blob corrupted). Discard
-                // both sides and fall through to a clean regeneration — the
-                // old database is unreadable either way, and the migrator
-                // will set it aside rather than let the app crash-loop.
-                Log.w(TAG, "Passphrase unwrap failed - regenerating key material", e)
-                prefs.edit().remove(PREF_WRAPPED).remove(PREF_IV).apply()
-                runCatching { wrapper.discardKey() }
-                    .onFailure { Log.w(TAG, "Discarding stale wrapping key failed: ${it.message}") }
             }
+            if (existing != null) return existing
+            // Keystore key lost/invalidated (or blob corrupted). Discard both
+            // sides and fall through to a clean regeneration — the old
+            // database is unreadable either way, and the migrator will set it
+            // aside rather than let the app crash-loop.
+            prefs.edit().remove(PREF_WRAPPED).remove(PREF_IV).apply()
+            discardQuietly(wrapper)
         }
 
         val raw = ByteArray(PASSPHRASE_BYTES).also { SecureRandom().nextBytes(it) }
         val passphrase = Base64.encodeToString(raw, Base64.NO_WRAP)
-        val blob = wrapper.wrap(passphrase.toByteArray(Charsets.UTF_8))
-        prefs.edit()
-            .putString(PREF_WRAPPED, Base64.encodeToString(blob.sealed, Base64.NO_WRAP))
-            .putString(PREF_IV, Base64.encodeToString(blob.iv, Base64.NO_WRAP))
-            .apply()
+
+        // Wrapping can fail too, and used to be unguarded — a sick Keystore
+        // threw straight out of here into a launch crash loop. The usual cause
+        // is an existing entry that can no longer be used, so drop the entry
+        // and try once with a freshly generated wrapping key.
+        val plain = passphrase.toByteArray(Charsets.UTF_8)
+        val blob = recoverable("passphrase wrap") { wrapper.wrap(plain) }
+            ?: run {
+                discardQuietly(wrapper)
+                recoverable("passphrase wrap retry") { wrapper.wrap(plain) }
+            }
+
+        if (blob != null) {
+            prefs.edit()
+                .putString(PREF_WRAPPED, Base64.encodeToString(blob.sealed, Base64.NO_WRAP))
+                .putString(PREF_IV, Base64.encodeToString(blob.iv, Base64.NO_WRAP))
+                .apply()
+        } else {
+            // Nothing can be persisted. Returning the unpersisted passphrase
+            // still keeps the app launchable: the next start generates a
+            // different one and the migrator sets this database aside, so
+            // history stops surviving restarts. Degraded, but far better than
+            // an app that cannot open at all.
+            Log.e(TAG, "Keystore unusable - passphrase not persisted, history will not survive restart")
+        }
         return passphrase
+    }
+
+    /**
+     * Runs [block], returning null when the Keystore failed in a way we can
+     * recover from by regenerating key material.
+     *
+     * Three distinct failure families, all reaching us on the app's first
+     * database touch, where a throw is a permanent launch crash loop:
+     *  - [GeneralSecurityException] — the documented case: entry lost or
+     *    invalidated, blob corrupt, GCM tag mismatch.
+     *  - [ProviderException] — an **unchecked** wrapper the AndroidKeyStore
+     *    provider raises on some OEM/StrongBox builds when the keystore daemon
+     *    is unhealthy. Being a RuntimeException it slipped past the original
+     *    `catch (GeneralSecurityException)` entirely.
+     *  - [IOException] — `KeyStore.load` against a corrupted keystore file.
+     *
+     * Deliberately narrow: any other throwable is a bug in our own code and
+     * must still surface rather than being laundered into key regeneration.
+     */
+    private fun <T> recoverable(what: String, block: () -> T): T? =
+        try {
+            block()
+        } catch (e: GeneralSecurityException) {
+            Log.w(TAG, "$what failed (${e.javaClass.simpleName}) - regenerating key material", e)
+            null
+        } catch (e: ProviderException) {
+            Log.w(TAG, "$what failed in the Keystore provider - regenerating key material", e)
+            null
+        } catch (e: IOException) {
+            Log.w(TAG, "$what failed reading the Keystore - regenerating key material", e)
+            null
+        }
+
+    /** Best-effort key removal; failing to discard must never block recovery. */
+    private fun discardQuietly(wrapper: Wrapper) {
+        runCatching { wrapper.discardKey() }
+            .onFailure { Log.w(TAG, "Discarding stale wrapping key failed: ${it.message}") }
     }
 
     /** Production wrapper: AES/GCM under a non-exportable Android Keystore key. */
