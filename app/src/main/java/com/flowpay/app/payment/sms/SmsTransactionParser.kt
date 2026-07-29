@@ -140,6 +140,20 @@ object SmsTransactionParser {
         "timed out"
     )
 
+    // Outgoing-payment verbs, checked before the credit words in
+    // [detectTransactionType]. Many banks describe one payment from both
+    // sides in a single sentence ("A/c XX556 debited for Rs 500; KIRANA
+    // STORE credited"), so a body carrying both verbs is ours only if the
+    // debit reading wins.
+    private val DEBIT_INDICATORS = listOf(
+        "debited",
+        "sent to",
+        "paid to",
+        "withdrawn",
+        "spent",
+        "transferred to"
+    )
+
     // Amount patterns - multiple formats
     private val AMOUNT_PATTERNS = listOf(
         "(?:Rs\\.?|INR|₹)\\s*([0-9,]+(?:\\.[0-9]{1,2})?)",
@@ -261,8 +275,10 @@ object SmsTransactionParser {
         // Generic DLT-shaped sender fallback. Deliberately layered rather
         // than strict: an all-caps 6-letter promo sender ("AMAZON") can
         // still slip through here, but downstream defenses keep that
-        // non-catastrophic — a failure keyword records FAILED and an
-        // amount mismatch records NEEDS_REVIEW, never a silent SUCCESS.
+        // non-catastrophic — a debit whose amount doesn't match the expected
+        // amount is dropped outright (it isn't this payment's confirmation;
+        // the operation window stays open), and a failure keyword records
+        // FAILED — never a silent SUCCESS.
         // The old blanket `sender.length == 6` check was removed: it also
         // admitted mixed/lowercase senders ("Amazon", "MyShop"), which
         // are never DLT bank headers.
@@ -387,9 +403,19 @@ object SmsTransactionParser {
         return null
     }
 
+    /**
+     * DEBIT (money left the user's account) or CREDIT (money arrived).
+     *
+     * A debit verb wins over a credit word: ICICI/Union-style templates name
+     * both sides of the same payment ("Acct XX556 debited for Rs 500.00 …;
+     * KIRANA STORE credited"), and reading those as CREDIT would classify
+     * our own outgoing confirmation as somebody else's incoming money — the
+     * pipeline then drops it as unrelated and the payment never appears.
+     */
     internal fun detectTransactionType(body: String): String {
         val bodyLower = body.lowercase(Locale.getDefault())
         return when {
+            DEBIT_INDICATORS.any { bodyLower.contains(it) } -> "DEBIT"
             bodyLower.contains("credited") ||
                 bodyLower.contains("received") ||
                 bodyLower.contains("added") -> "CREDIT"

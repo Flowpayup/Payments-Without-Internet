@@ -105,4 +105,51 @@ class SmsIngestionPipelineTest {
 
         assertNull(owner)
     }
+
+    // An unrelated incoming credit (salary, refund, someone paying you) can
+    // land inside the operation window while an outgoing payment is still
+    // pending. It never confirms our DEBIT, so it must not surface a result
+    // screen, post a notification, or be saved as a payment.
+    @Test
+    fun `unclaimed incoming credit in the window is ignored`() {
+        assertEquals(
+            true,
+            SmsIngestionPipeline.isUnrelatedIncomingCredit(
+                recordTxnId = null,
+                parsed = parsed(type = "CREDIT")
+            )
+        )
+    }
+
+    @Test
+    fun `an outgoing debit is never treated as an unrelated credit`() {
+        // Standalone QR-flow debit (no owning row) must still be surfaced/saved.
+        assertEquals(
+            false,
+            SmsIngestionPipeline.isUnrelatedIncomingCredit(
+                recordTxnId = null,
+                parsed = parsed(type = "DEBIT")
+            )
+        )
+    }
+
+    @Test
+    fun `a claimed confirmation is always surfaced`() {
+        // Defensive: if any future path ever lets a row own this ingestion,
+        // surface it rather than silently dropping it.
+        assertEquals(
+            false,
+            SmsIngestionPipeline.isUnrelatedIncomingCredit(
+                recordTxnId = "session-1",
+                parsed = parsed(type = "DEBIT")
+            )
+        )
+        assertEquals(
+            false,
+            SmsIngestionPipeline.isUnrelatedIncomingCredit(
+                recordTxnId = "session-1",
+                parsed = parsed(type = "CREDIT")
+            )
+        )
+    }
 }

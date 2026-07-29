@@ -113,6 +113,22 @@ class SmsTransactionParserTest {
             "FB-FEDBNK",
             "Rs 5,000.00 transferred from Federal Bank A/c **5566 to merchant@fbl via UPI. Ref 112233445566",
             "5000.00"
+        ),
+        // Dual-verb templates: the bank narrates both sides of one payment,
+        // so the body carries "debited" AND "credited". These are ordinary
+        // outgoing confirmations and must parse as DEBIT — read as CREDIT
+        // they look like somebody else's incoming money and get dropped.
+        BankCase(
+            "ICICI Bank",
+            "AD-ICICIB",
+            "ICICI Bank Acct XX556 debited for Rs 500.00 on 29-Jul-26; KIRANA STORE credited. UPI:512233440091",
+            "500.00"
+        ),
+        BankCase(
+            "Union Bank",
+            "VM-UNIONB",
+            "Rs.2,340.00 debited from Union Bank A/c **8899 and credited to merchant@ubi. UPI Ref 445566778899",
+            "2340.00"
         )
     )
 
@@ -171,6 +187,50 @@ class SmsTransactionParserTest {
         assertEquals("CREDIT", result!!.transactionType)
         assertEquals(TransactionStatus.SUCCESS, result.status)
         assertEquals("1500.00", result.amount)
+    }
+
+    // A dual-verb body describes our own outgoing payment from both sides.
+    // Classifying it CREDIT would make the ingestion pipeline treat a genuine
+    // confirmation as an unrelated incoming credit and drop it, so the
+    // payment would never appear even though the SMS arrived.
+    @Test
+    fun `dual-verb debit template confirms the payment it belongs to`() {
+        val result = SmsTransactionParser.parse(
+            sender = "AD-ICICIB",
+            body = "ICICI Bank Acct XX556 debited for Rs 500.00 on 29-Jul-26; KIRANA STORE credited. UPI:512233440091",
+            expectedAmount = "500"
+        )
+
+        assertNotNull("a dual-verb debit is our confirmation", result)
+        assertEquals("DEBIT", result!!.transactionType)
+        assertEquals(TransactionStatus.SUCCESS, result.status)
+        assertEquals("500.00", result.amount)
+    }
+
+    @Test
+    fun `dual-verb debit for a different amount is still dropped`() {
+        // Debit precedence must not weaken the amount gate: this is somebody
+        // else's payment that merely landed inside our window.
+        val result = SmsTransactionParser.parse(
+            sender = "AD-ICICIB",
+            body = "ICICI Bank Acct XX556 debited for Rs 900.00 on 29-Jul-26; OTHER SHOP credited. UPI:512233440099",
+            expectedAmount = "500"
+        )
+
+        assertNull("a dual-verb debit for another amount is not our confirmation", result)
+    }
+
+    @Test
+    fun `debit verbs win over credit words when a body carries both`() {
+        assertEquals(
+            "DEBIT",
+            SmsTransactionParser.detectTransactionType("A/c XX1 debited Rs 10; payee credited")
+        )
+        // A pure incoming alert has no debit verb and stays CREDIT.
+        assertEquals(
+            "CREDIT",
+            SmsTransactionParser.detectTransactionType("Rs 10 credited to A/c XX1 by UPI")
+        )
     }
 
     @Test

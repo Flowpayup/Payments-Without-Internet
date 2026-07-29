@@ -7,6 +7,7 @@ import com.flowpay.app.data.PaymentDetails
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.repository.TransactionRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,19 +47,33 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
-    
+
+    /** The transaction whose detail dialog is open, if any. */
+    private val _selectedTransaction = MutableStateFlow<Transaction?>(null)
+    val selectedTransaction: StateFlow<Transaction?> = _selectedTransaction.asStateFlow()
+
+    /**
+     * The in-flight collection of the recent-transactions Room flow. That flow
+     * never completes, so each [loadRecentTransactions] must cancel the
+     * previous one — [refresh] runs on every resume, and without this the
+     * collectors (and their database observers) accumulate for the lifetime
+     * of the ViewModel.
+     */
+    private var recentTransactionsJob: Job? = null
+
     init {
         loadRecentTransactions()
     }
-    
+
     /**
      * Load recent transactions (last 10)
      */
     fun loadRecentTransactions() {
-        viewModelScope.launch {
+        recentTransactionsJob?.cancel()
+        recentTransactionsJob = viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            
+
             try {
                 repository().getRecentPaymentDetails(10).collect { transactions ->
                     _recentTransactions.value = transactions
@@ -69,6 +84,25 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                 _isLoading.value = false
             }
         }
+    }
+
+    /**
+     * Open the detail dialog for a recent-payments row. The list carries only
+     * the summary [PaymentDetails], so the full row is fetched by id.
+     */
+    fun selectTransaction(transactionId: String) {
+        viewModelScope.launch {
+            try {
+                _selectedTransaction.value = repository().getTransactionById(transactionId)
+            } catch (e: Exception) {
+                _error.value = "Failed to open transaction: ${e.message}"
+            }
+        }
+    }
+
+    /** Close the detail dialog. */
+    fun clearSelectedTransaction() {
+        _selectedTransaction.value = null
     }
     
     /**

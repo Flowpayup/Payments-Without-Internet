@@ -20,6 +20,14 @@ interface TransactionDao {
      */
     @Query("SELECT * FROM transactions ORDER BY timestamp DESC LIMIT :limit")
     fun getRecentTransactions(limit: Int = 10): Flow<List<Transaction>>
+
+    /**
+     * Recent transactions the bank has already spoken about. PENDING rows are
+     * excluded: a payment in flight has no outcome yet, and showing it beside
+     * settled ones on the home screen reads as though it completed.
+     */
+    @Query("SELECT * FROM transactions WHERE status != 'PENDING' ORDER BY timestamp DESC LIMIT :limit")
+    fun getRecentConfirmedTransactions(limit: Int = 10): Flow<List<Transaction>>
     
     /**
      * Get transactions by status
@@ -112,6 +120,10 @@ interface TransactionDao {
      * SMS: upiId/recipientName keep their existing value when the parse found
      * none (COALESCE), and amount is filled only when the row started without
      * one (the QR flow can begin before the user has entered an amount).
+     *
+     * [expectedStatus] guards which rows a confirmation may land on — callers
+     * pass PENDING, so an SMS arriving after the payment was cancelled can
+     * never rewrite that cancelled row into a success.
      */
     @Query(
         "UPDATE transactions SET status = :status, bankRef = :bankRef, bankName = :bankName, " +
@@ -119,7 +131,7 @@ interface TransactionDao {
             "recipientName = COALESCE(:recipientName, recipientName), " +
             "amount = CASE WHEN amount = '' THEN :amount ELSE amount END, " +
             "verifiedAt = :verifiedAt " +
-            "WHERE transactionId = :transactionId"
+            "WHERE transactionId = :transactionId AND status = :expectedStatus"
     )
     @Suppress("LongParameterList") // Room @Query binds flat parameters; the
     // domain seam (PaymentTransactionStore) takes a SimpleTransaction instead.
@@ -132,13 +144,25 @@ interface TransactionDao {
         upiId: String?,
         recipientName: String?,
         amount: String,
-        verifiedAt: Long
+        verifiedAt: Long,
+        expectedStatus: String
     ): Int
 
     /**
-     * PENDING rows past their verification deadline become UNVERIFIED.
+     * PENDING rows past their verification deadline are discarded: a payment
+     * with no bank confirmation is not a payment we can report on, so it
+     * leaves no trace rather than lingering as an outcome the user can't act
+     * on. Returns the number of rows removed.
      */
-    @Query("UPDATE transactions SET status = 'UNVERIFIED' WHERE status = 'PENDING' AND deadlineAt IS NOT NULL AND deadlineAt < :now")
-    suspend fun expireStalePending(now: Long): Int
+    @Query("DELETE FROM transactions WHERE status = 'PENDING' AND deadlineAt IS NOT NULL AND deadlineAt < :now")
+    suspend fun deleteStalePending(now: Long): Int
+
+    /**
+     * Discards one row only while it is still awaiting confirmation — the
+     * status guard keeps a deadline that fires just as the SMS lands from
+     * deleting the row that SMS confirmed.
+     */
+    @Query("DELETE FROM transactions WHERE transactionId = :transactionId AND status = 'PENDING'")
+    suspend fun deletePending(transactionId: String): Int
 }
 

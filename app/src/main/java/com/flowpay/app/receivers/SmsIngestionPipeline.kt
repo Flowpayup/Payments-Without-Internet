@@ -38,10 +38,12 @@ object SmsIngestionPipeline {
 
         // An active payment session owns its row — update it in place. With
         // no live session (QR flow, or the process died mid-payment), try to
-        // reattach the confirmation to the PENDING/UNVERIFIED row recorded at
+        // reattach the confirmation to the still-PENDING row recorded at
         // begin(); only insert a fresh row when neither applies. Without the
         // reattach, a payment whose process died would end up as TWO rows:
-        // a fresh SUCCESS plus the original row expiring to UNVERIFIED.
+        // a fresh SUCCESS plus the original row. A confirmation arriving
+        // after the deadline discarded that row finds nothing to adopt and
+        // is saved standalone — the payment still surfaces.
         val sessionManager = FlowpayApplication.from(context)?.paymentSessionManager
         val sessionTxnId = sessionManager?.onSmsConfirmed(transaction)
         val recordTxnId = resolveOwnerTxnId(
@@ -49,6 +51,18 @@ object SmsIngestionPipeline {
             windowTxnId = windowTxnId,
             parsed = transaction
         ) { orphanId -> adoptOrphanedRow(context, orphanId, transaction) }
+
+        // A stray incoming CREDIT that no payment claimed is an unrelated bank
+        // alert (salary, refund, someone paying you) that merely arrived inside
+        // the operation window — it is never a confirmation of our outgoing
+        // DEBIT. Surfacing it would flash a false "Payment successful" result
+        // screen for the credit's amount, post a success notification, and save
+        // a phantom row, all while the real payment is still pending. Ignore it;
+        // processSMS deliberately left the window open for the genuine debit.
+        if (isUnrelatedIncomingCredit(recordTxnId, transaction)) {
+            Log.d(TAG, "Unrelated incoming credit during payment window - ignored")
+            return
+        }
 
         if (recordTxnId == null) {
             TransactionRepository.getInstance(context).saveTransaction(transaction)
@@ -114,6 +128,21 @@ object SmsIngestionPipeline {
             }
         }
     }
+
+    /**
+     * True when this ingestion is an incoming CREDIT that no payment claimed —
+     * an unrelated bank alert that only coincided with the operation window and
+     * must not surface a result screen or be persisted as a payment.
+     *
+     * A CREDIT can never legitimately own a row here: [PaymentSessionManager]'s
+     * onSmsConfirmed rejects a CREDIT (a session is always an outgoing DEBIT)
+     * and [resolveOwnerTxnId] refuses to adopt one, so [recordTxnId] is always
+     * null for a CREDIT. The null check is kept explicit so that if a future
+     * owning path ever does claim one, it is surfaced rather than silently
+     * dropped. Pure — unit-tested.
+     */
+    internal fun isUnrelatedIncomingCredit(recordTxnId: String?, parsed: SimpleTransaction): Boolean =
+        recordTxnId == null && parsed.transactionType == "CREDIT"
 
     /** Fills bank-confirmed details into the orphaned session row. */
     private suspend fun adoptOrphanedRow(

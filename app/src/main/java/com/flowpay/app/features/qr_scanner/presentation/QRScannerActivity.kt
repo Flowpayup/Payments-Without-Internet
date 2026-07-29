@@ -541,6 +541,11 @@ class QRScannerActivity : ComponentActivity() {
 
         } catch (e: Exception) {
             Log.e("QRScanner", "Failed to dial USSD: ${e.message}", e)
+            // Nothing was dialled, so end the session too. Otherwise it stays
+            // live: the SMS window keeps listening for a payment that never
+            // happened, and the next scan is refused as "already in progress".
+            FlowpayApplication.from(this)?.paymentSessionManager
+                ?.onDialFailed("Could not start the payment call")
             showError("Failed to initiate USSD call: ${e.message}")
         }
     }
@@ -657,7 +662,7 @@ class QRScannerActivity : ComponentActivity() {
             }
 
             // The user explicitly aborted: mark the session row CANCELLED so
-            // it doesn't linger PENDING and later surface as UNVERIFIED.
+            // it doesn't linger PENDING waiting for a payment nobody made.
             FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
 
             // Show termination message briefly
@@ -927,6 +932,16 @@ class QRScannerActivity : ComponentActivity() {
             // FIX: Reset processing flags
             isProcessingQRCode = false
             hasDialedUSSD = false
+
+            // Leaving this screen with a payment still in flight (system back,
+            // recents swipe) abandons it — end the session so the SMS window
+            // closes with it and the next scan isn't refused as "already in
+            // progress". A no-op once the session reached a terminal state,
+            // and `isFinishing` keeps a config change from cancelling a live
+            // payment.
+            if (isFinishing) {
+                FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
+            }
 
             // Wipe the payee VPA from the clipboard now the flow is over.
             clearVpaClipboard()

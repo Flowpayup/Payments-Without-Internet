@@ -13,9 +13,9 @@ known simplifications are deliberate.
 call state or call duration.** Everything below serves this. A dialed call
 that connects and ends "normally" proves nothing; only the bank's own
 confirmation SMS, matched to the amount that was sent, promotes a payment to
-SUCCESS. When no SMS arrives before the deadline, the payment ends
-`UNVERIFIED` — visibly distinct from both success and failure, never
-silently assumed either way.
+SUCCESS. When no SMS arrives before the deadline, the attempt is discarded
+and nothing is shown — an outcome the bank never confirmed is not one this
+app can report on, and it is never silently assumed either way.
 
 ## Composition root
 
@@ -61,24 +61,29 @@ Initiating ──OFFHOOK──▶ InProgress ──call ends──▶ WaitingFor
        call never started              (onSmsConfirmed)                         │
               │                                                                 ▼
               ▼                              ┌── amount matches ⇒ Success ──────┤
-           Cancelled                         ├── amount mismatch ⇒ NeedsReview  │
-                                             └── failure keyword ⇒ Failed       │
-   no SMS before the 10-minute deadline ⇒ Timeout, and the PENDING row ⇒ UNVERIFIED
+           Cancelled                         ├── amount mismatch ⇒ dropped,     │
+       (PaymentWindowObserver also           │   window stays open for the      │
+        closes the SMS window, so a          │   real confirmation              │
+        later debit can't be adopted         └── failure keyword ⇒ Failed       │
+        onto the cancelled row)                                                 │
+   no SMS before the 10-minute deadline ⇒ Timeout, and the PENDING row is DELETED
                                              │
-                    Timeout is surfaced live: UnverifiedOutcomeObserver
-                    (process-scoped) opens the result screen as UNVERIFIED
+                    Nothing is surfaced: a payment the bank never confirmed
+                    leaves no record. The SMS window outlives the deadline by
+                    30s, so a late-but-genuine confirmation still lands — with
+                    no row to adopt it is saved as a standalone transaction.
 ```
 
 Every terminal transition `join()`s the pending-insert coroutine first, so
 the PENDING row always exists before it's updated. Stale PENDING rows left by
-a killed process are reconciled to `UNVERIFIED` lazily (`reconcileStalePending`
-on app start). If the process died mid-payment and the confirming SMS arrives
-after restart, the ingestion pipeline *reattaches* it: the session txnId is
-persisted in the operation window at `begin()`, and a no-live-session
-confirmation updates that row (PENDING or already-expired UNVERIFIED) instead
-of inserting a duplicate. The QR flow runs through the same session lifecycle
-(PENDING row, deadline, UNVERIFIED) — it used to bypass it entirely, leaving
-no trace when no SMS arrived. The `PaymentState` sealed hierarchy carries
+a killed process are discarded lazily (`reconcileStalePending` on app start).
+If the process died mid-payment and the confirming SMS arrives after restart,
+the ingestion pipeline *reattaches* it: the session txnId is persisted in the
+operation window at `begin()`, and a no-live-session confirmation updates that
+still-PENDING row instead of inserting a duplicate. Adoption is guarded to
+PENDING rows in SQL, so a confirmation can never rewrite a row the user
+already cancelled. The QR flow runs through the same session lifecycle — it
+used to bypass it entirely. The `PaymentState` sealed hierarchy carries
 exactly the states the machine emits — dead QR/retry variants were removed so
 the type reflects reality.
 
@@ -227,10 +232,16 @@ Honest about what isn't consolidated, and why:
   blind Compose rewrite of a payment-outcome screen that can't be
   device-tested isn't worth the regression risk for pattern purity alone.
 - The **permissive SMS matcher** is intentional — banks phrase confirmations
-  inconsistently, and the downstream tiers (`NeedsReview` on amount mismatch,
-  `Failed` on a failure keyword) are the safety net that keeps permissiveness
-  from ever producing a false SUCCESS. It is permissive, not naive: body
+  inconsistently, and the downstream tiers (a debit with a mismatched amount
+  is dropped outright — it isn't this payment's confirmation, and the
+  operation window stays open for the real one; `Failed` on a failure
+  keyword) are the safety net that keeps permissiveness from ever producing
+  a false SUCCESS. It is permissive, not naive: body
   keywords match on word boundaries (with "YES"/"BOB" requiring the full bank
   phrase so promo SMS can't enter the pipeline), amount comparison is
   paise-exact, and extraction skips balance figures ("Avl Bal Rs …") in
   favour of the transaction amount. Growing the test corpus is the guardrail.
+  Direction is read debit-first: many banks narrate both sides of one payment
+  ("A/c XX556 debited for Rs 500; KIRANA STORE credited"), and taking such a
+  body for an incoming credit would make the pipeline drop our own
+  confirmation as unrelated.
