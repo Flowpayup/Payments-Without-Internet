@@ -9,6 +9,17 @@ run once per release against real hardware before publishing.
 This is deliberately manual and deliberately honest about being manual:
 no CI can dial a real Indian SIM.
 
+This is the **only** device gate — it absorbed the former `DEVICE_QA.md`, so
+there is one list to work through rather than two overlapping ones. The
+outcome-surface items below can be driven without a SIM using the debug
+SMS-injection tool; see the money-path scenarios in
+[TESTING.md](TESTING.md#money-path-scenarios-worth-re-running). Only the
+`*99#`, real-₹1, and QR items genuinely require a live UPI-linked SIM.
+
+If an item can't be run on the hardware you have, leave it unchecked and say
+so in the release notes. An unchecked box is information; a checked box that
+wasn't actually verified is a lie the next maintainer inherits.
+
 ## Prerequisites
 
 - A physical Android device, API 29+, with an Indian SIM in slot 1 (dual-SIM
@@ -48,9 +59,50 @@ no CI can dial a real Indian SIM.
       permissions listed in `AndroidManifest.xml` (phone, SMS, camera,
       overlay, contacts) and that each request has a clear, contextual
       trigger — no permission requested before it's needed.
-- [ ] **No new lint/detekt findings** and `./gradlew test :app:lintDebug detekt`
-      is green on the exact commit being released (should already be true
-      from CI, but re-confirm on the release commit specifically).
+- [ ] **No new lint/detekt findings** and
+      `./gradlew test :app:lintDebug detekt koverVerify` is green on the exact
+      commit being released (should already be true from CI, but re-confirm on
+      the release commit specifically).
+
+## Outcome surfaces
+
+- [ ] **An unconfirmed payment surfaces nothing.** Start a payment, let the
+      call end normally, and never send the confirmation SMS (with the debug
+      tool: run `START_OPERATION` and simply don't inject). At the verification
+      deadline there must be **no** result screen and **no** notification, and
+      the row must be gone from Transaction History — no `PENDING` row left
+      behind, and certainly no green "Payment Successful".
+
+      This is the visible half of the *no confirmation, no record* rule: a
+      payment the bank never confirmed is one the app cannot report on, so it
+      leaves no trace rather than an outcome the user can't act on. The app
+      used to show an `UNVERIFIED` "No Confirmation Received" screen here; if
+      you see one, this rule has regressed. (Rows written by older builds still
+      render as `UNVERIFIED` in history by design — that is not a regression.)
+
+- [ ] **A late-but-genuine confirmation still lands.** The SMS operation window
+      deliberately outlives the verification deadline by 30 seconds. Inject a
+      matching confirmation just after the deadline: it must be recorded as a
+      standalone transaction rather than dropped.
+
+## Hardware-only behavior
+
+These need a real device and can't be reproduced on an emulator — OEM audio
+routing, overlays over the system dialer, and real clipboard behavior.
+
+- [ ] **"Call volume lowered" pill is truthful.** During a 123Pay call the pill
+      appears only after the volume is actually lowered; if the volume change
+      fails, the pill stays hidden.
+- [ ] **Ringer/notifications survive a payment.** Across a full payment
+      (including via the notification-listener fallback), the phone's ring and
+      notification volumes are unchanged, and the in-call volume is restored
+      when the call ends. Only `CallManager` should ever touch call audio.
+- [ ] **VPA clipboard is wiped.** After a QR payment flow ends, the payee VPA
+      is no longer on the clipboard (paste into a notes app to confirm). On
+      Android 13+, verify the clip was flagged sensitive during the flow.
+- [ ] **Clear App Data empties history.** Make a few payments, then
+      Settings → Clear App Data; after relaunch, Transaction History is empty
+      and the app returns to Setup.
 
 ## After the checklist
 
