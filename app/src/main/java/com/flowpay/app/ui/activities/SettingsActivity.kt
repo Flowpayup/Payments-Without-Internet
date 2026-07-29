@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.flowpay.app.BuildConfig
 import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.R
 import com.flowpay.app.SetupActivity
@@ -401,7 +402,9 @@ fun SettingsScreen(
                         SettingsRow(
                             icon = Icons.Default.Info,
                             title = "Version",
-                            value = "1.0.0"
+                            // Read from the build, never hardcoded: this row
+                            // once said "1.0.0" while the app shipped as 2.1.0.
+                            value = BuildConfig.VERSION_NAME
                         )
                         GroupDivider()
                         SettingsRow(
