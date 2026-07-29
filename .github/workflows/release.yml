@@ -37,7 +37,11 @@ jobs:
         run: ./gradlew test --no-daemon --stacktrace
 
       - name: Assemble release APK (unsigned)
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        # -PallowUnsigned is REQUIRED here and must not be removed: the
+        # packageRelease guard in app/build.gradle.kts fails any release build
+        # that would be silently unsigned, and CI deliberately holds no
+        # keystore. Without the flag this step fails on every tag.
+        run: ./gradlew assembleRelease -PallowUnsigned --no-daemon --stacktrace
 
       - name: Generate checksums
         run: |
