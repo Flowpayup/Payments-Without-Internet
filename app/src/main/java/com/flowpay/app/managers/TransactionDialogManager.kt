@@ -6,14 +6,8 @@ package com.flowpay.app.managers
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.WindowManager
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import com.flowpay.app.R
 
@@ -66,8 +60,8 @@ class TransactionDialogManager(
                 .prepareForOverlayDisplay()
                 .show()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to show transaction cancelled dialog: ${e.message}")
-            Toast.makeText(context, "Transaction cancelled", Toast.LENGTH_LONG).show()
+            Log.e(TAG, "Failed to show transaction cancelled dialog", e)
+            Toast.makeText(context, R.string.toast_payment_cancelled, Toast.LENGTH_LONG).show()
             onAnyDismiss?.invoke()
         }
     }
@@ -89,69 +83,16 @@ class TransactionDialogManager(
                 .prepareForOverlayDisplay()
                 .show()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to show transaction cancelled by user dialog: ${e.message}")
-            Toast.makeText(context, "The transaction was cancelled", Toast.LENGTH_LONG).show()
+            Log.e(TAG, "Failed to show transaction cancelled by user dialog", e)
+            Toast.makeText(context, R.string.toast_payment_cancelled, Toast.LENGTH_LONG).show()
             onAnyDismiss?.invoke()
         }
     }
 
-    /**
-     * Show dialog when the bank SMS confirms the transaction
-     */
-    fun showTransactionCompleted() {
-        try {
-            // Create custom dialog with Flowpay design
-            val dialogBuilder = AlertDialog.Builder(context)
-            val inflater = LayoutInflater.from(context)
-            val dialogView = inflater.inflate(R.layout.dialog_transaction_success, null)
-
-            val dialog = dialogBuilder
-                .setView(dialogView)
-                .setCancelable(false)
-                .create()
-                .prepareForOverlayDisplay()
-
-            // Make dialog background transparent and rounded
-            dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-            val successIcon = dialogView.findViewById<ImageView>(R.id.iv_success_icon)
-            successIcon?.setImageResource(R.drawable.ic_success_check)
-            successIcon?.setColorFilter(context.getColor(R.color.white))
-
-            val titleText = dialogView.findViewById<TextView>(R.id.tv_success_title)
-            titleText?.text = context.getString(R.string.dialog_success_title)
-
-            val messageText = dialogView.findViewById<TextView>(R.id.tv_success_message)
-            messageText?.text = context.getString(R.string.dialog_success_message)
-
-            val doneButton = dialogView.findViewById<Button>(R.id.btn_done)
-            doneButton?.setOnClickListener {
-                dialog.dismiss()
-                dismissed("Transaction completed")
-            }
-
-            dialog.show()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to show transaction completed dialog: ${e.message}")
-            try {
-                AlertDialog.Builder(context)
-                    .setTitle(context.getString(R.string.dialog_success_title))
-                    .setMessage(context.getString(R.string.dialog_success_message))
-                    .setPositiveButton(context.getString(R.string.action_great)) { dialog, _ ->
-                        dialog.dismiss()
-                        dismissed("Transaction completed (fallback)")
-                    }
-                    .setCancelable(false)
-                    .create()
-                    .prepareForOverlayDisplay()
-                    .show()
-            } catch (e2: Exception) {
-                Log.e(TAG, "Failed to show fallback dialog: ${e2.message}")
-                Toast.makeText(context, "Transaction completed successfully!", Toast.LENGTH_LONG).show()
-                onAnyDismiss?.invoke()
-            }
-        }
-    }
+    // There is deliberately no success dialog here. PaymentResultActivity —
+    // launched by the SMS ingestion pipeline, and backed by a notification
+    // when the direct launch is blocked — is the only success surface, so a
+    // second one from this service would either duplicate it or race it.
 
     /**
      * Show dialog when the bank SMS reports the transaction failed
@@ -170,8 +111,8 @@ class TransactionDialogManager(
                 .prepareForOverlayDisplay()
                 .show()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to show transaction failed dialog: ${e.message}")
-            Toast.makeText(context, "Transaction failed. Please try again.", Toast.LENGTH_LONG).show()
+            Log.e(TAG, "Failed to show transaction failed dialog", e)
+            Toast.makeText(context, R.string.toast_payment_failed, Toast.LENGTH_LONG).show()
             onAnyDismiss?.invoke()
         }
     }
@@ -195,30 +136,8 @@ class TransactionDialogManager(
                 .prepareForOverlayDisplay()
                 .show()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to show awaiting confirmation dialog: ${e.message}")
-            Toast.makeText(context, "Request sent — waiting for bank confirmation", Toast.LENGTH_LONG).show()
-        }
-    }
-
-    /**
-     * Show a custom dialog with specific title and message
-     */
-    fun showCustomDialog(title: String, message: String, positiveButton: String = "OK") {
-        try {
-            AlertDialog.Builder(context)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton(positiveButton) { dialog, _ ->
-                    dialog.dismiss()
-                    Log.d(TAG, "Custom dialog dismissed: $title")
-                }
-                .setCancelable(false)
-                .create()
-                .prepareForOverlayDisplay()
-                .show()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to show custom dialog: ${e.message}")
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            Log.e(TAG, "Failed to show awaiting confirmation dialog", e)
+            Toast.makeText(context, R.string.toast_awaiting_confirmation, Toast.LENGTH_LONG).show()
         }
     }
 }

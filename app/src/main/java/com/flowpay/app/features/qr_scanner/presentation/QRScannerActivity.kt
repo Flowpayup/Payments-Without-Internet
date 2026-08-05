@@ -289,8 +289,8 @@ class QRScannerActivity : ComponentActivity() {
             Log.d("QRScanner", "Starting permission check...")
             checkPermissionsAndStartCamera()
         } catch (e: Exception) {
-            Log.e("QRScanner", "Error in onCreate: ${e.message}", e)
-            Toast.makeText(this, "Failed to initialize QR scanner: ${e.message}", Toast.LENGTH_LONG).show()
+            Log.e("QRScanner", "Error in onCreate", e)
+            Toast.makeText(this, R.string.error_qr_scanner_init, Toast.LENGTH_LONG).show()
             setResult(RESULT_ERROR)
             finish()
         }
@@ -396,16 +396,16 @@ class QRScannerActivity : ComponentActivity() {
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("QRScanner", "Error in camera setup: ${e.message}", e)
+                    Log.e("QRScanner", "Error in camera setup", e)
                     runOnUiThread {
                         if (!isActivityAlive()) return@runOnUiThread
-                        Toast.makeText(this, "Camera setup failed: ${e.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, R.string.error_camera_setup, Toast.LENGTH_LONG).show()
                     }
                 }
             }, ContextCompat.getMainExecutor(this))
         } catch (e: Exception) {
-            Log.e("QRScanner", "Failed to start camera: ${e.message}", e)
-            Toast.makeText(this, "Failed to start camera: ${e.message}", Toast.LENGTH_LONG).show()
+            Log.e("QRScanner", "Failed to start camera", e)
+            Toast.makeText(this, R.string.error_camera_setup, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -985,8 +985,8 @@ class QRScannerActivity : ComponentActivity() {
                         )
                     }
                 } catch (e: Exception) {
-                    Log.e("QRScanner", "Failed to resume scanning: ${e.message}", e)
-                    Toast.makeText(this, "Failed to resume scanning. Please restart the app.", Toast.LENGTH_LONG).show()
+                    Log.e("QRScanner", "Failed to resume scanning", e)
+                    Toast.makeText(this, R.string.error_qr_resume_failed, Toast.LENGTH_LONG).show()
                 }
             }, 3000)
         }

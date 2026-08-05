@@ -16,6 +16,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
+import com.flowpay.app.R
 import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.payment.Upi123CallStringBuilder
@@ -342,11 +343,11 @@ class CallManager(private val context: Context) {
             true
         } catch (e: SecurityException) {
             Log.e(TAG, "Security exception while initiating call", e)
-            Toast.makeText(context, "Permission denied: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, R.string.error_call_permission_denied, Toast.LENGTH_SHORT).show()
             false
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error while initiating UPI123 call", e)
-            Toast.makeText(context, "Failed to initiate call. Please try again.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, R.string.error_call_failed, Toast.LENGTH_SHORT).show()
             false
         }
     }
@@ -389,11 +390,11 @@ class CallManager(private val context: Context) {
                 true
             } catch (e: SecurityException) {
                 Log.e(TAG, "Security exception while muting audio", e)
-                Toast.makeText(context, "Permission required to control audio", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.error_audio_permission, Toast.LENGTH_SHORT).show()
                 false
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to mute call audio", e)
-                Toast.makeText(context, "Failed to mute audio: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.error_audio_lower_failed, Toast.LENGTH_SHORT).show()
                 false
             }
         }
@@ -436,11 +437,11 @@ class CallManager(private val context: Context) {
                 true
             } catch (e: SecurityException) {
                 Log.e(TAG, "Security exception while restoring audio", e)
-                Toast.makeText(context, "Permission required to control audio", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.error_audio_permission, Toast.LENGTH_SHORT).show()
                 false
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to restore call audio", e)
-                Toast.makeText(context, "Failed to restore audio: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.error_audio_restore_failed, Toast.LENGTH_SHORT).show()
                 false
             }
         }
