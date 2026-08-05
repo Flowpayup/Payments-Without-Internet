@@ -1,11 +1,14 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import com.flowpay.app.constants.PermissionConstants
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,14 +18,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -34,7 +37,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flowpay.app.ui.theme.FlowpayTheme
+import com.flowpay.app.constants.PermissionConstants
+import com.flowpay.app.helpers.SetupHelper
+import com.flowpay.app.helpers.TestConfigurationHelper
+import com.flowpay.app.managers.CallType
+import com.flowpay.app.ui.dialogs.Upi123ProgressDialog
+import com.flowpay.app.ui.dialogs.UssdProgressDialog
 import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.FlowpayAccentGreen
 import com.flowpay.app.ui.theme.FlowpayDarkGray
@@ -45,17 +53,8 @@ import com.flowpay.app.ui.theme.FlowpaySurfaceDim
 import com.flowpay.app.ui.theme.FlowpayTextGray
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.FlowpayTextPale
+import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
-import com.flowpay.app.FlowpayApplication
-import com.flowpay.app.data.SettingsRepository
-import androidx.compose.runtime.CompositionLocalProvider
-import com.flowpay.app.R
-import com.flowpay.app.helpers.TestConfigurationHelper
-import com.flowpay.app.managers.CallType
-import com.flowpay.app.ui.dialogs.UssdProgressDialog
-import com.flowpay.app.ui.dialogs.Upi123ProgressDialog
-import android.widget.Toast
-import com.flowpay.app.helpers.SetupHelper
 import kotlinx.coroutines.delay
 
 class TestConfigurationActivity : ComponentActivity() {
@@ -73,73 +72,78 @@ class TestConfigurationActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Initialize test helper
-        testHelper = TestConfigurationHelper(this, object : TestConfigurationHelper.UICallback {
-            override fun showToast(message: String) {
-                runOnUiThread { android.widget.Toast.makeText(this@TestConfigurationActivity, message, android.widget.Toast.LENGTH_LONG).show() }
-            }
+        testHelper = TestConfigurationHelper(
+            this,
+            object : TestConfigurationHelper.UICallback {
+                override fun showToast(message: String) {
+                    runOnUiThread {
+                        android.widget.Toast.makeText(this@TestConfigurationActivity, message, android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
 
-            override fun updateUssdTesting(isTesting: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateUssdTesting(isTesting: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateUssdDialog(show: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateUssdDialog(show: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateUssdTestCompleted(completed: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateUssdTestCompleted(completed: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateUpi123Testing(isTesting: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateUpi123Testing(isTesting: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateUpi123TestCompleted(completed: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateUpi123TestCompleted(completed: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateUpi123Dialog(show: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateUpi123Dialog(show: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateUpi123ConfigurationOptions(show: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateUpi123ConfigurationOptions(show: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateVoiceTesting(isTesting: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateVoiceTesting(isTesting: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateVoiceDialog(show: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateVoiceDialog(show: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateVoiceTestCompleted(completed: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateVoiceTestCompleted(completed: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateCallCompleteButton(show: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateCallCompleteButton(show: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateUssdProgressMessage(message: String) {
-                // State will be managed by the composable
-            }
+                override fun updateUssdProgressMessage(message: String) {
+                    // State will be managed by the composable
+                }
 
-            override fun updateUssdConfigurationOptions(show: Boolean) {
-                // State will be managed by the composable
-            }
+                override fun updateUssdConfigurationOptions(show: Boolean) {
+                    // State will be managed by the composable
+                }
 
-            override fun navigateToMain() {
-                val intent = Intent(this@TestConfigurationActivity, MainActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
+                override fun navigateToMain() {
+                    val intent = Intent(this@TestConfigurationActivity, MainActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
 
-            override fun requestPhonePermissions() {
-                phonePermissionLauncher.launch(PermissionConstants.PHONE_PERMISSIONS)
+                override fun requestPhonePermissions() {
+                    phonePermissionLauncher.launch(PermissionConstants.PHONE_PERMISSIONS)
+                }
             }
-        })
+        )
 
         // Initialize the helper
         testHelper.initialize()
@@ -366,8 +370,11 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
                         }
                     )
                     .then(
-                        if (canContinue) Modifier.clickable { testHelper.continueToMain() }
-                        else Modifier
+                        if (canContinue) {
+                            Modifier.clickable { testHelper.continueToMain() }
+                        } else {
+                            Modifier
+                        }
                     ),
                 contentAlignment = Alignment.Center
             ) {

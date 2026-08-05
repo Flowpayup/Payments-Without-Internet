@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.ui.activities
 
 import android.os.Bundle
@@ -34,9 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.R
-import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.ui.components.TransactionDetailDialog
 import com.flowpay.app.ui.theme.BlueAccentTheme
@@ -50,7 +51,9 @@ import com.flowpay.app.ui.theme.statusColor
 import com.flowpay.app.viewmodel.TransactionViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 // Utility functions
 fun formatAmount(amount: Double): String {
@@ -80,7 +83,7 @@ fun statusLabelRes(status: String): Int = when (status.uppercase()) {
 
 private fun isSameDay(c1: Calendar, c2: Calendar): Boolean =
     c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) &&
-    c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)
+        c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)
 
 class TransactionHistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -234,8 +237,11 @@ fun TransactionHistoryScreen(
                                 .size(36.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (showSearchBar) Color.White.copy(alpha = 0.35f)
-                                    else Color.White.copy(alpha = 0.22f)
+                                    if (showSearchBar) {
+                                        Color.White.copy(alpha = 0.35f)
+                                    } else {
+                                        Color.White.copy(alpha = 0.22f)
+                                    }
                                 )
                                 .clickable(
                                     indication = null,
@@ -389,16 +395,22 @@ fun TransactionHistoryScreen(
                                 }
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = if (searchQuery.isNotEmpty())
-                                        "No matching transactions" else "No transactions yet",
+                                    text = if (searchQuery.isNotEmpty()) {
+                                        "No matching transactions"
+                                    } else {
+                                        "No transactions yet"
+                                    },
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color.White
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = if (searchQuery.isNotEmpty())
-                                        "Try a different search" else "Transactions will appear here",
+                                    text = if (searchQuery.isNotEmpty()) {
+                                        "Try a different search"
+                                    } else {
+                                        "Transactions will appear here"
+                                    },
                                     fontSize = 13.sp,
                                     color = FlowpayTextLightGray
                                 )

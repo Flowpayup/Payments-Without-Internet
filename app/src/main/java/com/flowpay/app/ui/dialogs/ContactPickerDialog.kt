@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.ui.dialogs
 
 import android.content.ContentResolver
@@ -84,7 +87,7 @@ fun ContactPickerDialog(
         } else {
             contacts.filter { contact ->
                 contact.name.contains(searchQuery, ignoreCase = true) ||
-                contact.phoneNumber.contains(searchQuery)
+                    contact.phoneNumber.contains(searchQuery)
             }
         }
     }
@@ -125,8 +128,8 @@ fun ContactPickerDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
-                    placeholder = { 
-                        Text(stringResource(R.string.contacts_search_hint), color = FlowpayTextGray) 
+                    placeholder = {
+                        Text(stringResource(R.string.contacts_search_hint), color = FlowpayTextGray)
                     },
                     leadingIcon = {
                         Icon(
@@ -165,8 +168,11 @@ fun ContactPickerDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (searchQuery.isEmpty()) "No contacts found" 
-                                   else "No matches for \"$searchQuery\"",
+                            text = if (searchQuery.isEmpty()) {
+                                "No contacts found"
+                            } else {
+                                "No matches for \"$searchQuery\""
+                            },
                             color = FlowpayTextGray,
                             fontSize = 16.sp
                         )
@@ -274,7 +280,7 @@ suspend fun loadContacts(contentResolver: ContentResolver): List<Contact> = with
         ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
         ContactsContract.CommonDataKinds.Phone.NUMBER
     )
-    
+
     val cursor: Cursor? = contentResolver.query(
         ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
         projection,
@@ -282,7 +288,7 @@ suspend fun loadContacts(contentResolver: ContentResolver): List<Contact> = with
         null,
         "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC"
     )
-    
+
     cursor?.use {
         val idColumn = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
         val nameColumn = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
@@ -290,24 +296,23 @@ suspend fun loadContacts(contentResolver: ContentResolver): List<Contact> = with
         if (idColumn < 0 || nameColumn < 0 || numberColumn < 0) {
             return@withContext emptyList()
         }
-        
+
         while (it.moveToNext()) {
             val id = it.getString(idColumn)
             val name = it.getString(nameColumn) ?: "Unknown"
             val number = it.getString(numberColumn) ?: ""
-            
+
             // Clean the phone number (remove spaces, dashes, brackets, etc.)
             val cleanedNumber = number.replace(Regex("[^0-9+]"), "")
                 .replace("+91", "") // Remove country code
                 .takeLast(10) // Get last 10 digits for Indian numbers
-            
+
             if (cleanedNumber.length == 10) {
                 contactsList.add(Contact(id, name, cleanedNumber))
             }
         }
     }
-    
+
     // Remove duplicates based on phone number
     contactsList.distinctBy { it.phoneNumber }
 }
-

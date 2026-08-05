@@ -55,7 +55,8 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@drawable/ic_check_circle"
-                android:tint="@color/flowpay_green" />
+                android:tint="@color/flowpay_green"
+                android:importantForAccessibility="no" />
             
             <TextView
                 android:layout_width="wrap_content"
@@ -228,7 +229,8 @@
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:src="@drawable/ic_volume_off"
-                android:tint="@color/overlay_alert_red" />
+                android:tint="@color/overlay_alert_red"
+                android:importantForAccessibility="no" />
             
             <TextView
                 android:id="@+id/instructionText"

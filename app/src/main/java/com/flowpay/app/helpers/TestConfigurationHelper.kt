@@ -1,15 +1,13 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.helpers
 
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.widget.Toast
-import androidx.core.content.ContextCompat
-import com.flowpay.app.MainActivity
 import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.data.TestResults
 import com.flowpay.app.data.TestResultsManager
@@ -37,7 +35,7 @@ class TestConfigurationHelper(
     private val mainHandler = Handler(Looper.getMainLooper())
     private var ussdTimeoutRunnable: Runnable? = null
     private var upi123ConfigDelayRunnable: Runnable? = null
-    
+
     // Test state variables
     private var currentTestingType: CallType? = null
     private var ussdTesting = false
@@ -77,7 +75,6 @@ class TestConfigurationHelper(
         /** Launch the phone-permission request (Activity owns the launcher). */
         fun requestPhonePermissions()
     }
-    
 
     /**
      * Initialize all managers
@@ -133,14 +130,14 @@ class TestConfigurationHelper(
             uiCallback.requestPhonePermissions()
             return
         }
-        
+
         val number = when (callType) {
             CallType.USSD -> "*99#"
             CallType.VOICE -> "1234567890"
             CallType.UPI123 -> "1234567890" // This should not be used anymore
             CallType.MANUAL_TRANSFER -> "1234567890"
         }
-        
+
         // Update UI state
         when (callType) {
             CallType.USSD -> {
@@ -173,14 +170,14 @@ class TestConfigurationHelper(
                 return
             }
         }
-        
+
         currentTestingType = callType
-        
+
         // For USSD, start the 25-second timeout
         if (callType == CallType.USSD) {
             startUssdTimeout() // Start 25-second timeout
         }
-        
+
         callManager.initiateCall(
             context = context,
             phoneNumber = number,
@@ -233,7 +230,7 @@ class TestConfigurationHelper(
         upi123ConfigDelayRunnable?.let { mainHandler.removeCallbacks(it) }
         upi123ConfigDelayRunnable = null
     }
-    
+
     /**
      * Start 25-second timeout for USSD setup
      */
@@ -294,18 +291,18 @@ class TestConfigurationHelper(
         uiCallback.updateUpi123Dialog(false)
         uiCallback.updateUpi123ConfigurationOptions(false)
     }
-    
+
     /**
      * Handle USSD configuration confirmation
      */
     fun handleUssdConfigurationConfirmation(configured: Boolean) {
         Log.d(TAG, "USSD configuration confirmation: $configured")
         cancelUssdTimeout()
-        
+
         showUssdConfigurationOptions = false
         showUssdDialog = false
         ussdTesting = false
-        
+
         if (configured) {
             SetupHelper.setUserReportedUssdNotWorking(context, false)
             ussdTestCompleted = true
@@ -317,23 +314,23 @@ class TestConfigurationHelper(
         } else {
             uiCallback.showToast("USSD setup not completed - you can try again")
         }
-        
+
         uiCallback.updateUssdConfigurationOptions(false)
         uiCallback.updateUssdDialog(false)
         uiCallback.updateUssdTesting(false)
     }
-    
+
     /**
      * Handle UPI123 configuration confirmation
      */
     fun handleUpi123ConfigurationConfirmation(configured: Boolean) {
         Log.d(TAG, "UPI123 configuration confirmation: $configured")
         cancelUpi123ConfigDelay()
-        
+
         showUpi123ConfigurationOptions = false
         showUpi123Dialog = false
         upi123Testing = false
-        
+
         if (configured) {
             upi123TestCompleted = true
             showCallCompleteButton = true
@@ -344,25 +341,27 @@ class TestConfigurationHelper(
         } else {
             uiCallback.showToast("UPI123 setup not completed. You can try again later.")
         }
-        
+
         uiCallback.updateUpi123ConfigurationOptions(false)
         uiCallback.updateUpi123Dialog(false)
         uiCallback.updateUpi123Testing(false)
     }
-    
-    
+
     /**
      * Initiate UPI123 test - simplified flow - show dialog when call ends
      */
     fun initiateUpi123Test() {
-        Log.d(TAG, "initiateUpi123Test called - upi123TestCompleted: $upi123TestCompleted, upi123Testing: $upi123Testing")
+        Log.d(
+            TAG,
+            "initiateUpi123Test called - upi123TestCompleted: $upi123TestCompleted, upi123Testing: $upi123Testing"
+        )
         if (!upi123TestCompleted && !upi123Testing) {
             Log.d(TAG, "Starting UPI123 test")
             upi123Testing = true
             showUpi123Dialog = true
             uiCallback.updateUpi123Testing(true)
             uiCallback.updateUpi123Dialog(true)
-            
+
             // Initiate UPI123 call - simple flow
             callManager.initiateCall(
                 context = context,
@@ -371,11 +370,11 @@ class TestConfigurationHelper(
                 onCallEnded = { type ->
                     if (type == CallType.UPI123 && upi123Testing) {
                         Log.d(TAG, "UPI123 call ended - showing configuration dialog after 2 second delay")
-                        
+
                         // Stop testing state
                         upi123Testing = false
                         uiCallback.updateUpi123Testing(false)
-                        
+
                         cancelUpi123ConfigDelay()
                         upi123ConfigDelayRunnable = Runnable {
                             upi123ConfigDelayRunnable = null
@@ -420,13 +419,13 @@ class TestConfigurationHelper(
     fun skipTests() {
         // Save current test results before continuing
         saveTestResults(ussdTestCompleted, upi123TestCompleted)
-        
+
         // Mark test configuration as completed even when skipped
         val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         sharedPreferences.edit()
             .putBoolean("test_configuration_completed", true)
             .apply()
-        
+
         uiCallback.navigateToMain()
     }
 
@@ -436,13 +435,13 @@ class TestConfigurationHelper(
     fun continueToMain() {
         // Save test results before continuing
         saveTestResults(ussdTestCompleted, upi123TestCompleted)
-        
+
         // Mark test configuration as completed
         val sharedPreferences = context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
         sharedPreferences.edit()
             .putBoolean("test_configuration_completed", true)
             .apply()
-        
+
         uiCallback.navigateToMain()
     }
 
@@ -463,7 +462,7 @@ class TestConfigurationHelper(
             SetupHelper.hasUserReportedUssdNotWorking(context)
         return (ussdTestCompleted || ussdWaived) && upi123TestCompleted
     }
-    
+
     /**
      * Get current test states
      */
@@ -484,7 +483,7 @@ class TestConfigurationHelper(
             showUpi123ConfigurationOptions = showUpi123ConfigurationOptions
         )
     }
-    
+
     /**
      * Data class for test states
      */

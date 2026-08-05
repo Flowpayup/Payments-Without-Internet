@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.receivers
 
 import android.app.NotificationChannel
@@ -8,6 +11,7 @@ import android.content.Intent
 import android.util.Log
 import com.flowpay.app.R
 import com.flowpay.app.data.TransactionStatus
+import com.flowpay.app.utils.CurrencyFormat
 
 /**
  * Posts a payment outcome as a high-priority notification.
@@ -47,7 +51,8 @@ object PaymentResultNotifier {
             val amount = resultIntent.getStringExtra("amount") ?: ""
             val bank = resultIntent.getStringExtra("bank_name") ?: ""
             val title = context.getString(statusTitleRes(status))
-            val text = listOf("₹$amount", bank).filter { it.length > 1 }.joinToString(" — ")
+            val text = listOf("₹${CurrencyFormat.inr(amount)}", bank)
+                .filter { it.length > 1 }.joinToString(" — ")
 
             val contentIntent = PendingIntent.getActivity(
                 context,

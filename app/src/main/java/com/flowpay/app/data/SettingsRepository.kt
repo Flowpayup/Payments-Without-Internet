@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 // =====================================
 // 1. SettingsRepository.kt
 // =====================================
@@ -15,10 +18,10 @@ class SettingsRepository(private val context: Context) {
         "flowpay_settings",
         Context.MODE_PRIVATE
     )
-    
+
     private val _settingsFlow = MutableStateFlow(loadSettings())
     val settingsFlow: StateFlow<SavedSettings> = _settingsFlow.asStateFlow()
-    
+
     data class SavedSettings(
         val bankId: String = "hdfc",
         val ussdTimeout: Int = 30,
@@ -29,7 +32,7 @@ class SettingsRepository(private val context: Context) {
         val setupCompleted: Boolean = false,
         val testConfigCompleted: Boolean = false
     )
-    
+
     fun saveSettings(settings: SavedSettings) {
         prefs.edit {
             putString("bank_id", settings.bankId)
@@ -43,7 +46,7 @@ class SettingsRepository(private val context: Context) {
         }
         _settingsFlow.value = settings
     }
-    
+
     private fun loadSettings(): SavedSettings {
         return SavedSettings(
             bankId = prefs.getString("bank_id", "hdfc") ?: "hdfc",
@@ -56,12 +59,12 @@ class SettingsRepository(private val context: Context) {
             testConfigCompleted = prefs.getBoolean("test_config_completed", false)
         )
     }
-    
+
     fun clearAllData() {
         prefs.edit { clear() }
         _settingsFlow.value = SavedSettings()
     }
-    
+
     fun resetToDefaults() {
         saveSettings(SavedSettings())
     }

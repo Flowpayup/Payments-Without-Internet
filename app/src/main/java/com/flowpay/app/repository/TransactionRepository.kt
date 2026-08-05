@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.repository
 
 import android.content.Context
@@ -17,11 +20,11 @@ class TransactionRepository private constructor(context: Context) :
     com.flowpay.app.payment.PaymentTransactionStore {
 
     private val transactionDao: TransactionDao = AppDatabase.getDatabase(context).transactionDao()
-    
+
     companion object {
         @Volatile
         private var INSTANCE: TransactionRepository? = null
-        
+
         fun getInstance(context: Context): TransactionRepository {
             return INSTANCE ?: synchronized(this) {
                 val instance = TransactionRepository(context.applicationContext)
@@ -30,21 +33,21 @@ class TransactionRepository private constructor(context: Context) :
             }
         }
     }
-    
+
     /**
      * Get all transactions as Flow
      */
     fun getAllTransactions(): Flow<List<Transaction>> {
         return transactionDao.getAllTransactions()
     }
-    
+
     /**
      * Get recent transactions (last 10 by default)
      */
     fun getRecentTransactions(limit: Int = 10): Flow<List<Transaction>> {
         return transactionDao.getRecentTransactions(limit)
     }
-    
+
     /**
      * Get recent transactions as PaymentDetails for UI compatibility
      */
@@ -54,35 +57,35 @@ class TransactionRepository private constructor(context: Context) :
                 transactions.map { it.toPaymentDetails() }
             }
     }
-    
+
     /**
      * Get transactions by status
      */
     fun getTransactionsByStatus(status: String): Flow<List<Transaction>> {
         return transactionDao.getTransactionsByStatus(status)
     }
-    
+
     /**
      * Get transactions by bank
      */
     fun getTransactionsByBank(bankName: String): Flow<List<Transaction>> {
         return transactionDao.getTransactionsByBank(bankName)
     }
-    
+
     /**
      * Search transactions
      */
     fun searchTransactions(query: String): Flow<List<Transaction>> {
         return transactionDao.searchTransactions("%$query%")
     }
-    
+
     /**
      * Get transaction by ID
      */
     suspend fun getTransactionById(transactionId: String): Transaction? {
         return transactionDao.getTransactionById(transactionId)
     }
-    
+
     /**
      * Save a transaction from SimpleTransaction
      */
@@ -90,56 +93,56 @@ class TransactionRepository private constructor(context: Context) :
         val transaction = Transaction.fromSimpleTransaction(simpleTransaction)
         transactionDao.insertTransaction(transaction)
     }
-    
+
     /**
      * Save multiple transactions
      */
     suspend fun saveTransactions(transactions: List<Transaction>) {
         transactionDao.insertTransactions(transactions)
     }
-    
+
     /**
      * Update a transaction
      */
     suspend fun updateTransaction(transaction: Transaction) {
         transactionDao.updateTransaction(transaction)
     }
-    
+
     /**
      * Delete a transaction
      */
     suspend fun deleteTransaction(transaction: Transaction) {
         transactionDao.deleteTransaction(transaction)
     }
-    
+
     /**
      * Delete transaction by ID
      */
     suspend fun deleteTransactionById(transactionId: String) {
         transactionDao.deleteTransactionById(transactionId)
     }
-    
+
     /**
      * Delete all transactions
      */
     suspend fun deleteAllTransactions() {
         transactionDao.deleteAllTransactions()
     }
-    
+
     /**
      * Get transaction count
      */
     suspend fun getTransactionCount(): Int {
         return transactionDao.getTransactionCount()
     }
-    
+
     /**
      * Get total amount of completed transactions
      */
     suspend fun getTotalAmount(): Double? {
         return transactionDao.getTotalAmount()
     }
-    
+
     /**
      * Get transactions within date range
      */
@@ -189,4 +192,3 @@ class TransactionRepository private constructor(context: Context) :
         return transactionDao.deletePending(transactionId)
     }
 }
-

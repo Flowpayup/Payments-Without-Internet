@@ -1,19 +1,25 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.data
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.flowpay.app.data.migrations.Migrations
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 /**
  * Room database for Flowpay app.
  *
- * Schema changes require a hand-written migration in [Migrations] —
- * destructive fallback is deliberately NOT configured, so a missing
- * migration fails fast in development instead of silently erasing the
- * user's payment history in production.
+ * Version 3 is the only schema this codebase has ever produced — the first
+ * commit already declared it — so there are no migrations to carry. The next
+ * schema change must add all four things together: a hand-written `Migration`,
+ * the exported schema JSON the compiler emits for the new version, a
+ * `MigrationTest` against it, and the emulator workflow that runs that test.
+ * Destructive fallback is deliberately NOT configured, so a missing migration
+ * fails fast in development instead of silently erasing payment history in
+ * production.
  *
  * The database is encrypted at rest with SQLCipher. The passphrase is
  * Keystore-wrapped ([DatabaseKeyManager]); existing plaintext installs are
@@ -49,7 +55,6 @@ abstract class AppDatabase : RoomDatabase() {
                         .openHelperFactory(
                             SupportOpenHelperFactory(passphrase.toByteArray(Charsets.UTF_8))
                         )
-                        .addMigrations(*Migrations.ALL)
                         .build()
                     INSTANCE = instance
                     instance

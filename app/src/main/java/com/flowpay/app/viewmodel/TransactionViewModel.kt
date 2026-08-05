@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.viewmodel
 
 import android.app.Application
@@ -6,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowpay.app.data.PaymentDetails
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.repository.TransactionRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -41,10 +45,10 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     // UI State
     private val _recentTransactions = MutableStateFlow<List<PaymentDetails>>(emptyList())
     val recentTransactions: StateFlow<List<PaymentDetails>> = _recentTransactions.asStateFlow()
-    
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-    
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -79,6 +83,13 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                     _recentTransactions.value = transactions
                     _isLoading.value = false
                 }
+            } catch (e: CancellationException) {
+                // Not a failure: this method cancels its own previous job on
+                // every refresh (and refresh runs on each resume), so the
+                // outgoing collector always lands here. Catching it as an
+                // error put "Failed to load transactions: … was cancelled" on
+                // the home screen while the data was loading perfectly well.
+                throw e
             } catch (e: Exception) {
                 _error.value = "Failed to load transactions: ${e.message}"
                 _isLoading.value = false
@@ -94,6 +105,8 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch {
             try {
                 _selectedTransaction.value = repository().getTransactionById(transactionId)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _error.value = "Failed to open transaction: ${e.message}"
             }
@@ -104,35 +117,35 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     fun clearSelectedTransaction() {
         _selectedTransaction.value = null
     }
-    
+
     /**
      * Load all transactions
      */
     fun loadAllTransactions(): Flow<List<Transaction>> {
         return repositoryFlow { it.getAllTransactions() }
     }
-    
+
     /**
      * Search transactions
      */
     fun searchTransactions(query: String): Flow<List<Transaction>> {
         return repositoryFlow { it.searchTransactions(query) }
     }
-    
+
     /**
      * Get transactions by status
      */
     fun getTransactionsByStatus(status: String): Flow<List<Transaction>> {
         return repositoryFlow { it.getTransactionsByStatus(status) }
     }
-    
+
     /**
      * Get transactions by bank
      */
     fun getTransactionsByBank(bankName: String): Flow<List<Transaction>> {
         return repositoryFlow { it.getTransactionsByBank(bankName) }
     }
-    
+
     /**
      * Delete a transaction
      */
@@ -142,12 +155,14 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                 repository().deleteTransaction(transaction)
                 // Reload recent transactions
                 loadRecentTransactions()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _error.value = "Failed to delete transaction: ${e.message}"
             }
         }
     }
-    
+
     /**
      * Delete transaction by ID
      */
@@ -157,12 +172,14 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                 repository().deleteTransactionById(transactionId)
                 // Reload recent transactions
                 loadRecentTransactions()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _error.value = "Failed to delete transaction: ${e.message}"
             }
         }
     }
-    
+
     /**
      * Clear all transactions
      */
@@ -171,19 +188,21 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             try {
                 repository().deleteAllTransactions()
                 _recentTransactions.value = emptyList()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _error.value = "Failed to clear transactions: ${e.message}"
             }
         }
     }
-    
+
     /**
      * Clear error state
      */
     fun clearError() {
         _error.value = null
     }
-    
+
     /**
      * Refresh data
      */
@@ -191,4 +210,3 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
         loadRecentTransactions()
     }
 }
-

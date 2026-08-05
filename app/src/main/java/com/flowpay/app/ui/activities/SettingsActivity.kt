@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 // SettingsActivity.kt
 package com.flowpay.app.ui.activities
 
 import android.Manifest
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -48,7 +50,6 @@ import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.FlowpayAccentGreenBright
 import com.flowpay.app.ui.theme.FlowpayDarkGray
 import com.flowpay.app.ui.theme.FlowpayDisabledGray
-import com.flowpay.app.ui.theme.FlowpayLightGray
 import com.flowpay.app.ui.theme.FlowpayMediumGray
 import com.flowpay.app.ui.theme.FlowpayStatusError
 import com.flowpay.app.ui.theme.FlowpaySurfaceDim
@@ -175,8 +176,10 @@ class SettingsViewModel : androidx.lifecycle.ViewModel() {
             true
         }
         val perms = mapOf(
-            "phone" to (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED),
+            "phone" to (
+                ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
+                ),
             "camera" to (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED),
             "sms" to (ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED),
             "contacts" to (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED),
@@ -328,10 +331,12 @@ fun SettingsScreen(
                             subtitle = "Calls & phone state",
                             granted = state.permissions["phone"] ?: false,
                             onRequest = {
-                                onRequestPermissions(arrayOf(
-                                    Manifest.permission.CALL_PHONE,
-                                    Manifest.permission.READ_PHONE_STATE
-                                ))
+                                onRequestPermissions(
+                                    arrayOf(
+                                        Manifest.permission.CALL_PHONE,
+                                        Manifest.permission.READ_PHONE_STATE
+                                    )
+                                )
                             }
                         )
                         GroupDivider()
@@ -709,70 +714,6 @@ private fun PermissionRow(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun ToggleRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    val accent = LocalFlowpayAccentTheme.current
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Icon
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(accent.primary.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = accent.primary,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Title + subtitle
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
-            )
-            Text(
-                text = subtitle,
-                fontSize = 12.sp,
-                color = FlowpayTextLightGray
-            )
-        }
-
-        // Switch
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = accent.primary,
-                uncheckedThumbColor = FlowpayTextGray,
-                uncheckedTrackColor = FlowpayLightGray,
-                uncheckedBorderColor = Color.Transparent
-            )
-        )
     }
 }
 

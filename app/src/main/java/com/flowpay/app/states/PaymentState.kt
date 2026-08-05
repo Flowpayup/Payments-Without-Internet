@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.states
 
 import java.util.UUID
@@ -7,12 +10,12 @@ import java.util.UUID
  * and clear state transitions for the UPI123 payment system
  */
 sealed class PaymentState {
-    
+
     /**
      * Initial state when no payment is in progress
      */
     object Idle : PaymentState()
-    
+
     /**
      * State when payment is being initiated
      * @param phoneNumber The recipient's phone number
@@ -24,7 +27,7 @@ sealed class PaymentState {
         val amount: String,
         val transactionId: String = UUID.randomUUID().toString()
     ) : PaymentState()
-    
+
     /**
      * State when UPI123 call is in progress
      * @param step Current step in the call process
@@ -40,7 +43,7 @@ sealed class PaymentState {
         val amount: String,
         val transactionId: String
     ) : PaymentState()
-    
+
     /**
      * State when waiting for bank verification call
      * @param timeout Timeout in milliseconds
@@ -54,7 +57,7 @@ sealed class PaymentState {
         val amount: String,
         val transactionId: String
     ) : PaymentState()
-    
+
     /**
      * State when payment is successfully completed
      * @param transactionId Unique transaction identifier
@@ -70,7 +73,7 @@ sealed class PaymentState {
         val bankReference: String? = null,
         val timestamp: Long = System.currentTimeMillis()
     ) : PaymentState()
-    
+
     /**
      * State when payment fails
      * @param error Error message describing the failure
@@ -88,7 +91,7 @@ sealed class PaymentState {
         val transactionId: String,
         val canRetry: Boolean = true
     ) : PaymentState()
-    
+
     /**
      * Terminal state when a bank SMS arrived during the payment but did not
      * match what was sent (e.g. a different amount). The outcome is recorded
@@ -116,7 +119,7 @@ sealed class PaymentState {
         val transactionId: String,
         val reason: String = "User cancelled"
     ) : PaymentState()
-    
+
     /**
      * State when payment is in a timeout scenario
      * @param timeoutType Type of timeout (call, verification, etc.)
