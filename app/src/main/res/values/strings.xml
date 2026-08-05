@@ -19,8 +19,14 @@
     
     <!-- SIM Carriers -->
     
-    <!-- Validation Messages -->
-    <string name="error_amount_above_123pay_cap">Maximum ₹%1$d per payment — the UPI 123Pay IVR does not accept ₹5,000 or more.</string>
+    <!-- Validation Messages. The cap is substituted from
+         AppConstants.UPI123PAY_MAX_AMOUNT rather than written into the
+         sentence, so the number quoted here cannot drift from the number
+         actually enforced. -->
+    <string name="error_amount_above_123pay_cap">Maximum ₹%1$s per payment — the UPI 123Pay IVR rejects anything above this.</string>
+    <string name="error_amount_below_minimum">Minimum ₹%1$s per payment.</string>
+    <string name="error_amount_whole_rupees_only">Enter a whole rupee amount — the IVR cannot dial paise.</string>
+    <string name="error_invalid_service_number">The UPI service number is not valid.</string>
     
     <!-- Overlay Messages -->
     
@@ -39,6 +45,31 @@
     <string name="error_camera_setup">Could not start the camera.</string>
     <string name="error_qr_resume_failed">Scanning stopped. Close the scanner and open it again to retry.</string>
 
+    <!-- Validation and flow errors raised from the helpers -->
+    <string name="error_enter_phone_and_amount">Enter both a phone number and an amount.</string>
+    <string name="error_invalid_phone_number">Enter a valid 10-digit phone number.</string>
+    <string name="error_invalid_amount">Enter a valid amount.</string>
+    <string name="error_phone_permission_required">Flowpay needs phone permissions to place the payment call.</string>
+    <string name="error_payment_not_started">The payment could not be started. Please try again.</string>
+    <string name="error_call_permission_required_ussd">Phone call permission is required to test USSD.</string>
+    <string name="error_call_permission_required_payments">Phone call permission is required for USSD payments.</string>
+    <string name="error_qr_processing">Could not read that QR code. Please try again.</string>
+    <string name="error_qr_invalid_vpa">That is not a valid UPI QR code.</string>
+    <string name="error_ussd_call_failed">Could not start the USSD call.</string>
+    <string name="error_payment_init_failed">Could not start the payment. Please try again.</string>
+    <string name="error_unexpected">Something went wrong. Please try again.</string>
+    <string name="error_camera_init_failed">The camera could not be started.</string>
+
+    <!-- Transaction-history failures. These reach the screen through
+         TransactionViewModel's error banner — the surface that once showed
+         "Failed to load transactions: k0 was cancelled" to every user on
+         every launch, an R8-obfuscated class name from an interpolated
+         exception. Fixed copy only; the throwable goes to Log.e. -->
+    <string name="error_load_transactions">Could not load your transactions.</string>
+    <string name="error_open_transaction">Could not open that transaction.</string>
+    <string name="error_delete_transaction">Could not delete that transaction.</string>
+    <string name="error_clear_transactions">Could not clear your transaction history.</string>
+
     <!-- Fallback toasts, shown only when the payment-result dialog itself
          cannot be displayed. They carry the same outcome as the dialog they
          stand in for, shortened to fit a toast. -->
@@ -46,25 +77,35 @@
     <string name="toast_payment_failed">Your bank reported the payment as failed.</string>
     <string name="toast_awaiting_confirmation">Request sent — waiting for your bank\'s confirmation SMS.</string>
 
+    <!-- Progress and outcome notices from setup and the connectivity test -->
+    <string name="status_requesting_permissions">Requesting the permissions Flowpay needs…</string>
+    <string name="status_opening_scanner">Opening the QR scanner…</string>
+    <string name="status_permissions_granted_ussd">Permissions granted. You can test USSD now.</string>
+    <string name="status_setup_complete">Setup complete.</string>
+    <string name="status_ussd_setup_complete">USSD setup marked as complete.</string>
+    <string name="status_ussd_setup_incomplete">USSD setup was not completed — you can try again.</string>
+    <string name="status_upi123_setup_complete">UPI 123Pay setup complete.</string>
+    <string name="status_upi123_setup_incomplete">UPI 123Pay setup was not completed — you can try again later.</string>
+    <string name="status_scan_to_pay_disabled">Saved. Scan to pay stays off — tap Set up again if USSD starts working on this SIM.</string>
+    <string name="qr_error_prefix">Error: %1$s</string>
+
     <!-- Success Messages -->
 
     <!-- Home screen -->
 
     <!-- Live payment status banner -->
 
-    <!-- Payment result dialogs (shown over the dialer) -->
+    <!-- Payment result dialogs (shown over the dialer). There is no success
+         dialog: PaymentResultActivity is the only success surface. -->
     <string name="dialog_cancelled_title">Transaction Cancelled</string>
     <string name="dialog_cancelled_message">The call ended before the payment flow could complete. No payment was processed.</string>
     <string name="dialog_cancelled_by_user_message">The transaction was cancelled. No payment was processed.</string>
-    <string name="dialog_success_title">Payment Successful</string>
-    <string name="dialog_success_message">Your bank confirmed the payment.</string>
     <string name="dialog_failed_title">Transaction Failed</string>
     <string name="dialog_failed_message">Your bank reported the payment as failed. Any debited amount is normally reversed automatically — check your bank if it isn\'t.</string>
     <string name="dialog_awaiting_title">Request Sent</string>
     <string name="dialog_awaiting_message">Your payment request was sent to the UPI service.\n\nIf your bank calls back, press 1 to confirm and enter your UPI PIN. Flowpay will show the result as soon as your bank\'s confirmation SMS arrives.</string>
     <string name="action_ok">OK</string>
     <string name="action_got_it">Got it</string>
-    <string name="action_great">Great!</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_continue">Continue</string>
     <string name="action_clear">Clear</string>
@@ -121,8 +162,16 @@
     <string name="amount_rupees">₹%1$s</string>
     <string name="percent_format">%1$d%%</string>
 
-    <!-- Shown over the live camera when a scanned code is not a usable UPI QR -->
+    <!-- Shown over the live camera when a scanned code is not a usable UPI QR.
+         The %1$s is one of the qr_reason_* fragments below, mapped from
+         QRCodeParser.Reason. -->
     <string name="qr_invalid_banner">Not a valid UPI payment QR — %1$s. Try another code.</string>
+    <string name="qr_reason_empty">the code is empty</string>
+    <string name="qr_reason_not_upi">it is not a UPI payment code</string>
+    <string name="qr_reason_malformed">the code is malformed</string>
+    <string name="qr_reason_no_payee">it carries no payee address</string>
+    <string name="qr_reason_invalid_payee">its payee address is not valid</string>
+    <string name="qr_reason_invalid_amount">its amount is not valid</string>
     <!-- QR scanner steps -->
     <string name="qr_torch">Torch</string>
     <string name="qr_pick_from_gallery">Scan a QR code from your gallery</string>

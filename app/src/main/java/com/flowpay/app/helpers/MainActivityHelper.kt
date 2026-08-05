@@ -78,13 +78,13 @@ class MainActivityHelper(
         // Check phone permissions only (camera is handled by QRScannerActivity)
         if (permissionManager?.hasPhonePermissions() != true) {
             Log.d(TAG, "Phone permissions not granted, requesting...")
-            uiCallback.showToast("Requesting required permissions...")
+            uiCallback.showToast(context.getString(R.string.status_requesting_permissions))
             uiCallback.requestPhonePermissions()
             return
         }
 
         Log.d(TAG, "Phone permissions granted, opening QR scanner")
-        uiCallback.showToast("Opening QR scanner...")
+        uiCallback.showToast(context.getString(R.string.status_opening_scanner))
         openQRScanner()
     }
 
@@ -146,16 +146,16 @@ class MainActivityHelper(
     @Suppress("ReturnCount") // one guard clause per rule reads clearer than one accumulated condition
     private fun isTransferInputValid(phoneNumber: String, amount: String): Boolean {
         if (phoneNumber.isBlank() || amount.isBlank()) {
-            uiCallback.showToast("Please enter both phone number and amount")
+            uiCallback.showToast(context.getString(R.string.error_enter_phone_and_amount))
             return false
         }
         if (!PaymentInputValidator.isValidPhoneNumber(phoneNumber)) {
-            uiCallback.showToast("Please enter valid 10-digit number")
+            uiCallback.showToast(context.getString(R.string.error_invalid_phone_number))
             return false
         }
         val amountValue = amount.toDoubleOrNull()
         if (amountValue == null || amountValue < AppConstants.MIN_AMOUNT_VALUE) {
-            uiCallback.showToast("Please enter valid amount")
+            uiCallback.showToast(context.getString(R.string.error_invalid_amount))
             return false
         }
         if (amountValue > AppConstants.UPI123PAY_MAX_AMOUNT) {
@@ -177,7 +177,7 @@ class MainActivityHelper(
 
         // Check phone permissions only (camera/contacts handled separately)
         if (permissionManager?.hasPhonePermissions() != true) {
-            uiCallback.showToast("Phone permissions required")
+            uiCallback.showToast(context.getString(R.string.error_phone_permission_required))
             uiCallback.requestPhonePermissions()
             return
         }
@@ -193,7 +193,7 @@ class MainActivityHelper(
         val sessionManager = FlowpayApplication.from(context)?.paymentSessionManager
         if (sessionManager == null) {
             Log.e(TAG, "PaymentSessionManager unavailable")
-            uiCallback.showToast("Payment could not be started. Please try again.")
+            uiCallback.showToast(context.getString(R.string.error_payment_not_started))
             return
         }
 

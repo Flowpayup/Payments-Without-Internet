@@ -30,21 +30,38 @@ object QRCodeParser {
     // Generic input ceiling for a QR-initiated payment.
     private const val MAX_QR_AMOUNT = 100_000.0
 
+    /**
+     * Why a scanned code was rejected.
+     *
+     * An enum, not a sentence: this parser is pure and unit-tested, and the
+     * copy shown over the live camera belongs in `strings.xml` with the rest
+     * of it. [messageFor][com.flowpay.app.features.qr_scanner.domain.messageFor]
+     * does the mapping at the UI edge.
+     */
+    enum class Reason {
+        EMPTY,
+        NOT_A_UPI_QR,
+        MALFORMED,
+        NO_PAYEE_ADDRESS,
+        INVALID_PAYEE_ADDRESS,
+        INVALID_AMOUNT,
+    }
+
     sealed class ParseResult {
         data class Valid(val data: UPIData) : ParseResult()
-        data class Invalid(val reason: String) : ParseResult()
+        data class Invalid(val reason: Reason) : ParseResult()
     }
 
     fun parse(qrCode: String): ParseResult {
         val raw = qrCode.trim()
-        if (raw.isEmpty()) return ParseResult.Invalid("Empty QR code")
+        if (raw.isEmpty()) return ParseResult.Invalid(Reason.EMPTY)
 
         return when {
             raw.startsWith("upi://", ignoreCase = true) -> parseUpiUri(raw)
             VPA_REGEX.matches(raw) -> ParseResult.Valid(
                 UPIData(vpa = raw, payeeName = "", amount = "", transactionNote = "", currency = "INR")
             )
-            else -> ParseResult.Invalid("Not a UPI payment QR code")
+            else -> ParseResult.Invalid(Reason.NOT_A_UPI_QR)
         }
     }
 
@@ -52,29 +69,29 @@ object QRCodeParser {
         val uri = try {
             Uri.parse(raw)
         } catch (e: Exception) {
-            return ParseResult.Invalid("Malformed UPI QR code")
+            return ParseResult.Invalid(Reason.MALFORMED)
         }
 
         val vpa = try {
             uri.getQueryParameter("pa")?.trim().orEmpty()
         } catch (e: UnsupportedOperationException) {
-            return ParseResult.Invalid("Malformed UPI QR code")
+            return ParseResult.Invalid(Reason.MALFORMED)
         }
-        if (vpa.isEmpty()) return ParseResult.Invalid("QR code has no payee address")
+        if (vpa.isEmpty()) return ParseResult.Invalid(Reason.NO_PAYEE_ADDRESS)
         if (!VPA_REGEX.matches(vpa)) {
             Log.w(TAG, "Rejected structurally invalid VPA in QR")
-            return ParseResult.Invalid("QR code has an invalid payee address")
+            return ParseResult.Invalid(Reason.INVALID_PAYEE_ADDRESS)
         }
 
         val amountParam = uri.getQueryParameter("am")?.trim().orEmpty()
         if (amountParam.isNotEmpty()) {
             val amount = amountParam.toDoubleOrNull()
             if (amount == null || amount <= 0 || amount > MAX_QR_AMOUNT) {
-                return ParseResult.Invalid("QR code has an invalid amount")
+                return ParseResult.Invalid(Reason.INVALID_AMOUNT)
             }
             // At most two decimal places per the NPCI spec
             if (amountParam.matches(Regex("^[0-9]+(\\.[0-9]{1,2})?$")).not()) {
-                return ParseResult.Invalid("QR code has an invalid amount")
+                return ParseResult.Invalid(Reason.INVALID_AMOUNT)
             }
         }
 
@@ -106,7 +123,7 @@ object QRCodeParser {
         return when (val result = parse(qrCode)) {
             is ParseResult.Valid -> result.data
             is ParseResult.Invalid -> {
-                Log.w(TAG, "QR rejected: ${result.reason}")
+                Log.w(TAG, "QR rejected: ${result.reason.name}")
                 UPIData(vpa = "", payeeName = "", amount = "", transactionNote = "", currency = "INR")
             }
         }

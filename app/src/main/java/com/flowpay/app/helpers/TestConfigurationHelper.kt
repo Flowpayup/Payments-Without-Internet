@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.flowpay.app.R
 import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.data.TestResults
 import com.flowpay.app.data.TestResultsManager
@@ -106,10 +107,10 @@ class TestConfigurationHelper(
     fun onPhonePermissionsResult(granted: Boolean) {
         if (granted) {
             Log.d(TAG, "All permissions granted")
-            uiCallback.showToast("Permissions granted! You can now test USSD")
+            uiCallback.showToast(context.getString(R.string.status_permissions_granted_ussd))
         } else {
             Log.w(TAG, "Some permissions denied")
-            uiCallback.showToast("Some permissions were denied. App may not work properly.")
+            uiCallback.showToast(context.getString(R.string.error_permissions_denied))
         }
     }
 
@@ -126,7 +127,7 @@ class TestConfigurationHelper(
         // Check phone permissions before initiating call - request if missing
         if (!permissionManager.hasPhonePermissions()) {
             Log.e(TAG, "Phone permissions not granted")
-            uiCallback.showToast("Phone call permission is required to test USSD")
+            uiCallback.showToast(context.getString(R.string.error_call_permission_required_ussd))
             uiCallback.requestPhonePermissions()
             return
         }
@@ -271,7 +272,7 @@ class TestConfigurationHelper(
         uiCallback.updateUssdConfigurationOptions(false)
         if (fromDoesNotWork) {
             SetupHelper.setUserReportedUssdNotWorking(context, true)
-            uiCallback.showToast("Saved. Scan to pay will stay off—you can tap Set up again if USSD starts working.")
+            uiCallback.showToast(context.getString(R.string.status_scan_to_pay_disabled))
         }
     }
 
@@ -310,9 +311,9 @@ class TestConfigurationHelper(
             uiCallback.updateUssdTestCompleted(true)
             uiCallback.updateCallCompleteButton(true)
             saveTestResults(ussdTestCompleted, upi123TestCompleted)
-            uiCallback.showToast("USSD setup marked as completed")
+            uiCallback.showToast(context.getString(R.string.status_ussd_setup_complete))
         } else {
-            uiCallback.showToast("USSD setup not completed - you can try again")
+            uiCallback.showToast(context.getString(R.string.status_ussd_setup_incomplete))
         }
 
         uiCallback.updateUssdConfigurationOptions(false)
@@ -337,9 +338,9 @@ class TestConfigurationHelper(
             uiCallback.updateUpi123TestCompleted(true)
             uiCallback.updateCallCompleteButton(true)
             saveTestResults(ussdTestCompleted, upi123TestCompleted)
-            uiCallback.showToast("UPI123 setup completed successfully")
+            uiCallback.showToast(context.getString(R.string.status_upi123_setup_complete))
         } else {
-            uiCallback.showToast("UPI123 setup not completed. You can try again later.")
+            uiCallback.showToast(context.getString(R.string.status_upi123_setup_incomplete))
         }
 
         uiCallback.updateUpi123ConfigurationOptions(false)
