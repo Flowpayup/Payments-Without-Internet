@@ -14,13 +14,58 @@ Flowpay tackles a problem millions of people in India hit every day: UPI payment
 
 ---
 
+## Project status — read this before you install it
+
+**Source only. There is no release APK, and this has not completed its
+hardware test pass.** This app moves real money, so here is exactly what has
+and has not been verified.
+
+**Verified, on every commit:** the full unit suite on both the debug and the
+release variant, lint, detekt, a coverage floor on the payment-critical
+packages, and a release build under a fixed size budget. The bank-SMS parser,
+the payment state machine, the DTMF dial-string builder and the QR parser are
+all covered by hermetic tests. See [docs/TESTING.md](docs/TESTING.md).
+
+**Verified on a real device, once:** the money path end to end via injected
+bank SMS (dual-verb templates confirm, mismatched amounts are rejected with
+the window left open, unrelated credits are ignored, duplicates are deduped),
+and that the minified release build installs and streams the camera.
+
+**Not yet verified on hardware** — the items in
+[docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) that need a live
+UPI-linked SIM:
+
+- a real end-to-end ₹1 payment through the UPI 123Pay IVR,
+- the `*99#` USSD flow against a live telco,
+- a live QR camera scan of a real merchant code,
+- the dual-SIM voice-SIM mismatch warning,
+- the permission deny-paths, and the clipboard-wipe and audio-restore
+  behaviours.
+
+If you build and install this, you are ahead of that gate. Start with a
+trivial amount. Payment outcomes are decided **solely** by your bank's
+confirmation SMS — if it does not arrive, Flowpay records nothing, which is
+deliberate and explained in [docs/FAQ.md](docs/FAQ.md).
+
+---
+
 ## What it does
 
 Flowpay wraps the two offline UPI rails that already exist on every Indian smartphone but are buried behind UX so poor that almost nobody uses them:
 
-- **`*99#` USSD flow** — dial the shortcode, navigate the menu, send money. Flowpay places the `*99#` call for the user and gives them a payment UI to start from. It does **not** automate the menu walk or parse USSD responses — the user navigates the telco menu manually.
-- **UPI 123Pay IVR flow** — the missed-call and call-based payment flow shipped in 2022 for feature phones. Flowpay invokes it from a smartphone with a thin wrapper around the call intent.
-- **QR scan + manual entry as fallbacks** — both feed the same `*99#` flow downstream.
+- **`*99#` USSD flow** — dial the shortcode, navigate the menu, send money. Flowpay places the call and gives the user a payment UI to start from. It does **not** automate the menu walk or parse USSD responses — the user navigates the telco menu manually.
+- **UPI 123Pay IVR flow** — the call-based payment flow NPCI launched in 2022 for feature phones. Flowpay invokes it from a smartphone with a thin wrapper around the call intent.
+
+Each entry point uses the rail that fits it:
+
+- **Scan QR** → dials `*99*1*3#`, the USSD scan-to-pay branch.
+- **Pay Contact** (manual entry) → places a **UPI 123Pay IVR call** to NPCI's published service number, with the payee and amount carried as DTMF.
+
+### Why both rails
+
+`*99#` USSD does not work on Jio. USSD rides the legacy GSM signalling channel, and Jio is an all-IP (VoLTE) network that never carried it — which is precisely the gap NPCI built UPI 123Pay to close.
+
+So Flowpay ships both. Jio users get the full offline payment experience through the 123Pay IVR rail, with nothing removed and no feature compromise; the USSD rail serves the operators where it does work. Using two rails instead of one is what makes "payments without internet" true for every Indian SIM rather than most of them.
 
 Both rails work without internet. Both are usable today on any Indian SIM with any UPI-linked bank account. No registration with Flowpay, no server, no account creation. The app is a client over rails that already exist.
 
@@ -59,31 +104,49 @@ Building on telco-era rails comes with real constraints. These are the hard part
 
 ```
 app/src/main/java/com/flowpay/app/
+├── FlowpayApplication.kt        # process entry; owns AppContainer
 ├── MainActivity.kt              # home screen (Compose), entry to all payment flows
 ├── SetupActivity.kt             # first-run setup: bank, primary SIM, disclaimer
 ├── TestConfigurationActivity.kt # post-setup connectivity test
-├── managers/
-│   ├── CallManager.kt           # dials *99#, monitors call state, restores audio
-│   └── PermissionManager.kt     # runtime-permission helper
+├── payment/                     # ← the money path
+│   ├── PaymentSessionManager.kt # payment lifecycle; the only writer of PaymentState
+│   ├── PaymentWindowObserver.kt # closes the SMS window when a payment is cancelled
+│   ├── Upi123CallStringBuilder.kt # builds + validates the 123Pay DTMF string
+│   ├── InvalidReasonMessages.kt # maps a rejection Reason to user-facing copy
+│   └── sms/SmsTransactionParser.kt # bank-SMS parsing (pure, Context-free)
 ├── receivers/
-│   └── SimpleSMSReceiver.kt     # priority-999 SMS broadcast receiver
+│   ├── SimpleSMSReceiver.kt     # priority-999 SMS broadcast receiver (PDU extraction)
+│   ├── SmsIngestionPipeline.kt  # shared SMS → transaction pipeline
+│   └── PaymentResultNotifier.kt # guaranteed-reachable outcome notification
 ├── helpers/
-│   ├── TransactionDetector.kt   # regex parsing of bank SMS across ~15 banks
-│   └── MainActivityHelper.kt    # transfer orchestration + permission gating
+│   ├── TransactionDetector.kt   # SMS operation window + cross-pipeline dedup
+│   ├── MainActivityHelper.kt    # transfer orchestration + permission gating
+│   └── SetupHelper.kt           # carrier capability + setup state
+├── telephony/CallStateCoordinator.kt # single telephony listener for the app
+├── managers/
+│   ├── CallManager.kt           # places the dial, monitors call state, restores audio
+│   └── PermissionManager.kt     # runtime-permission helper
 ├── services/
 │   ├── CallOverlayService.kt    # 40s on-call confirmation overlay
 │   └── FlowpayNotificationListener.kt  # supplemental SMS detection
 ├── features/qr_scanner/         # CameraX + ZXing QR scanner
-├── data/                        # Room entities + repositories (local-only)
+├── data/                        # Room entities + DAO, SQLCipher key management
+├── repository/                  # local-only transaction persistence
+├── states/PaymentState.kt       # the payment state machine
+├── di/AppContainer.kt           # hand-rolled DI container
+├── viewmodel/                   # Compose-facing state holders
 ├── constants/                   # app-wide constants
+├── utils/CurrencyFormat.kt      # the one place a rupee amount is grouped
 └── ui/                          # remaining Compose screens (transactions, settings, …)
 ```
 
 The pieces worth reading if you're poking around:
 
-- **`managers/CallManager.kt`** — handles the dialer interaction with `*99#`, including call-state monitoring and the timeout/retry logic that ended up being most of the complexity.
-- **`helpers/TransactionDetector.kt`** + **`receivers/SimpleSMSReceiver.kt`** — the bank-SMS regex parsers. The hardest part of the project; every bank's receipt format is different.
-- **`services/CallOverlayService.kt`** — the floating overlay shown during a USSD call so the user has a UI anchor instead of just the system dialer.
+- **`payment/sms/SmsTransactionParser.kt`** — the bank-SMS parser. The hardest part of the project; every bank's receipt format is different, and it decides whether a payment is reported as succeeded or failed. Pure and Context-free, so it is directly unit-testable.
+- **`payment/PaymentSessionManager.kt`** + **`receivers/SmsIngestionPipeline.kt`** — the payment lifecycle and the path from a received SMS to a stored outcome. Between them they own every rule about what gets recorded.
+- **`helpers/TransactionDetector.kt`** — the SharedPreferences-backed operation window that gates *when* incoming SMS may be inspected at all, plus cross-pipeline dedup. It delegates all message matching to the parser above.
+- **`managers/CallManager.kt`** — handles the dialer interaction for both rails, including call-state monitoring and the timeout/retry logic that ended up being most of the complexity.
+- **`services/CallOverlayService.kt`** — the floating overlay shown during a call so the user has a UI anchor instead of just the system dialer.
 - **`AndroidManifest.xml`** — the permission set is deliberately small and payment-scoped: phone (call + phone state + answer, for the overlay's End-call button), SMS, camera, contacts, overlay, notifications, plus vibrate and modify-audio-settings. No location, no storage, and — notably — **no INTERNET permission**.
 
 ## Stack
@@ -105,13 +168,13 @@ echo "sdk.dir=$ANDROID_HOME" > local.properties
 
 That's it. The build is self-contained — every dependency comes from public Maven repos.
 
-First launch routes through Setup → connectivity test → home screen. The connectivity test will dial `*99#` once to verify the menu walk works on your operator + SIM, which may incur a small charge depending on your plan (Jio and Airtel are usually free on most plans; some prepaid plans charge a few paise per session).
+First launch routes through Setup → connectivity test → home screen.
 
 If you want to skim the code without running it, the build also works without an Android device — `./gradlew assembleDebug` produces a working APK in `app/build/outputs/apk/debug/`.
 
 **Signed release build:** copy `keystore.properties.example` to `keystore.properties`, fill in your signing-key details, then run `./gradlew assembleRelease`. The `keystore.properties` file and any `*.jks`/`*.keystore` files are gitignored, so signing material is never committed. Without a keystore, `assembleRelease` stops rather than handing you an unsigned, uninstallable APK — pass `-PallowUnsigned` if that's what you actually want.
 
-**Verify a build:** check any release APK against its signing certificate with `apksigner verify --print-certs <apk>` and compare the SHA-256 fingerprint with the one published alongside the release.
+**Verify a build:** no signed release exists yet, so the build you compiled is the only Flowpay there is — an APK claiming to be Flowpay from anywhere else did not come from this project. Once releases begin, check one with `apksigner verify --print-certs <apk>` against the fingerprint committed in [SECURITY.md](SECURITY.md) — not against the release notes, which whoever published the release also wrote.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the system fits together, [docs/FAQ.md](docs/FAQ.md) for the trust/permissions questions, [docs/TESTING.md](docs/TESTING.md) for how outcomes are verified, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
 

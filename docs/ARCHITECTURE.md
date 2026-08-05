@@ -154,15 +154,22 @@ UI/audio cleanup, and can't be skipped by an exception in that cleanup.
 
 ## UI
 
-Screens are Jetpack Compose (`MainActivity`, `SetupActivity`,
-`TestConfigurationActivity`, `SettingsActivity`, `TransactionHistoryActivity`)
-following one pattern: **ViewModel + StateFlow, collected in Compose**, with
-Activity↔Compose one-shot events carried by a shared ViewModel
+Screens are Jetpack Compose. `MainActivity`, `SettingsActivity` and
+`TransactionHistoryActivity` follow the intended pattern: **ViewModel +
+StateFlow, collected in Compose**, with Activity↔Compose one-shot events
+carried by a shared ViewModel
 ([`MainViewModel`](../app/src/main/java/com/flowpay/app/viewmodel/MainViewModel.kt))
-rather than static callbacks. All permission and activity results go through
-`ActivityResultContracts` launchers — there are no `onActivityResult` /
-`onRequestPermissionsResult` overrides and no static mutable state bridging
-the UI.
+rather than static callbacks.
+
+`SetupActivity` and `TestConfigurationActivity` are older and have **no
+ViewModel**: they hold screen state in local `remember { mutableStateOf }` and
+talk to their helpers through a `UICallback` interface. They are listed under
+"Known deliberate simplifications" below — they are first-run screens with no
+state worth surviving process death, and converting them buys little.
+
+All permission and activity results go through `ActivityResultContracts`
+launchers — there are no `onActivityResult` / `onRequestPermissionsResult`
+overrides and no static mutable state bridging the UI.
 
 Two screens stay classic Views by design: `QRScannerActivity` (a CameraX
 `PreviewView` is a View regardless) and the `CallOverlayService` overlay
@@ -189,9 +196,12 @@ survives, [`DatabaseKeyManager`](../app/src/main/java/com/flowpay/app/data/Datab
 recovers rather than throwing — it discards the stale blob, regenerates the
 key, and the migrator sets the now-unreadable database aside so the app
 starts fresh instead of crash-looping on its first database touch. This runs
-lazily on `Dispatchers.IO`, never the main thread. Schema is at version 3
-with exported schemas and migration tests (`MIGRATION_1_2`, `MIGRATION_2_3`)
-run on-device in CI. The raw SMS body is never persisted — only a
+lazily on `Dispatchers.IO`, never the main thread. Schema is at version 3 —
+the only version this codebase has ever produced — with the exported schema
+committed under `app/schemas/`. There are no migrations to carry yet;
+`fallbackToDestructiveMigration` is deliberately absent, so the next schema
+change must ship a real migration and a test for it rather than silently
+wiping payment history. The raw SMS body is never persisted — only a
 constructively-built, privacy-safe excerpt from extracted fields (a CI grep
 gate blocks reintroducing raw-body logging).
 
@@ -206,8 +216,11 @@ gate blocks reintroducing raw-body logging).
 - **Debug only**: `DebugSmsInjectionReceiver` lives in `src/debug/` and is
   absent from release builds entirely.
 
-Permissions are deliberately minimal: phone, `RECEIVE_SMS` (never `READ_SMS`
-— the inbox is never read), camera, overlay, contacts, vibrate. No `INTERNET`.
+Permissions are deliberately minimal and payment-scoped: `CALL_PHONE`,
+`READ_PHONE_STATE`, `ANSWER_PHONE_CALLS` (the overlay's End-call button),
+`RECEIVE_SMS` (never `READ_SMS` — the inbox is never read), `CAMERA`,
+`READ_CONTACTS`, `SYSTEM_ALERT_WINDOW`, `POST_NOTIFICATIONS`, `VIBRATE`, and
+`MODIFY_AUDIO_SETTINGS`. No `INTERNET`, no location, no storage.
 
 ## Threat model & trust boundaries
 

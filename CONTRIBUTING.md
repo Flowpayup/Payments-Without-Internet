@@ -33,7 +33,7 @@ That single line is all the local configuration the build needs.
 ./gradlew :app:lintDebug             # run lint (must pass)
 ```
 
-JVM unit tests live in `app/src/test/` (`Upi123CallStringBuilderTest`, `PaymentSessionManagerTest`, `SmsTransactionParserTest`, `SmsParsingRegexTest`, `QRCodeParserTest`, `QRCodeAnalyzerDecodeTest`) and an instrumentation test in `app/src/androidTest/` (`MigrationTest`). CI runs `./gradlew test` on every push, so keep them green and add coverage for new logic where it makes sense. See [docs/TESTING.md](docs/TESTING.md) for the full verification story, including a debug-only tool for replaying bank SMS through the live pipeline without a real bank.
+JVM unit tests live in `app/src/test/` (`Upi123CallStringBuilderTest`, `PaymentSessionManagerTest`, `SmsTransactionParserTest`, `SmsParsingRegexTest`, `SmsIngestionPipelineTest`, `TransactionDetectorTest`, `CallStateCoordinatorTest`, `PaymentWindowObserverTest`, `PaymentInputValidatorTest`, `DatabaseKeyManagerRecoveryTest`, `TransactionMappingTest`, `QRCodeParserTest`, `QRCodeAnalyzerDecodeTest`). There are no instrumented tests at present — see [docs/TESTING.md](docs/TESTING.md) Layer 2 for why, and what must come back with the next schema change. CI runs `./gradlew test` on every push, so keep them green and add coverage for new logic where it makes sense. See [docs/TESTING.md](docs/TESTING.md) for the full verification story, including a debug-only tool for replaying bank SMS through the live pipeline without a real bank.
 
 ### Adding a bank SMS template
 
@@ -86,9 +86,15 @@ CI runs on every push and PR. A green run is required before merge.
 
 ## Code style
 
-- Kotlin official style (4-space indent, no wildcard imports).
+- Kotlin official style (4-space indent). Wildcard imports are banned except for Compose's DSL packages (`androidx.compose.foundation.layout.*`, `material3.*`, `runtime.*`, …), where a screen legitimately pulls dozens of symbols from each; the exception is declared in `.editorconfig` and `app/config/detekt/detekt.yml`.
 - An `.editorconfig` at the repo root captures the conventions; most IDEs respect it automatically.
-- `detekt` (with the ktlint-style formatting ruleset) is enforced in CI: run `./gradlew detekt` locally before pushing. Pre-existing findings are frozen in `app/detekt-baseline.xml`; new code must come in clean.
+- `detekt` (with the ktlint-style formatting ruleset) is enforced in CI: run `./gradlew detekt` locally before pushing. Pre-existing findings are frozen in `app/detekt-baseline.xml`; new code must come in clean. `./gradlew detekt --auto-correct` fixes the formatting ones for you.
+- **Every new `.kt` file needs the licence header** — the first two lines, before the `package` declaration:
+  ```kotlin
+  // SPDX-License-Identifier: Apache-2.0
+  // Copyright 2026 Flowpay
+  ```
+  The repo-root `LICENSE` doesn't travel with a file someone copies out, so per-file SPDX is what licence scanners actually read.
 
 ## About the lint and detekt baselines
 

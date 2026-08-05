@@ -63,8 +63,13 @@ the same thing — Flowpay doesn't know whether that payment went through.
 `*99#` is a synchronous telco menu walk over GSM signalling. Each round trip
 takes roughly a minute, sessions can time out, and behavior varies by
 operator and SIM. Flowpay accounts for the timeouts but can't make the
-underlying rail faster. Dialing `*99#` or 123Pay may incur a small charge
-depending on your plan — check with your operator.
+underlying rail faster.
+
+`*99#` also does not work on Jio at all — USSD rides the legacy GSM signalling
+channel, and Jio is an all-IP (VoLTE) network. That is exactly the gap UPI
+123Pay was created to close, which is why Flowpay ships the 123Pay IVR rail
+alongside USSD: Jio users pay through IVR with the full feature set, no
+compromise.
 
 ### Why does it need my carrier / SIM in setup?
 

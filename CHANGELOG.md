@@ -5,9 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-07-30
+## [1.0.0] - 2026-08-05
 
-The first published release.
+The first public release of the source. **No binary has been distributed** —
+there is no tagged release and no signed APK yet; build it yourself per
+[Running it](README.md#running-it). See [SECURITY.md](SECURITY.md) for what
+that means for verifying a build.
 
 Everything below this entry is **pre-release history**: internal milestones
 built and versioned locally while the app was still private, never tagged and
@@ -15,6 +18,79 @@ never distributed. The `1.x`/`2.x` numbers in that history were working
 labels, not releases, which is why the public version line restarts here.
 `versionCode` does not restart — it continues upward from those builds, since
 Android refuses to install a lower one.
+
+### Found by running it on a real phone
+
+Six defects that no amount of reading the code surfaced. All were caught in a
+single device session and none of them are visible statically.
+
+#### Fixed
+- **The home screen showed an error on every launch.** "Failed to load
+  transactions: k0 was cancelled" — `TransactionViewModel` cancels its own
+  previous query on each refresh, then rendered that cancellation as a
+  user-facing failure, with an R8-obfuscated class name standing in for the
+  cause. Cancellation is now rethrown rather than reported, at all five call
+  sites.
+- **Multi-word payees were cut to one word.** "KIRANA STORE" recorded as
+  "Kirana", "BIG MERCHANT" as "Big" — the recipient pattern ended a name at
+  the first space, and it did so on the *most common* HDFC template. A shared
+  name terminator now ends a name on a following keyword, punctuation, or the
+  end of the body.
+- **Failure templates absorbed their own status words.** "Rs.200 paid to
+  Kirana Store has failed" recorded the payee as "Kirana Store Has Failed".
+  Stop-words end the name, with a word boundary so real names that merely
+  begin with one — Hasty Traders, Hasmukh Patel, Ismail Khan — stay intact.
+- **The same amount rendered three different ways.** ₹1,00,000 appeared as
+  `₹1,00,000.00` in history, `₹100,000.00` on the result screen and
+  `₹100000.00` in the notification. `String.format("%,.2f")` was the cause and
+  cannot be fixed by passing a Locale: its `,` flag takes only the separator
+  and always groups in threes. All five money surfaces now go through one
+  formatter.
+- **Values collided with their labels** on the result screen
+  ("Transaction ID512233…") — five `TextView`s had no start margin.
+
+### Scan a QR from your gallery
+
+#### Added
+- **The scanner can read a QR out of a picked image**, for when the payee sent
+  the code as a photo or it is on a screen the camera cannot focus on. It
+  decodes through the same path the live camera uses, so a gallery scan and a
+  camera scan are indistinguishable downstream. Uses Android's photo picker,
+  which grants a one-shot read on the single chosen image — no storage
+  permission is requested or held. Large photos are downsampled before
+  decoding; a QR stays readable far below 100MP.
+
+  (The decoder had been able to do this for a while. Nothing in the UI could
+  reach it, which is why a previous entry below records removing a "hidden
+  gallery-import affordance" — that was the dead entry point, not this
+  feature.)
+
+### All user-visible copy lives in strings.xml, and now it is enforced
+
+#### Fixed
+- **Thirty-nine hardcoded strings were still in Kotlin**, and both copy gates
+  were structurally unable to see them: lint's `HardcodedText` never leaves
+  XML, and the CI ratchet only matched Compose `Text(`. Everything in the View
+  layer sat in the gap — Toasts, `TextView` assignments, and the app's own
+  `showToast()`/`showError()` helpers.
+- **Twelve of them interpolated an exception message.** In a minified release
+  that is an R8-obfuscated class name shown to the user; several also passed
+  `e.message` to the log instead of the throwable, discarding the stack trace.
+  Exception detail now goes to `Log.e` with the throwable, and the user gets a
+  fixed sentence.
+- **The 123Pay cap message stated one number twice.** "Maximum ₹4999 per
+  payment — the UPI 123Pay IVR does not accept ₹5,000 or more" substituted the
+  cap from `AppConstants` and then wrote a second, unrelated copy of it into
+  the sentence, free to disagree if the ceiling ever moved. It is substituted
+  once and rendered through the shared formatter.
+
+#### Changed
+- `Upi123CallStringBuilder` and `QRCodeParser` return a `Reason` enum instead
+  of an English sentence. Both are pure and unit-tested — one decides a live
+  payment's DTMF string — so neither should carry a `Context` or user-facing
+  copy; small extension functions map the reason to a string at the UI edge.
+- The CI copy gate covers all three forms now, and was verified to fail on a
+  reintroduced literal rather than merely passing.
 
 ### One rule for confirmations: the bank's SMS decides
 
@@ -55,6 +131,82 @@ Android refuses to install a lower one.
 #### Added
 - Tapping a row under Recent Payments opens its detail dialog — the same
   surface Transaction History already offered.
+
+### Install size — 62 MB down to 16 MB
+
+#### Changed
+- **The release APK is a third of its former size.** Three blanket ProGuard
+  keeps (`androidx.compose.**`, `androidx.camera.**`, `kotlinx.coroutines.**`)
+  disabled R8 shrinking across those namespaces entirely — `material-icons-
+  extended` alone contributed 10+ MB for 30 icons actually used. Removed with
+  no replacement: every reflective anchor those libraries need (Room's
+  database impl lookup, CameraX's config bootstrap, coroutines' field
+  updaters) already ships in the libraries' own consumer rules or in the
+  rules aapt generates from the manifest/layouts. A release build now also
+  targets `arm64-v8a` + `armeabi-v7a` only — real phones are ARM, x86 only
+  ever served emulators, which now build from the (unaffected) debug variant
+  instead. `armeabi-v7a` is kept: 32-bit Android Go-edition devices are this
+  app's target market. Two unused proguard blocks left from the pre-ZXing/
+  pre-Gson dependency graph were also removed. This app's whole audience is
+  entry-level phones on metered data, so `build.yml` now gates on a release
+  build staying under an 18 MB budget, ratcheted like the lint/detekt
+  baselines.
+- A missing or misspelled key in `keystore.properties` now fails with a
+  message naming the key, instead of a bare `NullPointerException` from an
+  unchecked cast.
+
+### Release readiness
+
+#### Fixed
+- **A cancel landing at the same instant as the bank's SMS could leave the
+  transaction record contradicting the screen.** `finishSession` and
+  `onVerificationDeadline` queued their database write *before* claiming the
+  terminal state, so on a multi-threaded dispatcher the losing caller's write
+  still executed: history could read `CANCELLED` (or lose the row entirely)
+  while the user was looking at "Payment successful". Both now claim and write
+  inside one lock, exactly as `onSmsConfirmed` already did. The DAO's
+  compare-and-set guards remain as a second line of defence. Covered by a
+  regression test that races the two paths on real threads.
+- **CI publishes no uninstallable artifact.** `release.yml` attached the
+  *unsigned* APK to the draft release along with a `SHA-256SUMS` computed over
+  it — so the checksum described a file users must not install, and verifying
+  the signed APK per `RELEASING.md` could never succeed. CI now keeps the
+  unsigned build as a workflow artifact only and opens an empty draft; the
+  maintainer uploads the signed APK and a checksum generated over *that* file.
+  The R8 `mapping.txt` is archived too — release crash traces were previously
+  undecodable.
+- **The security-disclosure link in the issue template was a 404.** It pointed
+  at an un-substituted `https://github.com/.github/blob/main/SECURITY.md`; with
+  blank issues disabled, a researcher's only route led nowhere. The reporting
+  address is now inlined in the template so a broken link cannot hide it.
+- **README named the wrong payment rail.** It claimed QR scan and manual entry
+  "both feed the same `*99#` flow". Manual entry places a UPI 123Pay IVR call;
+  QR scan dials `*99*1*3#`. The README now says which rail each entry point
+  uses, and explains *why* there are two: `*99#` USSD does not exist on Jio's
+  all-IP network, which is the gap 123Pay was created to close.
+
+#### Changed
+- Every GitHub Action is pinned to a commit SHA, and `contents: write` is
+  scoped to the one job that opens the release rather than the whole workflow.
+- The dead Room migrations (`MIGRATION_1_2`, `MIGRATION_2_3`), their
+  hand-authored v1/v2 schema JSON, and `MigrationTest` are removed. The first
+  commit of this codebase already declared `version = 3`, so no v1 or v2
+  database has ever existed and the migrations could never run; the emulator
+  matrix gating every release was guarding unreachable code. `docs/TESTING.md`
+  records what must return with the next schema change.
+- `LocalBroadcastManager` — which carries the payment-result broadcast — is
+  declared explicitly instead of arriving as a fourth-level transitive of
+  Material, where a dependency bump could have silently removed it.
+- Static-analysis baselines cut from 662 to 466 (detekt) and 44 to 39 (lint),
+  with the CI budgets ratcheted to match exactly — the detekt gate previously
+  allowed 170 findings of slack. Real accessibility gaps were fixed rather than
+  re-baselined: four missing `contentDescription`s and the overlay's touch
+  handler now forwarding to `performClick`.
+- Build toolchain pinned for reproducibility (`buildToolsVersion`, Gradle
+  distribution SHA-256). `docs/RELEASING.md` no longer promises byte-identical
+  rebuilds as fact — no independent reproducer has confirmed one yet.
+- Every Kotlin source file carries an SPDX licence header; per-file scanners
+  previously reported all 71 as unlicensed.
 
 ---
 
@@ -204,8 +356,10 @@ the published `1.0.0` above is unambiguous.
 #### Removed
 - The uncalled fake-progress engine and no-op health monitor in
   `CallOverlayService`, the fabricated "Almost there!" QR status messages, the
-  dead `stopOverlayReceiver`, the hidden gallery-import affordance, and the
-  QR activity's unused `showOnLockScreen`/`turnScreenOn` flags.
+  dead `stopOverlayReceiver`, the hidden gallery-import affordance (an entry
+  point that reached nothing — the working gallery scan under `[1.0.0]` above
+  is a different, later thing), and the QR activity's unused
+  `showOnLockScreen`/`turnScreenOn` flags.
 
 ## [2.0.0] - 2026-07-13
 
