@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-08-05
 
-The first public release of the source. **No binary has been distributed** —
-there is no tagged release and no signed APK yet; build it yourself per
-[Running it](README.md#running-it). See [SECURITY.md](SECURITY.md) for what
-that means for verifying a build.
+The first public release.
+
+Distributed as a directly-installed APK — Flowpay is not on Google Play,
+because its SMS-permission usage falls outside Play's restricted-permission
+policy. Verify any download against the signing fingerprint committed in
+[SECURITY.md](SECURITY.md); building from source is equally supported, per
+[Running it](README.md#running-it).
+
+**The physical-device gate in [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)
+has not been completed** — see the README's *Project status* for exactly which
+behaviours are unproven on hardware.
 
 Everything below this entry is **pre-release history**: internal milestones
 built and versioned locally while the app was still private, never tagged and

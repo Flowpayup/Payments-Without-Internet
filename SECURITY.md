@@ -4,34 +4,44 @@ Flowpay handles UPI 123Pay payment flows, USSD dialing, and SMS parsing. Please 
 
 ## Supported versions
 
-**No binary release has been published yet.** Flowpay is currently available as
-source only: there is no tagged release, no signed APK, and nothing to
-download. Build it yourself — see [Running it](README.md#running-it).
+Security fixes land on the latest tagged release and on `main`. Older releases
+are not backported — update to the newest release.
 
-Security fixes land on `main`. Once releases begin, they will land on the
-latest tagged release too, and older releases will not be backported.
-
-| Version             | Supported                              |
-|---------------------|----------------------------------------|
-| `main`              | ✅ the only thing that exists today    |
-| any tagged release  | — none published yet                   |
+| Version             | Supported |
+|---------------------|-----------|
+| 1.0.x               | ✅        |
+| `main` (unreleased) | ✅        |
+| < 1.0               | ❌ pre-release, never distributed |
 
 ## Verifying you have a genuine build
 
-Right now the honest answer is: **build from source.** That is the only
-distribution channel, so the source you compiled is the source you run. Nothing
-on any release page, mirror, or third-party APK site is published by this
-project — if you find a "Flowpay" APK somewhere, it did not come from here.
+Flowpay is distributed as a directly-installed APK, so the signing certificate
+is the trust anchor. Fake UPI apps are common in India, and an APK claiming to
+be Flowpay can come from anywhere; this fingerprint is how you tell.
 
-Once a signed release exists, the signing certificate becomes the trust anchor
-and this section will carry its SHA-256 fingerprint. Check any future APK
-against the fingerprint committed **here**, not against the release notes —
-release notes are written by whoever published the release, so checking them
-against themselves proves nothing, while the committed fingerprint is
-tamper-evident through git history. A change to it means the signing key
-changed; that is not normal, so ask before installing.
+```
+Release signing certificate SHA-256:
+  64:28:F5:18:05:90:8F:85:2F:A3:63:76:A4:D2:A9:53:31:D1:1D:0A:03:DC:16:12:25:06:EA:E5:D3:68:A8:82
 
-The release procedure that will produce it is in
+Subject: CN=Flowpay, O=Flowpay, L=Bengaluru, C=IN
+```
+
+Check any APK against it:
+
+```bash
+apksigner verify --print-certs flowpay-vX.Y.Z.apk
+```
+
+Compare against the fingerprint committed **here**, not against the release
+notes — release notes are written by whoever published the release, so checking
+them against themselves proves nothing. The fingerprint above is tamper-evident
+through git history.
+
+A change to this fingerprint in a future version means the signing key changed.
+That is not normal; ask before installing.
+
+Building from source remains fully supported and needs none of this — see
+[Running it](README.md#running-it). The release procedure is in
 [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Reporting a vulnerability
