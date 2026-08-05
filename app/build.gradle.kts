@@ -20,9 +20,21 @@ val keystoreProperties = Properties().apply {
     }
 }
 
+// A missing or misspelled key used to throw a bare NullPointerException from
+// the unchecked `as String` casts below, at configuration time, with no hint
+// which key was the problem. Name it instead.
+fun keystoreProp(key: String): String = keystoreProperties[key] as? String
+    ?: throw GradleException(
+        "keystore.properties is missing '$key' (see keystore.properties.example)"
+    )
+
 android {
     namespace = "com.flowpay.app"
     compileSdk = 35
+    // Pinned, not "whatever AGP resolves": aapt2 and zipalign differ between
+    // build-tools revisions, so leaving this floating makes the reproducible
+    // -build claim in docs/RELEASING.md impossible to honour.
+    buildToolsVersion = "35.0.0"
 
     defaultConfig {
         applicationId = "com.flowpay.app"
@@ -34,7 +46,6 @@ android {
         versionCode = 5
         versionName = "1.0.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -47,10 +58,10 @@ android {
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProp("storeFile"))
+                storePassword = keystoreProp("storePassword")
+                keyAlias = keystoreProp("keyAlias")
+                keyPassword = keystoreProp("keyPassword")
             }
         }
     }
@@ -65,6 +76,17 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Real Android phones are ARM; Intel exited the Android space in
+            // 2016, so the x86 ABIs only ever serve emulators. Restricting
+            // RELEASE to arm64-v8a + armeabi-v7a roughly halves the native
+            // payload (SQLCipher ships a .so per ABI) for every actual user.
+            // armeabi-v7a is kept deliberately: 32-bit-only Android Go-edition
+            // devices are exactly this app's target market. Debug is left
+            // alone so the x86_64 emulator matrix in instrumented.yml still
+            // runs the app it's built for.
+            ndk {
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            }
         }
         debug {
             isMinifyEnabled = false
@@ -82,12 +104,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-    // Exported Room schemas as androidTest assets so MigrationTestHelper can load them
-    sourceSets {
-        getByName("androidTest") {
-            assets.srcDirs("$projectDir/schemas")
-        }
     }
     packaging {
         resources {
@@ -187,6 +203,15 @@ dependencies {
     // Constraint Layout
     implementation(libs.androidx.constraintlayout)
 
+    // LocalBroadcastManager — carries the payment-result broadcast in
+    // SmsIngestionPipeline and QRScannerActivity. Declared explicitly because
+    // it was previously reaching the money path only as a 4th-level transitive
+    // of com.google.android.material (material -> transition/dynamicanimation
+    // -> legacy-support-core-utils), so a Material bump that trimmed that
+    // chain would have broken payment results. Deprecated upstream; the two
+    // call sites should eventually move to a shared flow.
+    implementation(libs.androidx.localbroadcastmanager)
+
     // QR Code Scanning — ZXing core: pure Java, Apache 2.0, no proprietary
     // model blob (unlike ML Kit, which this replaced for FOSS purity).
     implementation(libs.zxing.core)
@@ -215,7 +240,4 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     // Real android.net.Uri etc. in JVM tests (QRCodeParser)
     testImplementation(libs.robolectric)
-    androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.androidx.test.runner)
-    androidTestImplementation(libs.room.testing)
 }

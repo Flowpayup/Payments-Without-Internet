@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/.github/blob/main/SECURITY.md
-    about: Do not file a public issue for security reports. See SECURITY.md.
+    url: https://github.com/Flowpayup/Flowpay_v1/blob/main/SECURITY.md
+    about: >-
+      Do not file a public issue for security reports. Email
+      flowpay28@gmail.com with the subject "Flowpay UPI — Security report".
+      Full policy and disclosure timeline in SECURITY.md.

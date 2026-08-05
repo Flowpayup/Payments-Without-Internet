@@ -11,7 +11,12 @@ indent_size = 4
 [*.{kt,kts}]
 indent_size = 4
 ij_kotlin_imports_layout = *
-ij_kotlin_packages_to_use_import_on_demand = unset
+# Wildcard imports are banned everywhere EXCEPT Compose's DSL packages, where
+# a single screen legitimately pulls dozens of symbols from each and the
+# ecosystem imports them wholesale. Mirrored by the WildcardImport excludes in
+# app/config/detekt/detekt.yml; this property is what ktlint's
+# NoWildcardImports rule reads.
+ij_kotlin_packages_to_use_import_on_demand = androidx.compose.foundation.**, androidx.compose.foundation.layout.**, androidx.compose.material3.**, androidx.compose.runtime.**, androidx.compose.animation.core.**, androidx.compose.material.icons.filled.**
 
 [*.xml]
 indent_size = 4

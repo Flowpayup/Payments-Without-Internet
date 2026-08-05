@@ -93,6 +93,11 @@ lint/tmp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+# Finder duplicates ("detekt-baseline 2.xml", "config copy.yml"). Two of these
+# were committed by accident before this rule existed.
+* [0-9].*
+* copy.*
+* copy [0-9].*
 
 # IDE / AI tool state
 .vscode/

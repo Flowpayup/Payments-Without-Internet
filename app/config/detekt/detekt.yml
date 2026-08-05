@@ -6,6 +6,19 @@ naming:
     ignoreAnnotated: ['Composable']
 
 style:
+  WildcardImport:
+    # Compose's layout/material3/runtime/animation packages are DSL surfaces —
+    # a screen legitimately pulls dozens of symbols from each, and the
+    # ecosystem (including Google's own samples) imports them wholesale.
+    # Everything else must be imported explicitly.
+    excludeImports:
+      - 'androidx.compose.foundation.*'
+      - 'androidx.compose.foundation.layout.*'
+      - 'androidx.compose.material3.*'
+      - 'androidx.compose.runtime.*'
+      - 'androidx.compose.animation.core.*'
+      - 'androidx.compose.material.icons.filled.*'
+
   MagicNumber:
     # Compose UI is full of literal dp/sp/color/alpha values; flagging them as
     # "magic numbers" is noise. Design tokens are handled in the Phase 3 pass.

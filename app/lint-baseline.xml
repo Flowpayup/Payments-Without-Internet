@@ -40,13 +40,13 @@
         errorLine2="                                                                          ~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="678"
+            line="582"
             column="75"/>
     </issue>
 
     <issue
         id="AndroidGradlePluginVersion"
-        message="A newer version of com.android.application than 8.7.2 is available: 9.2.1. (There is also a newer version of 8.7.𝑥 available, if upgrading to 9.2.1 is difficult: 8.7.3)"
+        message="A newer version of com.android.application than 8.7.2 is available: 9.3.1. (There is also a newer version of 8.7.𝑥 available, if upgrading to 9.3.1 is difficult: 8.7.3)"
         errorLine1="agp = &quot;8.7.2&quot;"
         errorLine2="      ~~~~~~~">
         <location
@@ -57,7 +57,7 @@
 
     <issue
         id="AndroidGradlePluginVersion"
-        message="A newer version of com.android.application than 8.7.2 is available: 9.2.1. (There is also a newer version of 8.7.𝑥 available, if upgrading to 9.2.1 is difficult: 8.7.3)"
+        message="A newer version of com.android.application than 8.7.2 is available: 9.3.1. (There is also a newer version of 8.7.𝑥 available, if upgrading to 9.3.1 is difficult: 8.7.3)"
         errorLine1="agp = &quot;8.7.2&quot;"
         errorLine2="      ~~~~~~~">
         <location
@@ -68,7 +68,7 @@
 
     <issue
         id="AndroidGradlePluginVersion"
-        message="A newer version of com.android.application than 8.7.2 is available: 9.2.1. (There is also a newer version of 8.7.𝑥 available, if upgrading to 9.2.1 is difficult: 8.7.3)"
+        message="A newer version of com.android.application than 8.7.2 is available: 9.3.1. (There is also a newer version of 8.7.𝑥 available, if upgrading to 9.3.1 is difficult: 8.7.3)"
         errorLine1="agp = &quot;8.7.2&quot;"
         errorLine2="      ~~~~~~~">
         <location
@@ -84,7 +84,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="61"
+            line="66"
             column="13"/>
     </issue>
 
@@ -95,7 +95,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="68"
+            line="73"
             column="13"/>
     </issue>
 
@@ -106,7 +106,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="76"
+            line="81"
             column="13"/>
     </issue>
 
@@ -117,7 +117,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="85"
+            line="90"
             column="13"/>
     </issue>
 
@@ -128,7 +128,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="61"
+            line="66"
             column="13"/>
     </issue>
 
@@ -139,7 +139,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="68"
+            line="73"
             column="13"/>
     </issue>
 
@@ -150,7 +150,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="76"
+            line="81"
             column="13"/>
     </issue>
 
@@ -161,26 +161,26 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="85"
+            line="90"
             column="13"/>
     </issue>
 
     <issue
         id="UseAppTint"
         message="Must use `app:tint` instead of `android:tint`"
-        errorLine1="                android:tint=&quot;@android:color/white&quot; />"
+        errorLine1="                android:tint=&quot;@android:color/white&quot;"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
-            line="36"
+            line="37"
             column="17"/>
     </issue>
 
     <issue
         id="UseAppTint"
         message="Must use `app:tint` instead of `android:tint`"
-        errorLine1="                android:tint=&quot;#4CAF50&quot; />"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                android:tint=&quot;@color/flowpay_green&quot;"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/call_overlay_flowpay.xml"
             line="58"
@@ -190,11 +190,11 @@
     <issue
         id="UseAppTint"
         message="Must use `app:tint` instead of `android:tint`"
-        errorLine1="                android:tint=&quot;#FF6B6B&quot; />"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                android:tint=&quot;@color/overlay_alert_red&quot;"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="231"
+            line="232"
             column="17"/>
     </issue>
 
@@ -207,6 +207,17 @@
             file="src/main/res/layout/dialog_transaction_success.xml"
             line="18"
             column="9"/>
+    </issue>
+
+    <issue
+        id="ChromeOsAbiSupport"
+        message="Missing x86_64 ABI support for ChromeOS"
+        errorLine1="                abiFilters += listOf(&quot;arm64-v8a&quot;, &quot;armeabi-v7a&quot;)"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="88"
+            column="31"/>
     </issue>
 
     <issue
@@ -245,22 +256,11 @@
     <issue
         id="ObsoleteSdkInt"
         message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/flowpay/app/helpers/AudioStateManager.kt"
-            line="48"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; SDK_INT is always >= 29"
         errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="377"
+            line="325"
             column="13"/>
     </issue>
 
@@ -271,7 +271,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="394"
+            line="342"
             column="20"/>
     </issue>
 
@@ -282,7 +282,7 @@
         errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="706"
+            line="610"
             column="28"/>
     </issue>
 
@@ -293,7 +293,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/MainActivity.kt"
-            line="194"
+            line="205"
             column="13"/>
     </issue>
 
@@ -304,7 +304,7 @@
         errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/managers/PermissionManager.kt"
-            line="18"
+            line="21"
             column="24"/>
     </issue>
 
@@ -315,18 +315,18 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/managers/PermissionManager.kt"
-            line="79"
+            line="82"
             column="13"/>
     </issue>
 
     <issue
         id="ObsoleteSdkInt"
         message="Unnecessary; SDK_INT is always >= 29"
-        errorLine1="            &quot;overlay&quot; to (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(context) else true)"
+        errorLine1="            &quot;overlay&quot; to (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(context) else true),"
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/ui/activities/SettingsActivity.kt"
-            line="163"
+            line="187"
             column="31"/>
     </issue>
 
@@ -373,19 +373,19 @@
     <issue
         id="StaticFieldLeak"
         message="Do not place Android context classes in static fields (static reference to `CallOverlayService` which has field `overlayView` pointing to `View`); this is a memory leak"
-        errorLine1="        private var serviceInstance: CallOverlayService? = null"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="        // Cleared in onDestroy(), so the reference is bounded by the service"
+        errorLine2="        ^">
         <location
             file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="54"
+            line="53"
             column="9"/>
     </issue>
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `#000000` with a theme that also paints a background (inferred theme is `@style/PaymentSuccessTheme`)"
-        errorLine1="    android:background=&quot;#000000&quot;"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Possible overdraw: Root element paints background `@color/black` with a theme that also paints a background (inferred theme is `@style/PaymentSuccessTheme`)"
+        errorLine1="    android:background=&quot;@color/black&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/activity_payment_success.xml"
             line="7"
@@ -410,7 +410,7 @@
         errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="23"
+            line="28"
             column="33"/>
     </issue>
 
@@ -421,63 +421,8 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle.kts"
-            line="182"
+            line="232"
             column="20"/>
-    </issue>
-
-    <issue
-        id="ClickableViewAccessibility"
-        message="`onTouch` lambda should call `View#performClick` when a click is detected"
-        errorLine1="        overlayView?.setOnTouchListener { view, event ->"
-        errorLine2="                                        ^">
-        <location
-            file="src/main/java/com/flowpay/app/services/CallOverlayService.kt"
-            line="828"
-            column="41"/>
-    </issue>
-
-    <issue
-        id="ContentDescription"
-        message="Missing `contentDescription` attribute on image"
-        errorLine1="            &lt;ImageView"
-        errorLine2="             ~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_payment_success.xml"
-            line="30"
-            column="14"/>
-    </issue>
-
-    <issue
-        id="ContentDescription"
-        message="Missing `contentDescription` attribute on image"
-        errorLine1="            &lt;ImageView"
-        errorLine2="             ~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="54"
-            column="14"/>
-    </issue>
-
-    <issue
-        id="ContentDescription"
-        message="Missing `contentDescription` attribute on image"
-        errorLine1="            &lt;ImageView"
-        errorLine2="             ~~~~~~~~~">
-        <location
-            file="src/main/res/layout/call_overlay_flowpay.xml"
-            line="227"
-            column="14"/>
-    </issue>
-
-    <issue
-        id="ContentDescription"
-        message="Missing `contentDescription` attribute on image"
-        errorLine1="    &lt;ImageView"
-        errorLine2="     ~~~~~~~~~">
-        <location
-            file="src/main/res/layout/dialog_transaction_success.xml"
-            line="13"
-            column="6"/>
     </issue>
 
     <issue
@@ -487,7 +432,7 @@
         errorLine2="                                                              ~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/flowpay/app/utils/OverlayLogger.kt"
-            line="15"
+            line="19"
             column="63"/>
     </issue>
 
