@@ -1,5 +1,12 @@
 # Release checklist — physical-device gate
 
+> **Status: never completed.** No release has been cut, and this gate has not
+> been run end to end against the current code. Parts of it have been
+> exercised — the money path via injected SMS, and a minified release build
+> running the camera — but the items needing a live UPI-linked SIM have not.
+> The README's *Project status* section lists which ones, so anyone installing
+> from source knows what is unproven.
+
 Layers 1–3 in [TESTING.md](TESTING.md) are hermetic: they run without a SIM
 or a bank, and they can't catch a telco changing `*99#` behavior or a bank
 quietly reformatting its SMS template. This checklist is Layer 4 — the
@@ -43,8 +50,14 @@ wasn't actually verified is a lie the next maintainer inherits.
       the correct amount/status → the row appears correctly in Transaction
       History.
 - [ ] **QR scan flow**: scan a real merchant UPI QR (camera + ZXing decode
-      pipeline), confirm the parsed VPA/amount are correct, confirm it feeds
-      into the same downstream flow as manual entry.
+      pipeline), confirm the parsed VPA/amount are correct, and confirm it
+      dials `*99*1*3#` (the USSD scan-to-pay branch) — note this is a
+      *different rail* from manual entry, which places a 123Pay IVR call.
+      Run this on a non-Jio SIM; `*99#` USSD does not exist on Jio.
+- [ ] **Release build, not debug.** Run at least the QR scan and one payment
+      against a **minified release** APK. R8 shrinking is only exercised in the
+      release variant, and the CameraX config bootstrap it touches is
+      reflective — a crash here would appear on users' phones and nowhere else.
 - [ ] **SMS confirmation timing**: note how long the bank SMS actually took
       to arrive; confirm it's comfortably inside `PaymentSessionManager`'s
       10-minute verification deadline on this operator.
@@ -56,9 +69,12 @@ wasn't actually verified is a lie the next maintainer inherits.
       the default calling SIM to something other than the UPI-registered
       one and confirm the warning toast appears before dialing.
 - [ ] **Permissions**: fresh install, confirm the app only ever requests the
-      permissions listed in `AndroidManifest.xml` (phone, SMS, camera,
-      overlay, contacts) and that each request has a clear, contextual
-      trigger — no permission requested before it's needed.
+      permissions listed in `AndroidManifest.xml` (phone — call + phone state +
+      answer, SMS, camera, contacts, overlay, notifications, vibrate,
+      modify-audio-settings) and that each request has a clear, contextual
+      trigger — no permission requested before it's needed. On Android 13+ the
+      notifications prompt is expected; it backs the payment-result
+      notification.
 - [ ] **No new lint/detekt findings** and
       `./gradlew test :app:lintDebug detekt koverVerify` is green on the exact
       commit being released (should already be true from CI, but re-confirm on

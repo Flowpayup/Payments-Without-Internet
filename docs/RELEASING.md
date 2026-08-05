@@ -1,21 +1,32 @@
 # Releasing Flowpay
 
+> **No release has been cut yet.** There is no tag, no signing key, and no
+> published APK — this document describes the procedure for the first one.
+> Step 0 is generating the release keystore (see `keystore.properties.example`)
+> and pasting its certificate fingerprint into [SECURITY.md](../SECURITY.md),
+> which currently states plainly that no signed build exists.
+
 The release pipeline is deliberately split: **CI builds, the maintainer signs.**
-The signing key never leaves the maintainer's machine — CI has no secrets to
-leak, and anyone can rebuild the unsigned APK and compare it byte-for-byte
-against a release.
+The signing key never leaves the maintainer's machine, so CI has no secrets to
+leak — and because CI therefore cannot produce the artifact users install, it
+attaches **nothing** to the GitHub Release. Everything on the release page is
+uploaded by the maintainer, signed.
 
 ## Build environment
 
-Releases are built with a pinned toolchain so builds are reproducible:
+Releases are built with a pinned toolchain:
 
 - **JDK:** Temurin 17 (the same distribution CI uses)
-- **Android SDK:** compileSdk 35, build-tools as resolved by AGP
-- **Gradle:** the version pinned in `gradle/wrapper/gradle-wrapper.properties`
+- **Android SDK:** `compileSdk 35`, `buildToolsVersion 35.0.0` (pinned in
+  `app/build.gradle.kts` — aapt2 and zipalign differ between revisions)
+- **Gradle:** the version and SHA-256 pinned in
+  `gradle/wrapper/gradle-wrapper.properties`
 
 `dependenciesInfo` is disabled in `app/build.gradle.kts`, so APKs contain no
-Play-Store metadata blob and two builds of the same commit should be
-byte-identical modulo the signature block.
+Play-Store metadata blob. With the toolchain above held constant, two builds of
+the same commit are expected to match outside `META-INF/`; this has not yet been
+confirmed by an independent reproducer, so treat it as an intent rather than a
+guarantee until someone reports a byte-for-byte match.
 
 ## Release checklist
 
@@ -42,28 +53,43 @@ byte-identical modulo the signature block.
    git commit -am "Release vX.Y.Z"
    git tag vX.Y.Z
    ```
-6. **Push the tag** (when a remote is in use). The `Release` workflow builds
-   the unsigned APK, generates `SHA-256SUMS`, and attaches both to a **draft**
-   GitHub Release.
-7. **Sign locally**:
+6. **Push the tag.** The `Release` workflow runs the unit tests, builds the
+   unsigned APK, and opens an **empty draft** GitHub Release with generated
+   notes. The unsigned APK and the R8 `mapping.txt` are kept as *workflow
+   artifacts* — they are deliberately **not** attached to the release, because
+   an unsigned APK is uninstallable and a user who downloaded it would hit
+   `INSTALL_PARSE_FAILED_NO_CERTIFICATES`.
+7. **Build and sign locally.** With `keystore.properties` in place this is one
+   step and produces the artifact users install:
    ```bash
-   # zipalign first if using apksigner on the unsigned CI artifact
-   zipalign -v 4 app-release-unsigned.apk app-release-aligned.apk
-   apksigner sign --ks <your-keystore> --out flowpay-vX.Y.Z.apk app-release-aligned.apk
+   ./gradlew clean assembleRelease
+   cp app/build/outputs/apk/release/app-release.apk flowpay-vX.Y.Z.apk
    apksigner verify --print-certs flowpay-vX.Y.Z.apk
    ```
-   A locally built `./gradlew assembleRelease` with `keystore.properties`
-   present produces the same signed result in one step.
-8. **Upload the signed APK** to the draft release, paste the certificate
-   SHA-256 fingerprint from `apksigner verify --print-certs` into the release
-   notes, and publish.
+8. **Generate the checksum over the signed APK** — the file users actually
+   download. Never publish a checksum computed over the CI artifact:
+   ```bash
+   shasum -a 256 flowpay-vX.Y.Z.apk > SHA-256SUMS
+   cat SHA-256SUMS
+   ```
+9. **Upload `flowpay-vX.Y.Z.apk` and `SHA-256SUMS`** to the draft release,
+   paste the certificate SHA-256 fingerprint from step 7 into the notes, and
+   publish. The release page must contain exactly these two files.
 
 ## Verifying a release (anyone)
 
+Run both, from the directory holding the downloaded files:
+
 ```bash
-apksigner verify --print-certs flowpay-vX.Y.Z.apk   # fingerprint must match release notes
-shasum -a 256 -c SHA-256SUMS                        # checksum must match
+shasum -a 256 -c SHA-256SUMS                        # must report: OK
+apksigner verify --print-certs flowpay-vX.Y.Z.apk   # fingerprint must match SECURITY.md
 ```
+
+Compare the certificate fingerprint against the copy committed in
+[SECURITY.md](../SECURITY.md), **not** against the release notes — release
+notes are mutable by whoever published the release, so checking them against
+themselves proves nothing. The committed fingerprint is tamper-evident through
+git history.
 
 To reproduce the build: check out the tag and build with the pinned toolchain
 above. A third-party reproducer has no signing key, so pass `-PallowUnsigned`

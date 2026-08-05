@@ -4,11 +4,35 @@ Flowpay handles UPI 123Pay payment flows, USSD dialing, and SMS parsing. Please 
 
 ## Supported versions
 
-Only the `main` branch is supported. There are no tagged releases yet.
+**No binary release has been published yet.** Flowpay is currently available as
+source only: there is no tagged release, no signed APK, and nothing to
+download. Build it yourself — see [Running it](README.md#running-it).
 
-| Branch | Supported |
-|--------|-----------|
-| `main` | ✅        |
+Security fixes land on `main`. Once releases begin, they will land on the
+latest tagged release too, and older releases will not be backported.
+
+| Version             | Supported                              |
+|---------------------|----------------------------------------|
+| `main`              | ✅ the only thing that exists today    |
+| any tagged release  | — none published yet                   |
+
+## Verifying you have a genuine build
+
+Right now the honest answer is: **build from source.** That is the only
+distribution channel, so the source you compiled is the source you run. Nothing
+on any release page, mirror, or third-party APK site is published by this
+project — if you find a "Flowpay" APK somewhere, it did not come from here.
+
+Once a signed release exists, the signing certificate becomes the trust anchor
+and this section will carry its SHA-256 fingerprint. Check any future APK
+against the fingerprint committed **here**, not against the release notes —
+release notes are written by whoever published the release, so checking them
+against themselves proves nothing, while the committed fingerprint is
+tamper-evident through git history. A change to it means the signing key
+changed; that is not normal, so ask before installing.
+
+The release procedure that will produce it is in
+[docs/RELEASING.md](docs/RELEASING.md).
 
 ## Reporting a vulnerability
 
@@ -75,8 +99,40 @@ Design rules the code enforces:
 
 ## Known deferred issues
 
-The CI lint baseline (`app/lint-baseline.xml`) captures pre-existing findings.
+The CI baselines (`app/lint-baseline.xml`, `app/detekt-baseline.xml`) freeze
+pre-existing static-analysis findings so new code must come in clean. Two are
+worth naming because they look security-relevant and are deliberate:
 
-- ~~`CallManager.endCall` uses `TelecomManager.endCall` without holding `ANSWER_PHONE_CALLS`.~~ Fixed: the permission is now declared and requested with the phone-permission group; without it the in-call End button degrades to a "hang up manually" prompt.
+- **`StaticFieldLeak` in `CallOverlayService`** — the service holds a static
+  reference to itself so the overlay can be addressed from a broadcast context.
+  It is cleared in `onDestroy()`, so the reference is bounded by the service
+  lifecycle rather than leaked indefinitely.
+- **`ExportedReceiver` on `DebugSmsInjectionReceiver`** — an unguarded exported
+  receiver, in the **debug** source set only. It exists so a developer can
+  replay a bank SMS through the live pipeline via `adb` without a real SIM, and
+  requiring a permission would defeat that. It is absent from release builds
+  entirely (`src/debug/AndroidManifest.xml`), not merely disabled at runtime.
+  Verified by inspecting a built release APK, not just by reading the manifest.
 
-If you spot something else with security implications hiding behind the baseline, please report it.
+Two more are deliberate rather than baselined, and are named here because both
+look like oversights:
+
+- **A `SharedPreferences` read on the main thread in the SMS path.**
+  `SimpleSMSReceiver.onReceive` checks whether a payment window is open before
+  its `goAsync()` hop, so the first such read in a process does synchronous
+  disk I/O on the main thread — for every SMS the device receives, not just
+  bank ones. StrictMode is enabled in debug builds with `penaltyLog` and does
+  flag it. The file is tiny and the read is cached thereafter; moving the check
+  into the coroutine touches the money path's entry point, which is not a
+  change worth making outside a release with a device gate behind it.
+
+- **`-assumenosideeffects` strips `Log.e` as well as the rest.** Release builds
+  therefore carry no logging at all, including the "Keystore unusable"
+  diagnostic. This is intentional — logs are the main way a payments app leaks
+  PII, and the app has no crash reporting and no `INTERNET` permission — but it
+  does mean a user-reported problem comes with a stack trace and nothing else.
+  The R8 `mapping.txt` archived by the release workflow is what makes that
+  trace readable.
+
+If you spot something else with security implications hiding behind a baseline,
+please report it.

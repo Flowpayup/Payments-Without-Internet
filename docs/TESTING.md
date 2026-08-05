@@ -38,17 +38,21 @@ Pure logic, no Android framework, no device. Runs in seconds via
   those same URIs into real QR bitmaps and decodes them back through the
   live analyzer pipeline.
 
-## Layer 2 — Instrumented tests (CI, emulator, path-filtered + weekly)
+## Layer 2 — Instrumented tests (none at present)
 
-Real Android framework classes on an emulator, via
-`./gradlew connectedDebugAndroidTest`. Slower and occasionally flaky, so
-this doesn't run on every push — see
-[instrumented.yml](../.github/workflows/instrumented.yml).
+There are currently **no instrumented tests**, and no emulator job in CI.
 
-- **`MigrationTest`** — every Room schema migration
-  ([Migrations.kt](../app/src/main/java/com/flowpay/app/data/migrations/Migrations.kt))
-  against `MigrationTestHelper`, confirming existing rows and columns
-  survive a real upgrade.
+The only one that ever existed was `MigrationTest`, covering Room migrations
+`1→2` and `2→3`. Those were removed: the first commit of this codebase already
+declared schema `version = 3`, so no v1 or v2 database has ever existed on any
+device, the migrations could never execute, and the v1/v2 schema JSON they were
+validated against had been written by hand rather than emitted by the Room
+compiler. Keeping an emulator matrix in the release path to guard unreachable
+code was cost without coverage.
+
+This layer comes back with the next schema change, which must land together
+with its migration, the compiler-generated schema JSON, a `MigrationTest`, and
+the emulator workflow to run it. All four are recoverable from git history.
 
 ## Layer 3 — Debug SMS injection (any emulator, on demand)
 
