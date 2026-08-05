@@ -180,9 +180,7 @@ class PaymentResultActivity : AppCompatActivity() {
         when {
             !recipientName.isNullOrEmpty() -> {
                 recipientLayout.visibility = View.VISIBLE
-                recipientLabel.text = getString(
-                    if (transactionType == "CREDIT") R.string.recipient_received_from else R.string.recipient_paid_to
-                )
+                recipientLabel.text = getString(counterpartyLabelFor(status, transactionType))
                 recipientText.text = recipientName
             }
             !phoneNumber.isNullOrEmpty() -> {
@@ -205,7 +203,7 @@ class PaymentResultActivity : AppCompatActivity() {
         // Bank name - show if different from recipient
         bankNameText.text = bankName
 
-        transactionIdText.text = transactionId
+        transactionIdText.text = bankReferenceOf(transactionId)
         dateTimeText.text = formatDateTime(timestamp)
 
         // Show UPI ID if available
@@ -235,6 +233,44 @@ class PaymentResultActivity : AppCompatActivity() {
     }
 
     private fun formatAmount(amount: String): String = CurrencyFormat.inr(amount)
+
+    /**
+     * The label above the counterparty's name, for the outcome being rendered.
+     *
+     * "Paid to" and "Received from" are past tense: they assert that the money
+     * moved, so only a confirmed SUCCESS earns them. Under a red "Payment
+     * Failed" heading the assertion is simply false — the card read "Paid to
+     * SHARMA STORE" directly below an explainer saying any debited amount is
+     * normally auto-reversed, so the screen contradicted itself and the more
+     * concrete-looking line is the one a worried user believes. NEEDS_REVIEW
+     * and UNVERIFIED have the same problem for the opposite reason: nobody
+     * knows yet whether it moved, which is the whole point of those states.
+     *
+     * The neutral "To"/"From" names the counterparty without claiming an
+     * outcome, which is all the row was ever there to do.
+     */
+    private fun counterpartyLabelFor(status: String, transactionType: String): Int {
+        val isCredit = transactionType == "CREDIT"
+        return when {
+            status != TransactionStatus.SUCCESS ->
+                if (isCredit) R.string.recipient_from else R.string.recipient_to
+            isCredit -> R.string.recipient_received_from
+            else -> R.string.recipient_paid_to
+        }
+    }
+
+    /**
+     * The part of a stored transaction id a user can actually act on.
+     *
+     * Ids are stored as `<bank reference>_<timestamp>` — the timestamp keeps
+     * rows unique when a bank reuses a reference, and is meaningless to the
+     * reader. Shown whole it produced "125012501250…85952823651", ellipsised
+     * through the middle, which is precisely the half a user needs to match
+     * this payment against their bank statement. Generated ids (`TXN…`, no
+     * separator) are shown as-is.
+     */
+    private fun bankReferenceOf(transactionId: String): String =
+        transactionId.substringBeforeLast('_').ifBlank { transactionId }
 
     private fun formatDateTime(timestamp: Long): String {
         val formatter = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
