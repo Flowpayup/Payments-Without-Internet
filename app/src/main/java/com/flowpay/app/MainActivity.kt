@@ -110,6 +110,8 @@ import com.flowpay.app.data.PaymentDetails
 import com.flowpay.app.data.TestResultsManager
 import com.flowpay.app.helpers.MainActivityHelper
 import com.flowpay.app.managers.PermissionManager
+import com.flowpay.app.payment.Upi123CallStringBuilder
+import com.flowpay.app.payment.messageFor
 import com.flowpay.app.ui.activities.SettingsActivity
 import com.flowpay.app.ui.activities.TransactionHistoryActivity
 import com.flowpay.app.ui.components.TransactionDetailDialog
@@ -119,6 +121,7 @@ import com.flowpay.app.ui.theme.FlowpayDarkGray
 import com.flowpay.app.ui.theme.FlowpayLightGray
 import com.flowpay.app.ui.theme.FlowpayMediumGray
 import com.flowpay.app.ui.theme.FlowpayOutlineGray
+import com.flowpay.app.ui.theme.FlowpayStatusError
 import com.flowpay.app.ui.theme.FlowpaySurfaceDim
 import com.flowpay.app.ui.theme.FlowpayTextGray
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
@@ -329,199 +332,234 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Payment Action Buttons - QR scan + Pay Contact
+// Payment Action Buttons - QR scan + Pay Contact.
+//
+// Each rail is locked until its own connectivity test has passed: Scan QR
+// dials *99#, Pay Contact dials the UPI 123 IVR. One composable per button,
+// because the locked/unlocked branches on both pushed the combined function
+// past detekt's complexity and parameter limits.
 @Composable
 fun PaymentActionButtons(
     onQRScanClick: () -> Unit,
     onPayContactClick: () -> Unit,
     isUpi123Ready: Boolean,
-    isScanning: Boolean,
-    modifier: Modifier = Modifier
+    isUssdReady: Boolean,
+    isScanning: Boolean
 ) {
-    var isQRPressed by remember { mutableStateOf(false) }
-    var isPayPressed by remember { mutableStateOf(false) }
-
-    val qrButtonScale by animateFloatAsState(
-        targetValue = if (isQRPressed) 0.94f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = "QR Button Scale"
-    )
-    val payButtonScale by animateFloatAsState(
-        targetValue = if (isPayPressed) 0.94f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = "Pay Button Scale"
-    )
-
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Scan QR Button
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(70.dp)
-                    .shadow(
-                        elevation = 12.dp,
-                        shape = CircleShape,
-                        ambientColor = LocalFlowpayAccentTheme.current.headerGradientStart.copy(alpha = 0.3f),
-                        spotColor = LocalFlowpayAccentTheme.current.headerGradientEnd.copy(alpha = 0.4f)
-                    )
-                    .scale(qrButtonScale)
-                    .background(
-                        brush = Brush.linearGradient(
+        ScanQrButton(onQRScanClick, isUssdReady, isScanning)
+        PayContactButton(onPayContactClick, isUpi123Ready)
+    }
+}
+
+/** Scan QR — locked until the *99# connectivity test has passed. */
+@Composable
+private fun ScanQrButton(
+    onQRScanClick: () -> Unit,
+    isUssdReady: Boolean,
+    isScanning: Boolean
+) {
+    var isQRPressed by remember { mutableStateOf(false) }
+    val qrButtonScale by animateFloatAsState(
+        targetValue = if (isQRPressed) 0.94f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "QR Button Scale"
+    )
+    // Scan QR Button
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .shadow(
+                    elevation = 12.dp,
+                    shape = CircleShape,
+                    ambientColor = LocalFlowpayAccentTheme.current.headerGradientStart.copy(alpha = 0.3f),
+                    spotColor = LocalFlowpayAccentTheme.current.headerGradientEnd.copy(alpha = 0.4f)
+                )
+                .scale(qrButtonScale)
+                .background(
+                    brush = if (isUssdReady) {
+                        Brush.linearGradient(
                             colors = listOf(
                                 LocalFlowpayAccentTheme.current.headerGradientStart,
                                 LocalFlowpayAccentTheme.current.headerGradientEnd
                             ),
                             start = Offset(0f, 0f),
                             end = Offset(1f, 1f)
-                        ),
-                        shape = CircleShape
-                    )
-                    .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onPress = {
-                                if (!isScanning) {
-                                    isQRPressed = true
-                                    tryAwaitRelease()
-                                    isQRPressed = false
-                                }
-                            },
-                            onTap = { if (!isScanning) onQRScanClick() }
                         )
+                    } else {
+                        Brush.linearGradient(colors = listOf(FlowpaySurfaceDim, FlowpaySurfaceDim))
                     },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isScanning) Icons.Default.QrCode else Icons.Default.QrCodeScanner,
-                    contentDescription = "Scan QR Code",
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
+                    shape = CircleShape
                 )
-            }
-
-            Text(
-                text = if (isScanning) "Opening..." else "Scan QR Code",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 1f), 3f)
-                )
-            )
-        }
-
-        // OR Divider
-        Row(
-            modifier = Modifier.padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(50.dp)
-                    .height(1.dp)
-                    .background(Color.White.copy(alpha = 0.3f))
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Box(
-                modifier = Modifier
-                    .background(Color.White.copy(alpha = 0.1f), CircleShape)
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "OR",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Box(
-                modifier = Modifier
-                    .width(50.dp)
-                    .height(1.dp)
-                    .background(Color.White.copy(alpha = 0.3f))
-            )
-        }
-
-        // Pay Contact Button — inactive until the UPI 123 IVR test has
-        // passed; in that state it prompts for setup and tapping it opens
-        // the *99# / UPI 123 test screen.
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(70.dp)
-                    .shadow(
-                        elevation = if (isUpi123Ready) 12.dp else 0.dp,
-                        shape = RoundedCornerShape(20.dp),
-                        ambientColor = LocalFlowpayAccentTheme.current.headerGradientStart.copy(alpha = 0.3f),
-                        spotColor = LocalFlowpayAccentTheme.current.headerGradientEnd.copy(alpha = 0.4f)
-                    )
-                    .scale(payButtonScale)
-                    .background(
-                        brush = if (isUpi123Ready) {
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    LocalFlowpayAccentTheme.current.headerGradientStart,
-                                    LocalFlowpayAccentTheme.current.headerGradientEnd
-                                ),
-                                start = Offset(0f, 0f),
-                                end = Offset(1f, 1f)
-                            )
-                        } else {
-                            Brush.linearGradient(
-                                colors = listOf(FlowpayMediumGray, FlowpayDarkGray),
-                                start = Offset(0f, 0f),
-                                end = Offset(1f, 1f)
-                            )
-                        },
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onPress = {
-                                isPayPressed = true
+                .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            if (!isScanning) {
+                                isQRPressed = true
                                 tryAwaitRelease()
-                                isPayPressed = false
-                            },
-                            onTap = { onPayContactClick() }
-                        )
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isUpi123Ready) Icons.Default.Person else Icons.Default.Lock,
-                    contentDescription = if (isUpi123Ready) "Pay Contact" else "Set up UPI 123 IVR",
-                    tint = if (isUpi123Ready) Color.White else Color.White.copy(alpha = 0.5f),
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
-            Text(
-                text = if (isUpi123Ready) "Pay Contact" else "Set up UPI 123 IVR",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = if (isUpi123Ready) Color.White else FlowpayTextLightGray,
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 1f), 3f)
-                )
+                                isQRPressed = false
+                            }
+                        },
+                        onTap = { if (!isScanning) onQRScanClick() }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = when {
+                    !isUssdReady -> Icons.Default.Lock
+                    isScanning -> Icons.Default.QrCode
+                    else -> Icons.Default.QrCodeScanner
+                },
+                contentDescription = stringResource(
+                    if (isUssdReady) R.string.home_scan_qr else R.string.home_setup_ussd
+                ),
+                tint = if (isUssdReady) Color.White else Color.White.copy(alpha = 0.5f),
+                modifier = Modifier.size(32.dp)
             )
         }
+
+        Text(
+            text = when {
+                !isUssdReady -> stringResource(R.string.home_setup_ussd)
+                isScanning -> stringResource(R.string.home_scan_opening)
+                else -> stringResource(R.string.home_scan_qr)
+            },
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (isUssdReady) Color.White else FlowpayTextLightGray,
+            textAlign = TextAlign.Center,
+            style = TextStyle(
+                shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 1f), 3f)
+            )
+        )
+    }
+
+    // OR Divider
+    Row(
+        modifier = Modifier.padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .width(50.dp)
+                .height(1.dp)
+                .background(Color.White.copy(alpha = 0.3f))
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Box(
+            modifier = Modifier
+                .background(Color.White.copy(alpha = 0.1f), CircleShape)
+                .padding(horizontal = 10.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = "OR",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Box(
+            modifier = Modifier
+                .width(50.dp)
+                .height(1.dp)
+                .background(Color.White.copy(alpha = 0.3f))
+        )
+    }
+}
+
+/** Pay Contact — locked until the UPI 123 IVR connectivity test has passed. */
+@Composable
+private fun PayContactButton(
+    onPayContactClick: () -> Unit,
+    isUpi123Ready: Boolean
+) {
+    var isPayPressed by remember { mutableStateOf(false) }
+    val payButtonScale by animateFloatAsState(
+        targetValue = if (isPayPressed) 0.94f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "Pay Button Scale"
+    )
+    // Pay Contact Button — inactive until the UPI 123 IVR test has
+    // passed; in that state it prompts for setup and tapping it opens
+    // the *99# / UPI 123 test screen.
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .shadow(
+                    elevation = if (isUpi123Ready) 12.dp else 0.dp,
+                    shape = RoundedCornerShape(20.dp),
+                    ambientColor = LocalFlowpayAccentTheme.current.headerGradientStart.copy(alpha = 0.3f),
+                    spotColor = LocalFlowpayAccentTheme.current.headerGradientEnd.copy(alpha = 0.4f)
+                )
+                .scale(payButtonScale)
+                .background(
+                    brush = if (isUpi123Ready) {
+                        Brush.linearGradient(
+                            colors = listOf(
+                                LocalFlowpayAccentTheme.current.headerGradientStart,
+                                LocalFlowpayAccentTheme.current.headerGradientEnd
+                            ),
+                            start = Offset(0f, 0f),
+                            end = Offset(1f, 1f)
+                        )
+                    } else {
+                        Brush.linearGradient(
+                            colors = listOf(FlowpayMediumGray, FlowpayDarkGray),
+                            start = Offset(0f, 0f),
+                            end = Offset(1f, 1f)
+                        )
+                    },
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            isPayPressed = true
+                            tryAwaitRelease()
+                            isPayPressed = false
+                        },
+                        onTap = { onPayContactClick() }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (isUpi123Ready) Icons.Default.Person else Icons.Default.Lock,
+                contentDescription = if (isUpi123Ready) "Pay Contact" else "Set up UPI 123 IVR",
+                tint = if (isUpi123Ready) Color.White else Color.White.copy(alpha = 0.5f),
+                modifier = Modifier.size(32.dp)
+            )
+        }
+
+        Text(
+            text = if (isUpi123Ready) "Pay Contact" else "Set up UPI 123 IVR",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (isUpi123Ready) Color.White else FlowpayTextLightGray,
+            textAlign = TextAlign.Center,
+            style = TextStyle(
+                shadow = Shadow(Color.Black.copy(alpha = 0.6f), Offset(0f, 1f), 3f)
+            )
+        )
     }
 }
 
@@ -548,11 +586,20 @@ fun MainScreen(
         mutableStateOf(testResultsManager.getTestResults()?.upi123Enabled == true)
     }
 
+    // Scan QR dials *99#, so it stays locked until the *99# test has passed —
+    // the same gate Pay Contact has always had for the UPI 123 IVR. Without
+    // it the scanner opened, read a QR, and only then dialled a rail this SIM
+    // may not support.
+    var isUssdReady by remember {
+        mutableStateOf(testResultsManager.getTestResults()?.ussdEnabled == true)
+    }
+
     LaunchedEffect(lifecycle) {
         snapshotFlow { lifecycle.currentState }.collect { state ->
             if (state == Lifecycle.State.RESUMED) {
                 savedBank = sharedPreferences.getString(AppConstants.KEY_SELECTED_BANK, "hdfc") ?: "hdfc"
                 isUpi123Ready = testResultsManager.getTestResults()?.upi123Enabled == true
+                isUssdReady = testResultsManager.getTestResults()?.ussdEnabled == true
             }
         }
     }
@@ -835,15 +882,27 @@ fun MainScreen(
                         val hasSms = ContextCompat.checkSelfPermission(
                             context, Manifest.permission.RECEIVE_SMS
                         ) == PackageManager.PERMISSION_GRANTED
-                        if (!hasSms) {
-                            pendingSmsAction = {
+                        when {
+                            // *99# not verified yet — the button is in its
+                            // "Set up *99#" state; take the user to the test
+                            // screen rather than opening a scanner whose
+                            // payment rail has not been shown to work.
+                            !isUssdReady -> {
+                                context.startActivity(
+                                    Intent(context, TestConfigurationActivity::class.java)
+                                )
+                            }
+                            !hasSms -> {
+                                pendingSmsAction = {
+                                    isScanning = true
+                                    onQRScanClick()
+                                }
+                                showSmsPermissionDialog = true
+                            }
+                            else -> {
                                 isScanning = true
                                 onQRScanClick()
                             }
-                            showSmsPermissionDialog = true
-                        } else {
-                            isScanning = true
-                            onQRScanClick()
                         }
                     },
                     onPayContactClick = {
@@ -874,6 +933,7 @@ fun MainScreen(
                         }
                     },
                     isUpi123Ready = isUpi123Ready,
+                    isUssdReady = isUssdReady,
                     isScanning = isScanning
                 )
 
@@ -1202,6 +1262,9 @@ fun PayContactDialog(
     val hostActivity = remember(context) { context.findComponentActivity() }
     var phoneNumber by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
+    // UPI 123Pay's IVR will not accept 5000 or more (AppConstants
+    // .UPI123PAY_MAX_AMOUNT = 4999), so the cap is enforced before dialling.
+    val isOverCap = (amount.toLongOrNull() ?: 0L) > AppConstants.UPI123PAY_MAX_AMOUNT.toLong()
     var selectedContactName by remember { mutableStateOf<String?>(null) }
     var showContactPicker by remember { mutableStateOf(false) }
     var showContactPermissionDialog by remember { mutableStateOf(false) }
@@ -1338,26 +1401,41 @@ fun PayContactDialog(
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
+                    isError = isOverCap,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        focusedBorderColor = FlowpayOutlineGray,
-                        unfocusedBorderColor = FlowpayLightGray,
+                        focusedBorderColor = if (isOverCap) FlowpayStatusError else FlowpayOutlineGray,
+                        unfocusedBorderColor = if (isOverCap) FlowpayStatusError else FlowpayLightGray,
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent
                     )
                 )
+
+                // Told here, in the dialog, while the number can still be
+                // corrected. The IVR itself only rejects an over-cap amount
+                // mid-call, after the user has already dialled.
+                if (isOverCap) {
+                    Text(
+                        text = Upi123CallStringBuilder.Reason.AMOUNT_ABOVE_CAP.messageFor(context),
+                        color = FlowpayStatusError,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    )
+                }
             }
         },
         confirmButton = {
+            val canTransfer = phoneNumber.length == 10 && amount.isNotEmpty() &&
+                amount != "0" && !isOverCap
             TextButton(
                 onClick = { onConfirm(phoneNumber, amount) },
-                enabled = phoneNumber.length == 10 && amount.isNotEmpty() && amount != "0"
+                enabled = canTransfer
             ) {
                 Text(
-                    "Transfer",
-                    color = if (phoneNumber.length == 10 && amount.isNotEmpty()) {
+                    stringResource(R.string.action_transfer),
+                    color = if (canTransfer) {
                         LocalFlowpayAccentTheme.current.accent
                     } else {
                         FlowpayTextGray

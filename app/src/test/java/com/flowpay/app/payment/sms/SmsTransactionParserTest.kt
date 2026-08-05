@@ -478,4 +478,72 @@ class SmsTransactionParserTest {
             assertEquals(expected, result!!.recipientName)
         }
     }
+
+    // -----------------------------------------------------------------
+    // An amount alone is not a payment (found on a real device, 2026-08-05)
+    // -----------------------------------------------------------------
+
+    /**
+     * Each of these carries the exact expected amount and arrives from a
+     * plausible sender inside an open payment window. Before the
+     * describesTransaction gate every one produced a green "Payment
+     * Successful" screen AND consumed the window, so the bank's genuine
+     * confirmation seconds later was discarded as having no active payment.
+     */
+    @Test
+    fun `a message carrying an amount but no transaction verb never confirms`() {
+        val notPayments = listOf(
+            "AD-BIGBAZ" to "Mega sale! Get products worth Rs.300 free. Shop now at bigbazaar.example",
+            "VM-HDFCBK" to "456 is your OTP for HDFC Bank. Rs.456 txn. Do not share with anyone.",
+            "VK-HDFCBK" to "Your HDFC Bank A/c **1234 Avl Bal is Rs.600.00 as on 05-Aug-26."
+        )
+        notPayments.forEach { (sender, body) ->
+            val amount = Regex("Rs\\.?([0-9]+)").find(body)!!.groupValues[1]
+            assertNull(
+                "must not confirm a payment: $body",
+                SmsTransactionParser.parse(sender, body, amount)
+            )
+        }
+    }
+
+    /** The balance phrasing that slipped past the balance-avoidance regex. */
+    @Test
+    fun `Avl Bal is Rs X is not a payment even at the exact expected amount`() {
+        assertNull(
+            SmsTransactionParser.parse(
+                "VK-HDFCBK",
+                "Your HDFC Bank A/c **1234 Avl Bal is Rs.600.00 as on 05-Aug-26.",
+                "600"
+            )
+        )
+    }
+
+    /** The gate must not cost us real debits phrased "transferred FROM". */
+    @Test
+    fun `a genuine debit still confirms through the gate`() {
+        val parsed = SmsTransactionParser.parse(
+            "PN-PNBSMS",
+            "Rs 3,499.00 transferred from PNB A/c **6789 to VPA merchant@okaxis. Ref 223344556677",
+            "3499"
+        )
+        assertNotNull(parsed)
+        assertEquals(TransactionStatus.SUCCESS, parsed!!.status)
+    }
+
+    /**
+     * The dual-verb template names the payee on the credited side. Direction
+     * detection already read these as debits; nothing could reach the payee,
+     * so the row recorded "Unknown" on a real device.
+     */
+    @Test
+    fun `dual-verb template resolves the payee, not Unknown`() {
+        val parsed = SmsTransactionParser.parse(
+            "AD-ICICIB",
+            "ICICI Bank Acct XX556 debited for Rs 500.00 on 05-Aug-26; KIRANA STORE credited. UPI:512233440091",
+            "500"
+        )
+        assertNotNull(parsed)
+        assertEquals("DEBIT", parsed!!.transactionType)
+        assertEquals("Kirana Store", parsed.recipientName)
+    }
 }
