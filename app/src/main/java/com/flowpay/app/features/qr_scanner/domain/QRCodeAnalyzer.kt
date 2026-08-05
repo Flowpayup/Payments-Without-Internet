@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.features.qr_scanner.domain
 
 import android.graphics.Bitmap
@@ -34,6 +37,7 @@ class QRCodeAnalyzer(
     private var lastDetectedCode: String? = null
     private var lastDetectionTime = 0L
     private val duplicateDetectionThreshold = 2000L // 2 seconds
+
     @Volatile
     private var isProcessing = false
 

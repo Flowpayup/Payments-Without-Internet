@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.features.qr_scanner.domain
 
 import android.net.Uri
