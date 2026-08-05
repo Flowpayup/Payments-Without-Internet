@@ -48,19 +48,14 @@ import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.ui.theme.statusColor
+import com.flowpay.app.utils.CurrencyFormat
 import com.flowpay.app.viewmodel.TransactionViewModel
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
 // Utility functions
-fun formatAmount(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-    return formatter.format(amount)
-}
-
 fun formatDate(timestamp: Long): String {
     val formatter = SimpleDateFormat("dd MMM, HH:mm", Locale("en", "IN"))
     return formatter.format(Date(timestamp))
@@ -525,7 +520,7 @@ private fun TransactionHistoryItem(
         // SUCCESS and UNVERIFIED never look identical in the list.
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = formatAmount(transaction.amount.toDoubleOrNull() ?: 0.0),
+                text = stringResource(R.string.amount_rupees, CurrencyFormat.inr(transaction.amount)),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White,
