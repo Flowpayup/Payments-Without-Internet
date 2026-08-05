@@ -7,260 +7,329 @@
     android:background="@color/black"
     android:fitsSystemWindows="true">
 
-    <!-- Success Icon Container -->
-    <LinearLayout
-        android:id="@+id/success_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="80dp"
-        android:orientation="vertical"
-        android:gravity="center">
+    <!-- The whole screen — status, amount, card AND the action button — is one
+         column, with the leftover height shared out between its seams rather
+         than pooled anywhere.
 
-        <!-- Circular Background for Tick -->
-        <FrameLayout
-            android:layout_width="120dp"
-            android:layout_height="120dp">
+         The content is short and the screen is tall, so there is always slack
+         to put somewhere, and every fixed arrangement dumps it in one place:
+         pinning the button to the bottom left 175dp of dead black between card
+         and button; centring the column instead left a tight cluster with
+         ~119dp voids above and below it.
 
-            <View
-                android:id="@+id/iv_status_circle"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/circle_success_bg" />
+         So the seams are weighted instead. The margins below are minimums —
+         what the spacing collapses to when there is nothing to share — and the
+         four <Space> views split whatever the screen has left over equally, so
+         the page breathes at every seam at once. It self-balances across both
+         the SUCCESS and FAILED heights (the explainer is worth ~52dp) and
+         across screen sizes, with no per-device numbers to maintain.
 
-            <ImageView
-                android:id="@+id/iv_success_tick"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_check_white"
-                android:tint="@android:color/white"
-                android:importantForAccessibility="no" />
-
-        </FrameLayout>
-
-        <!-- Status Text -->
-        <TextView
-            android:id="@+id/tv_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/payment_status_success"
-            android:textColor="@color/transaction_primary"
-            android:textSize="24sp"
-            android:fontFamily="sans-serif-medium" />
-
-        <!-- Status explainer (FAILED / NEEDS_REVIEW only) -->
-        <TextView
-            android:id="@+id/tv_status_explainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginHorizontal="32dp"
-            android:gravity="center"
-            android:textColor="@color/setup_text_secondary"
-            android:textSize="14sp"
-            android:visibility="gone" />
-
-        <!-- Amount -->
-        <TextView
-            android:id="@+id/tv_amount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            tools:text="₹0"
-            android:textColor="@color/flowpay_green"
-            android:textSize="36sp"
-            android:fontFamily="sans-serif-bold" />
-
-    </LinearLayout>
-
-    <!-- Transaction Details Card -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_details"
+         Being a ScrollView also removes a real failure mode: on a short screen
+         the tallest state (FAILED, with explainer, recipient and UPI rows all
+         visible) overran a bottom-pinned button, and a RelativeLayout has no
+         way to recover from that — the rows simply disappeared underneath it.
+         Here the spacers collapse to nothing, the minimums hold, and it
+         scrolls. -->
+    <ScrollView
+        android:id="@+id/content_scroll"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/success_container"
-        android:layout_marginTop="40dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        app:cardBackgroundColor="@color/surface_deep_dark"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="0dp">
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp">
 
-            <!-- Recipient/Sender Row -->
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- Status block.
+                 match_parent, not wrap_content: the explainer below is
+                 match_parent, and inside a wrap_content column that resolves to
+                 the width of the widest sibling, so its sentence wrapped into
+                 six cramped lines. gravity=center keeps every child centred. -->
             <LinearLayout
-                android:id="@+id/layout_recipient"
+                android:id="@+id/success_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone">
+                android:orientation="vertical"
+                android:gravity="center">
 
+                <!-- Circular Background for Tick -->
+                <FrameLayout
+                    android:layout_width="120dp"
+                    android:layout_height="120dp">
+
+                    <View
+                        android:id="@+id/iv_status_circle"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/circle_success_bg" />
+
+                    <ImageView
+                        android:id="@+id/iv_success_tick"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_check_white"
+                        android:tint="@android:color/white"
+                        android:importantForAccessibility="no" />
+
+                </FrameLayout>
+
+                <!-- Status Text -->
                 <TextView
-                    android:id="@+id/tv_recipient_label"
+                    android:id="@+id/tv_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/recipient_paid_to"
-                    android:textColor="@color/text_secondary_dark"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tv_recipient_name"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:layout_marginStart="12dp"
-                    tools:text="John Doe"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:ellipsize="end"
-                    android:maxLines="1" />
-
-            </LinearLayout>
-
-            <!-- Bank/Phone Row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/label_bank"
-                    android:textColor="@color/text_secondary_dark"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tv_bank_name"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:layout_marginStart="12dp"
-                    tools:text="HDFC Bank"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
+                    android:layout_marginTop="32dp"
+                    android:text="@string/payment_status_success"
+                    android:textColor="@color/transaction_primary"
+                    android:textSize="24sp"
                     android:fontFamily="sans-serif-medium" />
 
-            </LinearLayout>
-
-            <!-- Transaction ID Row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
-
+                <!-- Amount — the number the screen exists to report, so it
+                     follows the status directly. It used to sit below the
+                     explainer, which pushed it down on the failed state. -->
                 <TextView
+                    android:id="@+id/tv_amount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/label_transaction_id"
-                    android:textColor="@color/text_secondary_dark"
-                    android:textSize="14sp" />
+                    android:layout_marginTop="16dp"
+                    tools:text="₹1,250.00"
+                    android:textColor="@color/flowpay_green"
+                    android:textSize="36sp"
+                    android:fontFamily="sans-serif-bold" />
 
+                <!-- Status explainer (FAILED / NEEDS_REVIEW / UNVERIFIED only) -->
                 <TextView
-                    android:id="@+id/tv_transaction_id"
-                    android:layout_width="0dp"
+                    android:id="@+id/tv_status_explainer"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:layout_marginStart="12dp"
-                    tools:text="TXN123456"
-                    android:textColor="@android:color/white"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginHorizontal="32dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/setup_text_secondary"
                     android:textSize="14sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:ellipsize="middle"
-                    android:maxLines="1" />
+                    tools:text="Your bank reported this payment as failed. Any debited amount is normally auto-reversed."
+                    android:visibility="gone" />
 
             </LinearLayout>
 
-            <!-- Date Time Row -->
-            <LinearLayout
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- Transaction Details Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_details"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
+                android:layout_marginTop="28dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                app:cardBackgroundColor="@color/surface_deep_dark"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/label_date_time"
-                    android:textColor="@color/text_secondary_dark"
-                    android:textSize="14sp" />
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                <TextView
-                    android:id="@+id/tv_date_time"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:layout_marginStart="12dp"
-                    tools:text="01 Jan 2024, 12:00 PM"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:fontFamily="sans-serif-medium" />
+                    <!-- Recipient/Sender Row -->
+                    <LinearLayout
+                        android:id="@+id/layout_recipient"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp"
+                        android:visibility="gone">
 
-            </LinearLayout>
+                        <TextView
+                            android:id="@+id/tv_recipient_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="@string/recipient_paid_to"
+                            android:textColor="@color/text_secondary_dark"
+                            android:textSize="14sp" />
 
-            <!-- UPI ID Row (Optional) -->
-            <LinearLayout
-                android:id="@+id/layout_upi_id"
+                        <TextView
+                            android:id="@+id/tv_recipient_name"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:layout_marginStart="12dp"
+                            tools:text="John Doe"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:ellipsize="end"
+                            android:maxLines="1" />
+
+                    </LinearLayout>
+
+                    <!-- Bank/Phone Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_bank"
+                            android:textColor="@color/text_secondary_dark"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_bank_name"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:layout_marginStart="12dp"
+                            tools:text="HDFC Bank"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </LinearLayout>
+
+                    <!-- Transaction ID Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_transaction_id"
+                            android:textColor="@color/text_secondary_dark"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_transaction_id"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:layout_marginStart="12dp"
+                            tools:text="TXN123456"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:ellipsize="middle"
+                            android:maxLines="1" />
+
+                    </LinearLayout>
+
+                    <!-- Date Time Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_date_time"
+                            android:textColor="@color/text_secondary_dark"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_date_time"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:layout_marginStart="12dp"
+                            tools:text="01 Jan 2024, 12:00 PM"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </LinearLayout>
+
+                    <!-- UPI ID Row (Optional) -->
+                    <LinearLayout
+                        android:id="@+id/layout_upi_id"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_upi_id"
+                            android:textColor="@color/text_secondary_dark"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_upi_id"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:layout_marginStart="12dp"
+                            tools:text="user@upi"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <Space
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:visibility="gone">
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/label_upi_id"
-                    android:textColor="@color/text_secondary_dark"
-                    android:textSize="14sp" />
+            <!-- Done Button — in the flow, not pinned to the bottom, so it
+                 rises with the content instead of sitting alone against the
+                 navigation bar. 32dp is its minimum clearance from the card. -->
+            <Button
+                android:id="@+id/btn_done"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:background="@drawable/button_gradient_bg"
+                android:text="@string/action_done"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium"
+                android:textAllCaps="false"
+                android:elevation="4dp" />
 
-                <TextView
-                    android:id="@+id/tv_upi_id"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:layout_marginStart="12dp"
-                    tools:text="user@upi"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:fontFamily="sans-serif-medium" />
-
-            </LinearLayout>
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
         </LinearLayout>
 
-    </androidx.cardview.widget.CardView>
-
-    <!-- Done Button -->
-    <Button
-        android:id="@+id/btn_done"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="80dp"
-        android:background="@drawable/button_gradient_bg"
-        android:text="@string/action_done"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:fontFamily="sans-serif-medium"
-        android:textAllCaps="false"
-        android:elevation="4dp" />
+    </ScrollView>
 
 </RelativeLayout>

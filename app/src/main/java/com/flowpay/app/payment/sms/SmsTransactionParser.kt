@@ -447,7 +447,13 @@ object SmsTransactionParser {
 
     internal fun extractTransactionId(body: String, clock: () -> Long): String? {
         val patterns = listOf(
-            "(?:ref|txn|transaction|id)\\s*(?:no|number|id)?\\s*:?\\s*([A-Z0-9]+)",
+            // The \b are load-bearing. Without them "id" matched inside
+            // "pa|id| to SHARMA STORE" and captured the following word, so a
+            // receipt for the most common template read "Transaction ID
+            // to_1785952502285" instead of the bank's reference (seen on a
+            // real device, 2026-08-05). The reference is the one field a user
+            // needs to match this payment against their bank statement.
+            "\\b(?:ref|txn|transaction|id)\\b\\s*(?:no|number|id)?\\s*[:.#]?\\s*([A-Z0-9]+)",
             "([A-Z0-9]{10,})" // Generic pattern for long alphanumeric
         )
 
