@@ -1,11 +1,14 @@
 # Release checklist — physical-device gate
 
-> **Status: never completed.** No release has been cut, and this gate has not
-> been run end to end against the current code. Parts of it have been
-> exercised — the money path via injected SMS, and a minified release build
-> running the camera — but the items needing a live UPI-linked SIM have not.
-> The README's *Project status* section lists which ones, so anyone installing
-> from source knows what is unproven.
+> **Status: never completed.** This gate has not been run end to end against
+> the current code. Parts of it have been exercised — the money path via
+> injected SMS, and a minified release build running the camera — but the
+> items needing a live UPI-linked SIM have not.
+>
+> A signed release build now exists, so nothing except this list stands
+> between the code and a published APK. That makes running it the gate, not a
+> formality. The README's *Project status* section lists the unproven items,
+> so anyone installing knows what they are ahead of.
 
 Layers 1–3 in [TESTING.md](TESTING.md) are hermetic: they run without a SIM
 or a bank, and they can't catch a telco changing `*99#` behavior or a bank

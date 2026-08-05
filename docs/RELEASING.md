@@ -1,10 +1,13 @@
 # Releasing Flowpay
 
-> **No release has been cut yet.** There is no tag, no signing key, and no
-> published APK — this document describes the procedure for the first one.
-> Step 0 is generating the release keystore (see `keystore.properties.example`)
-> and pasting its certificate fingerprint into [SECURITY.md](../SECURITY.md),
-> which currently states plainly that no signed build exists.
+> **The signing key exists** (generated 2026-08-05, valid to 2053) and its
+> certificate fingerprint is committed in [SECURITY.md](../SECURITY.md). The
+> key and its password live only on the maintainer's machine and are never
+> committed — `keystore.properties` and `*.jks` are gitignored.
+>
+> **No release has been published yet.** Before the first one, the physical
+> device gate in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) must be run — it
+> never has been.
 
 The release pipeline is deliberately split: **CI builds, the maintainer signs.**
 The signing key never leaves the maintainer's machine, so CI has no secrets to

@@ -16,9 +16,8 @@ Flowpay tackles a problem millions of people in India hit every day: UPI payment
 
 ## Project status — read this before you install it
 
-**Source only. There is no release APK, and this has not completed its
-hardware test pass.** This app moves real money, so here is exactly what has
-and has not been verified.
+**This has not completed its hardware test pass.** This app moves real money,
+so here is exactly what has and has not been verified.
 
 **Verified, on every commit:** the full unit suite on both the debug and the
 release variant, lint, detekt, a coverage floor on the payment-critical
@@ -42,10 +41,10 @@ UPI-linked SIM:
 - the permission deny-paths, and the clipboard-wipe and audio-restore
   behaviours.
 
-If you build and install this, you are ahead of that gate. Start with a
-trivial amount. Payment outcomes are decided **solely** by your bank's
-confirmation SMS — if it does not arrive, Flowpay records nothing, which is
-deliberate and explained in [docs/FAQ.md](docs/FAQ.md).
+Whether you build this or install a release APK, you are ahead of that gate.
+Start with a trivial amount. Payment outcomes are decided **solely** by your
+bank's confirmation SMS — if it does not arrive, Flowpay records nothing,
+which is deliberate and explained in [docs/FAQ.md](docs/FAQ.md).
 
 ---
 
@@ -174,7 +173,7 @@ If you want to skim the code without running it, the build also works without an
 
 **Signed release build:** copy `keystore.properties.example` to `keystore.properties`, fill in your signing-key details, then run `./gradlew assembleRelease`. The `keystore.properties` file and any `*.jks`/`*.keystore` files are gitignored, so signing material is never committed. Without a keystore, `assembleRelease` stops rather than handing you an unsigned, uninstallable APK — pass `-PallowUnsigned` if that's what you actually want.
 
-**Verify a build:** no signed release exists yet, so the build you compiled is the only Flowpay there is — an APK claiming to be Flowpay from anywhere else did not come from this project. Once releases begin, check one with `apksigner verify --print-certs <apk>` against the fingerprint committed in [SECURITY.md](SECURITY.md) — not against the release notes, which whoever published the release also wrote.
+**Verify a build:** check a downloaded APK with `apksigner verify --print-certs <apk>` and compare the SHA-256 fingerprint against the one committed in [SECURITY.md](SECURITY.md) — not against the release notes, which whoever published the release also wrote. If it doesn't match, it isn't ours.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the system fits together, [docs/FAQ.md](docs/FAQ.md) for the trust/permissions questions, [docs/TESTING.md](docs/TESTING.md) for how outcomes are verified, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
 
