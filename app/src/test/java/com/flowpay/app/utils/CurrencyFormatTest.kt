@@ -17,6 +17,10 @@ import org.junit.Test
  */
 class CurrencyFormatTest {
 
+    private companion object {
+        const val NEGATIVE_FIVE_HUNDRED = -500.0
+    }
+
     @Test
     fun `groups lakhs in the Indian 3-2-2 pattern, not in threes`() {
         assertEquals("1,00,000.00", CurrencyFormat.inr("100000"))
@@ -57,8 +61,9 @@ class CurrencyFormatTest {
     /** The 3-then-2s rule has to keep holding well past a lakh. */
     @Test
     fun `keeps grouping in twos above a lakh`() {
-        assertEquals("10,00,000.00", CurrencyFormat.inr("1000000"))       // 10 lakh
-        assertEquals("1,00,00,000.00", CurrencyFormat.inr("10000000"))    // 1 crore
+        // 10 lakh, 1 crore, 100 crore
+        assertEquals("10,00,000.00", CurrencyFormat.inr("1000000"))
+        assertEquals("1,00,00,000.00", CurrencyFormat.inr("10000000"))
         assertEquals("1,00,00,00,000.00", CurrencyFormat.inr("1000000000"))
     }
 
@@ -70,7 +75,7 @@ class CurrencyFormatTest {
     @Test
     fun `negative amounts keep their sign outside the grouping`() {
         assertEquals("-1,00,000.00", CurrencyFormat.inr("-100000"))
-        assertEquals("-500.00", CurrencyFormat.inr(-500.0))
+        assertEquals("-500.00", CurrencyFormat.inr(NEGATIVE_FIVE_HUNDRED))
     }
 
     /**

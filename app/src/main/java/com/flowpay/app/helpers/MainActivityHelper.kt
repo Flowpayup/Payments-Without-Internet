@@ -16,6 +16,8 @@ import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.managers.CallManager
 import com.flowpay.app.managers.PermissionManager
 import com.flowpay.app.payment.PaymentInputValidator
+import com.flowpay.app.payment.Upi123CallStringBuilder
+import com.flowpay.app.payment.messageFor
 import com.flowpay.app.services.CallOverlayService
 import com.flowpay.app.states.PaymentState
 
@@ -159,11 +161,10 @@ class MainActivityHelper(
             return false
         }
         if (amountValue > AppConstants.UPI123PAY_MAX_AMOUNT) {
+            // Same reason, same wording as the one Upi123CallStringBuilder
+            // raises further down the path — see Reason.AMOUNT_ABOVE_CAP.
             uiCallback.showToast(
-                context.getString(
-                    R.string.error_amount_above_123pay_cap,
-                    AppConstants.UPI123PAY_MAX_AMOUNT.toLong()
-                )
+                Upi123CallStringBuilder.Reason.AMOUNT_ABOVE_CAP.messageFor(context)
             )
             return false
         }
