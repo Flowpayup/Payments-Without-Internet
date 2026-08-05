@@ -40,7 +40,7 @@ import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.FlowpayTextPale
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.ui.theme.statusColor
-import java.text.NumberFormat
+import com.flowpay.app.utils.CurrencyFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -115,7 +115,7 @@ fun TransactionDetailDialog(
 
                 // Large amount
                 Text(
-                    text = formatAmount(transaction.amount.toDoubleOrNull() ?: 0.0),
+                    text = stringResource(R.string.amount_rupees, CurrencyFormat.inr(transaction.amount)),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = accent.headerGradientStart,
@@ -404,11 +404,6 @@ private fun statusExplainerText(status: String): String? = when (status.uppercas
     "CANCELLED" -> androidx.compose.ui.res.stringResource(com.flowpay.app.R.string.status_explainer_cancelled)
     "FAILED" -> androidx.compose.ui.res.stringResource(com.flowpay.app.R.string.status_explainer_failed)
     else -> null
-}
-
-private fun formatAmount(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-    return formatter.format(amount)
 }
 
 private fun formatFullDate(timestamp: Long): String {
