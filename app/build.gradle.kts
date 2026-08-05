@@ -116,6 +116,11 @@ android {
         // Dependency freshness is Dependabot's job; lint's advisory would
         // otherwise go stale in the baseline every week.
         disable += "GradleDependency"
+        // Same category, and worse in the baseline: its location is
+        // gradle/libs.versions.toml, which sits outside app/, so lint records
+        // it as an absolute path. That baked the maintainer's home directory
+        // into a file this repo publishes, and never matched on CI anyway.
+        disable += "AndroidGradlePluginVersion"
         // All hardcoded UI strings have been extracted to resources; keep it
         // that way by failing the build on any new one.
         error += "HardcodedText"

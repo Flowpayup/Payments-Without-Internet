@@ -130,8 +130,8 @@ jobs:
           # must fix its lint findings, not absorb them into the baseline.
           ISSUES=$(grep -cE '<issue\s|<issue$' app/lint-baseline.xml || echo 0)
           echo "Baseline currently absorbs $ISSUES issues"
-          if [ "$ISSUES" -gt 39 ]; then
-            echo "::error::lint-baseline.xml grew beyond the frozen budget (39). Fix new lint issues instead of re-baselining."
+          if [ "$ISSUES" -gt 35 ]; then
+            echo "::error::lint-baseline.xml grew beyond the frozen budget (35). Fix new lint issues instead of re-baselining."
             exit 1
           fi
 

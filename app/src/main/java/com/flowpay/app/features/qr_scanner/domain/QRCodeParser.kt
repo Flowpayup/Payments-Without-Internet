@@ -3,8 +3,10 @@
 
 package com.flowpay.app.features.qr_scanner.domain
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.flowpay.app.R
 import com.flowpay.app.data.UPIData
 
 /**
@@ -35,8 +37,8 @@ object QRCodeParser {
      *
      * An enum, not a sentence: this parser is pure and unit-tested, and the
      * copy shown over the live camera belongs in `strings.xml` with the rest
-     * of it. [messageFor][com.flowpay.app.features.qr_scanner.domain.messageFor]
-     * does the mapping at the UI edge.
+     * of it. [messageFor] at the bottom of this file does the mapping at the
+     * UI edge.
      */
     enum class Reason {
         EMPTY,
@@ -128,4 +130,21 @@ object QRCodeParser {
             }
         }
     }
+}
+
+/**
+ * The UI edge where a [QRCodeParser.Reason] becomes the sentence shown in the
+ * scanner's inline banner ("Not a valid UPI payment QR — %1$s. Try another
+ * code.").
+ *
+ * An extension rather than a method on the enum, so the parser's decision
+ * logic stays free of resource lookups and keeps its plain-JVM tests.
+ */
+fun QRCodeParser.Reason.messageFor(context: Context): String = when (this) {
+    QRCodeParser.Reason.EMPTY -> context.getString(R.string.qr_reason_empty)
+    QRCodeParser.Reason.NOT_A_UPI_QR -> context.getString(R.string.qr_reason_not_upi)
+    QRCodeParser.Reason.MALFORMED -> context.getString(R.string.qr_reason_malformed)
+    QRCodeParser.Reason.NO_PAYEE_ADDRESS -> context.getString(R.string.qr_reason_no_payee)
+    QRCodeParser.Reason.INVALID_PAYEE_ADDRESS -> context.getString(R.string.qr_reason_invalid_payee)
+    QRCodeParser.Reason.INVALID_AMOUNT -> context.getString(R.string.qr_reason_invalid_amount)
 }
