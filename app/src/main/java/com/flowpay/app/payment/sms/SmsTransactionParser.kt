@@ -96,7 +96,16 @@ object SmsTransactionParser {
         "to\\s+([a-zA-Z][a-zA-Z0-9\\s]+?)@",
 
         // Pattern for phone numbers - LAST PRIORITY
-        "to\\s+(\\d{10})(?:\\s|\\.|,|;|$)"
+        "to\\s+(\\d{10})(?:\\s|\\.|,|;|$)",
+
+        // "<NAME> credited" — the payee position in the dual-verb templates
+        // that name both sides of one payment ("Acct XX556 debited for Rs
+        // 500.00; KIRANA STORE credited"). Direction detection was taught to
+        // read these as debits, but no pattern here could reach the payee, so
+        // the row recorded "Unknown" (seen on a real device, 2026-08-05).
+        // Last in the list, so every template that already resolves keeps
+        // resolving exactly as before.
+        "\\b([a-zA-Z][a-zA-Z\\s\\.]{2,40}?)\\s+credited\\b"
     )
 
     private val SENDER_PATTERNS = listOf(
@@ -218,17 +227,19 @@ object SmsTransactionParser {
         val transactionType = detectTransactionType(body)
         val (recipientName, phoneNumber) = extractRecipientInfo(body, transactionType)
 
-        // A confirmation for our outgoing payment is a DEBIT whose amount
-        // matches this payment. A mismatched debit isn't our confirmation —
-        // return null so the operation window stays open for the real one,
-        // instead of consuming the window or misattributing an unrelated bank
-        // alert (an auto-debit, a card decline) to this payment. Credits are
-        // never a debit's confirmation and are left to the downstream path.
-        if (transactionType != "CREDIT" &&
-            !expectedAmount.isNullOrEmpty() &&
-            !isAmountMatching(amount, expectedAmount)
-        ) {
-            return null
+        // Everything below applies only to an outgoing payment we are waiting
+        // on. Credits are never a debit's confirmation and are left to the
+        // downstream path, which ignores them.
+        if (transactionType != "CREDIT") {
+            // An amount alone is not a payment — see describesTransaction.
+            if (!describesTransaction(body)) return null
+
+            // A mismatched debit isn't our confirmation — return null so the
+            // window stays open for the real one, instead of misattributing an
+            // unrelated bank alert (an auto-debit, a card decline).
+            if (!expectedAmount.isNullOrEmpty() && !isAmountMatching(amount, expectedAmount)) {
+                return null
+            }
         }
 
         // Derive the outcome from the SMS itself: a failure keyword records
@@ -247,6 +258,38 @@ object SmsTransactionParser {
             recipientName = recipientName,
             phoneNumber = phoneNumber
         )
+    }
+
+    /**
+     * Verbs that mean money actually moved. Deliberately broader than
+     * [DEBIT_INDICATORS], which exists to decide *direction* and so needs
+     * "transferred to" rather than "transferred" — a real PNB template reads
+     * "Rs 3,499.00 transferred **from** PNB A/c … to VPA merchant@okaxis",
+     * and gating on the direction list would discard it.
+     */
+    private val TRANSACTION_VERBS = listOf(
+        "debited", "credited", "sent", "paid", "transferred",
+        "withdrawn", "spent", "received", "deducted"
+    )
+
+    /**
+     * True when the body reports a transaction at all, as opposed to merely
+     * mentioning an amount.
+     *
+     * This is the gate that separates a payment message from everything else
+     * a bank or a marketer sends. Without it, any message *containing* the
+     * expected number confirmed the payment — on a real device a balance
+     * alert ("Avl Bal is Rs.600.00"), a shopping promo ("products worth
+     * Rs.300 free") and an OTP ("456 is your OTP … Rs.456 txn") each produced
+     * a green "Payment Successful" screen and, worse, consumed the operation
+     * window, so the bank's genuine confirmation arriving seconds later was
+     * discarded as having no active payment.
+     *
+     * All three carry an amount. None carry a verb.
+     */
+    internal fun describesTransaction(body: String): Boolean {
+        val bodyLower = body.lowercase(Locale.getDefault())
+        return TRANSACTION_VERBS.any { bodyLower.contains(it) } || detectsFailure(body)
     }
 
     /** True when the SMS body reports a failed/declined transaction. */
@@ -314,6 +357,11 @@ object SmsTransactionParser {
         // The old blanket `sender.length == 6` check was removed: it also
         // admitted mixed/lowercase senders ("Amazon", "MyShop"), which
         // are never DLT bank headers.
+        //
+        // The bare 6-letter and 6-digit forms are kept ON PURPOSE and must
+        // not be tightened without a replacement: real banks use them
+        // (HDFCBK, SBIUPI, 561616), so rejecting them would silently discard
+        // genuine confirmations — the failure this app exists to avoid.
         if (sender.matches(Regex("^[A-Z]{2}-[A-Z0-9]{6}(-[A-Z])?$")) ||
             sender.matches(Regex("^[A-Z]{6}$")) ||
             sender.matches(Regex("^[0-9]{6}$"))

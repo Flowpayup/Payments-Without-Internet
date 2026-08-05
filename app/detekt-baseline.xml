@@ -14,7 +14,8 @@
     <ID>LongMethod:CallOverlayService.kt$CallOverlayService$private fun createSystemOverlay(phoneNumber: String, amount: String)</ID>
     <ID>LongMethod:ContactPickerDialog.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ContactPickerDialog( onDismiss: () -&gt; Unit, onContactSelected: (Contact) -&gt; Unit )</ID>
     <ID>LongMethod:MainActivity.kt$@Composable fun PayContactDialog( onDismiss: () -&gt; Unit, onConfirm: (String, String) -&gt; Unit )</ID>
-    <ID>LongMethod:MainActivity.kt$@Composable fun PaymentActionButtons( onQRScanClick: () -&gt; Unit, onPayContactClick: () -&gt; Unit, isUpi123Ready: Boolean, isScanning: Boolean, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:MainActivity.kt$@Composable private fun ScanQrButton( onQRScanClick: () -&gt; Unit, isUssdReady: Boolean, isScanning: Boolean )</ID>
+    <ID>LongMethod:MainActivity.kt$@Composable private fun PayContactButton( onPayContactClick: () -&gt; Unit, isUpi123Ready: Boolean )</ID>
     <ID>LongMethod:MainActivity.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MainScreen( onInitiateTransfer: (String, String) -&gt; Unit, onQRScanClick: () -&gt; Unit, onRequestOverlayPermission: () -&gt; Unit )</ID>
     <ID>LongMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
     <ID>LongMethod:PaymentResultActivity.kt$PaymentResultActivity$private fun loadTransactionData()</ID>

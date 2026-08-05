@@ -106,6 +106,7 @@
     <string name="dialog_awaiting_message">Your payment request was sent to the UPI service.\n\nIf your bank calls back, press 1 to confirm and enter your UPI PIN. Flowpay will show the result as soon as your bank\'s confirmation SMS arrives.</string>
     <string name="action_ok">OK</string>
     <string name="action_got_it">Got it</string>
+    <string name="action_transfer">Transfer</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_continue">Continue</string>
     <string name="action_clear">Clear</string>
@@ -200,6 +201,11 @@
     <string name="home_field_mobile_hint">10 digits</string>
     <string name="home_field_amount_label">Amount (₹)</string>
     <string name="home_field_amount_hint">Enter amount</string>
+    <string name="home_scan_qr">Scan QR Code</string>
+    <string name="home_scan_opening">Opening…</string>
+    <!-- Shown on the Scan QR button while the *99# test has not passed, the
+         same way Pay Contact reads "Set up UPI 123 IVR" before its test. -->
+    <string name="home_setup_ussd">Set up *99#</string>
 
     <!-- Setup screen -->
     <string name="setup_step_1_of_2">Step 1 of 2</string>
