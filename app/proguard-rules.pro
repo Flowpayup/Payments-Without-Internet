@@ -32,16 +32,6 @@
     public static final android.os.Parcelable$Creator *;
 }
 
-# Keep Serializable classes
--keepclassmembers class * implements java.io.Serializable {
-    static final long serialVersionUID;
-    private static final java.io.ObjectStreamField[] serialPersistentFields;
-    private void writeObject(java.io.ObjectOutputStream);
-    private void readObject(java.io.ObjectInputStream);
-    java.lang.Object writeReplace();
-    java.lang.Object readResolve();
-}
-
 # Keep native methods
 -keepclasseswithmembernames class * {
     native <methods>;
@@ -71,14 +61,17 @@
     @android.webkit.JavascriptInterface <methods>;
 }
 
-# Keep CameraX classes
--keep class androidx.camera.** { *; }
-
-# Keep Compose classes
--keep class androidx.compose.** { *; }
-
-# Keep Coroutines
--keep class kotlinx.coroutines.** { *; }
+# CameraX, Compose, and Coroutines deliberately have NO blanket keep here.
+# Every reflective anchor those libraries need is already shipped in their
+# own consumer proguard rules (Room's `-keep class * extends RoomDatabase`,
+# camera-camera2's `Camera2Config$DefaultProvider` keep, coroutines' volatile
+# field-updater keep) or generated from the manifest/layouts by aapt
+# (PreviewView's two-arg constructor, MetadataHolderService). A blanket keep
+# on androidx.compose.** alone forced the entire material-icons-extended set
+# (~5,000 classes) into the APK against 30 icons actually referenced —
+# removing these three keeps took the release APK from 62 MB to 28 MB.
+# Verified: app code has no Class.forName/getDeclaredMethod/ServiceLoader/
+# kotlin.reflect, and the two @Parcelize classes never cross an Intent.
 
 # Remove logging in release builds
 -assumenosideeffects class android.util.Log {
@@ -89,14 +82,6 @@
     public static int d(...);
     public static int e(...);
 }
-
-# Optional dependencies not on classpath (OkHttp/Meta SDK optional platforms)
--dontwarn com.facebook.common.preconditions.Preconditions
--dontwarn com.facebook.infer.annotation.**
--dontwarn com.facebook.secure.sanitizer.intf.DataSanitizer
--dontwarn org.bouncycastle.jsse.**
--dontwarn org.conscrypt.**
--dontwarn org.openjsse.**
 
 # error_prone annotations, pulled in transitively by material's compile-time
 # dependency graph, reference javax.lang.model.* compiler-only types that

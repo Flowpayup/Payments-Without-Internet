@@ -1,34 +1,42 @@
 name: Release
 
-# Builds an UNSIGNED release APK for every version tag and attaches it to a
-# draft GitHub Release. The signing key never touches CI: the maintainer signs
-# locally and uploads the signed APK before publishing the draft.
-# See docs/RELEASING.md for the full flow.
+# Builds an UNSIGNED release APK for every version tag and opens an empty draft
+# GitHub Release for the maintainer to fill in.
+#
+# The signing key never touches CI, so CI cannot produce the artifact users
+# install. It therefore deliberately attaches NOTHING to the release: the
+# unsigned APK is kept as a workflow artifact (for inspection and third-party
+# reproduction), and the maintainer uploads the signed APK plus a SHA-256SUMS
+# generated over that signed file. Publishing a checksum here would describe
+# the wrong binary — see docs/RELEASING.md for the full flow.
 
 on:
   push:
     tags: ["v*"]
 
+# Least privilege: only the job that opens the draft release needs write.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-release:
     name: test + assembleRelease (unsigned)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
@@ -43,17 +51,36 @@ jobs:
         # keystore. Without the flag this step fails on every tag.
         run: ./gradlew assembleRelease -PallowUnsigned --no-daemon --stacktrace
 
-      - name: Generate checksums
-        run: |
-          cd app/build/outputs/apk/release
-          shasum -a 256 *.apk > SHA-256SUMS
-          cat SHA-256SUMS
+      - name: Upload unsigned APK (workflow artifact, NOT a release asset)
+        # Deliberately not attached to the GitHub Release: an unsigned APK is
+        # uninstallable, and a user who downloaded it from the release page
+        # would hit INSTALL_PARSE_FAILED_NO_CERTIFICATES. It stays here so the
+        # build output is inspectable and third parties can reproduce it.
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: unsigned-release-apk-${{ github.ref_name }}
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
 
-      - name: Create draft release
-        uses: softprops/action-gh-release@v2
+      - name: Upload R8 mapping
+        # The build pays for -keepattributes LineNumberTable specifically so
+        # release crash traces can be deobfuscated. With no crash reporting and
+        # no INTERNET permission, a user-pasted stack trace is the only crash
+        # signal that exists — without this mapping it cannot be read.
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: r8-mapping-${{ github.ref_name }}
+          path: |
+            app/build/outputs/mapping/release/mapping.txt
+            app/build/outputs/mapping/release/seeds.txt
+            app/build/outputs/mapping/release/usage.txt
+          retention-days: 90
+
+      - name: Open empty draft release
+        # No `files:` on purpose — the maintainer attaches the signed APK and
+        # its SHA-256SUMS. This step exists only for the generated notes.
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           draft: true
           generate_release_notes: true
-          files: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/release/SHA-256SUMS

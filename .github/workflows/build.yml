@@ -16,23 +16,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           fetch-depth: 0  # gitleaks scans full history
 
       - name: Scan for secrets
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
@@ -82,6 +82,30 @@ jobs:
       - name: Verify payment-core coverage floor
         run: ./gradlew koverVerify --no-daemon --stacktrace
 
+      - name: Assemble release APK (unsigned) for the size gate
+        run: ./gradlew assembleRelease -PallowUnsigned --no-daemon --stacktrace
+
+      - name: Release APK size must not grow
+        run: |
+          # Same ratchet philosophy as the lint/detekt baselines below: the
+          # budget only ever goes DOWN. This app's whole audience is
+          # entry-level Indian phones on metered data, so install size is a
+          # product requirement, not a nice-to-have — a 62 MB APK (the size
+          # before removing three blanket ProGuard keeps and scoping release
+          # to arm64-v8a/armeabi-v7a) is a defect for that audience, not a nit.
+          APK=$(ls app/build/outputs/apk/release/*.apk 2>/dev/null | head -1)
+          if [ -z "$APK" ]; then
+            echo "::error::No release APK found — the size gate cannot be evaluated."
+            exit 1
+          fi
+          BYTES=$(stat -c%s "$APK")
+          echo "Release APK: $((BYTES / 1024 / 1024)) MB ($BYTES bytes)"
+          BUDGET=18874368 # 18 MB — ~15% headroom over the measured 16.4 MB
+          if [ "$BYTES" -gt "$BUDGET" ]; then
+            echo "::error::Release APK ($((BYTES / 1024 / 1024)) MB) exceeded the 18 MB budget. Shrink it instead of raising the ceiling."
+            exit 1
+          fi
+
       - name: Lint baseline must not grow
         run: |
           # The baseline freezes pre-existing findings. All hardcoded UI
@@ -90,8 +114,8 @@ jobs:
           # must fix its lint findings, not absorb them into the baseline.
           ISSUES=$(grep -cE '<issue\s|<issue$' app/lint-baseline.xml || echo 0)
           echo "Baseline currently absorbs $ISSUES issues"
-          if [ "$ISSUES" -gt 45 ]; then
-            echo "::error::lint-baseline.xml grew beyond the frozen budget (45). Fix new lint issues instead of re-baselining."
+          if [ "$ISSUES" -gt 39 ]; then
+            echo "::error::lint-baseline.xml grew beyond the frozen budget (39). Fix new lint issues instead of re-baselining."
             exit 1
           fi
 
@@ -102,13 +126,13 @@ jobs:
           # removed and helpers were consolidated. New code must come in clean.
           IDS=$(grep -c "<ID>" app/detekt-baseline.xml || echo 0)
           echo "Detekt baseline currently absorbs $IDS findings"
-          if [ "$IDS" -gt 832 ]; then
-            echo "::error::detekt-baseline.xml grew beyond the frozen budget (832). Fix new detekt findings instead of re-baselining."
+          if [ "$IDS" -gt 466 ]; then
+            echo "::error::detekt-baseline.xml grew beyond the frozen budget (466). Fix new detekt findings instead of re-baselining."
             exit 1
           fi
 
       - name: Upload debug APK
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: success()
         with:
           name: app-debug-apk
@@ -116,7 +140,7 @@ jobs:
           retention-days: 14
 
       - name: Upload lint report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
           name: lint-report
@@ -124,7 +148,7 @@ jobs:
           retention-days: 14
 
       - name: Upload unit test reports
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
           name: unit-test-reports
@@ -132,7 +156,7 @@ jobs:
           retention-days: 14
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
           name: coverage-report

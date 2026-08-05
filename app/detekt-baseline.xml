@@ -2,31 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>ArgumentListWrapping:CallManager.kt$CallManager$(AppConstants.DEFAULT_UPI_SERVICE_NUMBER, phoneNumber, amount)</ID>
-    <ID>ArgumentListWrapping:CallManager.kt$CallManager$(AudioManager.STREAM_VOICE_CALL, originalCallVolume, AudioManager.FLAG_SHOW_UI)</ID>
-    <ID>ArgumentListWrapping:CallManager.kt$CallManager$(TAG, "Failed to restore call volume, expected: $originalCallVolume, actual: $currentCallVolume")</ID>
-    <ID>ArgumentListWrapping:CallManager.kt$CallManager$(TAG, "Failed to restore call volume, expected: $originalCallVolume, actual: $currentVolume")</ID>
-    <ID>ArgumentListWrapping:CallOverlayService.kt$CallOverlayService$(pendingPhoneNumber, "CALL_DETECTED", "isCallDetected: $isCallDetected, isOverlayActive: $isOverlayActive")</ID>
-    <ID>ArgumentListWrapping:DatabaseEncryptionMigrator.kt$DatabaseEncryptionMigrator$( dbFile.absolutePath, "", null, SQLiteDatabase.OPEN_READWRITE, null, null )</ID>
-    <ID>ArgumentListWrapping:DatabaseEncryptionMigrator.kt$DatabaseEncryptionMigrator$( dbFile.absolutePath, passphrase, null, SQLiteDatabase.OPEN_READONLY, null, null )</ID>
-    <ID>ArgumentListWrapping:DatabaseEncryptionMigrator.kt$DatabaseEncryptionMigrator$( encryptedFile.absolutePath, passphrase, null, SQLiteDatabase.OPEN_READWRITE, null, null )</ID>
-    <ID>ArgumentListWrapping:MainActivityHelper.kt$MainActivityHelper$("UPI 123Pay allows up to ₹${AppConstants.UPI123PAY_MAX_AMOUNT.toLong()} per transaction")</ID>
-    <ID>ArgumentListWrapping:PaymentSessionManager.kt$PaymentSessionManager$( phone, amount, txnId, "Call ended before the payment flow could complete" )</ID>
-    <ID>ArgumentListWrapping:QRScannerActivity.kt$QRScannerActivity$(ContextCompat.getColor(this, R.color.background_secondary))</ID>
-    <ID>ArgumentListWrapping:QRScannerActivity.kt$QRScannerActivity$(ContextCompat.getColor(this, android.R.color.black))</ID>
-    <ID>ArgumentListWrapping:QRScannerActivity.kt$QRScannerActivity$(android.R.id.content)</ID>
-    <ID>ArgumentListWrapping:QRScannerActivity.kt$QRScannerActivity$(this, "Camera initialization failed: ${exc.message}", Toast.LENGTH_LONG)</ID>
-    <ID>ArgumentListWrapping:QRScannerActivity.kt$QRScannerActivity$(this, R.color.background_secondary)</ID>
-    <ID>ArgumentListWrapping:QRScannerActivity.kt$QRScannerActivity$(this, android.R.color.black)</ID>
-    <ID>ArgumentListWrapping:TestConfigurationHelper.kt$TestConfigurationHelper$(TAG, "initiateUpi123Test called - upi123TestCompleted: $upi123TestCompleted, upi123Testing: $upi123Testing")</ID>
-    <ID>ArgumentListWrapping:TransactionDao.kt$TransactionDao$("SELECT * FROM transactions WHERE recipientName LIKE :query OR phoneNumber LIKE :query ORDER BY timestamp DESC")</ID>
-    <ID>ArgumentListWrapping:TransactionDao.kt$TransactionDao$("UPDATE transactions SET status = 'UNVERIFIED' WHERE status = 'PENDING' AND deadlineAt IS NOT NULL AND deadlineAt &lt; :now")</ID>
-    <ID>ArgumentListWrapping:TransactionDao.kt$TransactionDao$("UPDATE transactions SET status = :newStatus WHERE transactionId = :transactionId AND status = :expectedStatus")</ID>
-    <ID>ArgumentListWrapping:TransactionDetailDialog.kt$(AnnotatedString(formatFullDate(transaction.timestamp)))</ID>
-    <ID>ArgumentListWrapping:TransactionDetailDialog.kt$(formatFullDate(transaction.timestamp))</ID>
-    <ID>ArgumentListWrapping:TransactionDetailDialog.kt$(transaction.timestamp)</ID>
-    <ID>ArgumentListWrapping:Upi123CallStringBuilder.kt$Upi123CallStringBuilder$("UPI 123Pay allows up to ₹${AppConstants.UPI123PAY_MAX_AMOUNT.toLong()} per transaction")</ID>
-    <ID>BlockCommentInitialStarAlignment:Type.kt$/* Other default text styles to override titleLarge = TextStyle( fontFamily = FontFamily.Default, fontWeight = FontWeight.Normal, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = 0.sp ), labelSmall = TextStyle( fontFamily = FontFamily.Default, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 16.sp, letterSpacing = 0.5.sp ) */</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt$@Composable fun PayContactDialog( onDismiss: () -&gt; Unit, onConfirm: (String, String) -&gt; Unit )</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MainScreen( onInitiateTransfer: (String, String) -&gt; Unit, onQRScanClick: () -&gt; Unit, onRequestOverlayPermission: () -&gt; Unit )</ID>
     <ID>CyclomaticComplexMethod:PaymentResultActivity.kt$PaymentResultActivity$private fun loadTransactionData()</ID>
@@ -35,31 +10,16 @@
     <ID>CyclomaticComplexMethod:TestConfigurationActivity.kt$@Composable fun TestConfigurationScreen(testHelper: TestConfigurationHelper)</ID>
     <ID>CyclomaticComplexMethod:TestConfigurationHelper.kt$TestConfigurationHelper$fun initiateCall(callType: CallType)</ID>
     <ID>CyclomaticComplexMethod:TransactionHistoryActivity.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TransactionHistoryScreen( onBackClick: () -&gt; Unit )</ID>
-    <ID>FinalNewline:CallManager.kt$com.flowpay.app.managers.CallManager.kt</ID>
-    <ID>ImportOrdering:CallManager.kt$import android.Manifest import android.content.Context import android.content.Intent import android.content.pm.PackageManager import android.media.AudioManager import android.net.Uri import android.os.Build import android.telecom.TelecomManager import android.telephony.PhoneStateListener import android.telephony.TelephonyManager import android.util.Log import android.widget.Toast import androidx.core.content.ContextCompat import androidx.compose.runtime.mutableStateOf import com.flowpay.app.constants.PermissionConstants import com.flowpay.app.constants.AppConstants import com.flowpay.app.payment.Upi123CallStringBuilder import java.util.concurrent.atomic.AtomicBoolean</ID>
-    <ID>ImportOrdering:CallStateCoordinator.kt$import android.content.Context import android.os.Build import android.telephony.PhoneStateListener import android.telephony.TelephonyCallback import android.telephony.TelephonyManager import android.util.Log import androidx.core.content.ContextCompat import java.util.concurrent.atomic.AtomicInteger import kotlinx.coroutines.flow.MutableSharedFlow import kotlinx.coroutines.flow.MutableStateFlow import kotlinx.coroutines.flow.SharedFlow import kotlinx.coroutines.flow.StateFlow import kotlinx.coroutines.flow.asSharedFlow import kotlinx.coroutines.flow.asStateFlow</ID>
-    <ID>ImportOrdering:ContactPickerDialog.kt$import android.content.ContentResolver import android.database.Cursor import android.provider.ContactsContract import android.util.Log import androidx.compose.foundation.background import androidx.compose.foundation.clickable import androidx.compose.foundation.layout.* import androidx.compose.foundation.lazy.LazyColumn import androidx.compose.foundation.lazy.items import androidx.compose.foundation.shape.RoundedCornerShape import androidx.compose.material3.* import androidx.compose.material.icons.Icons import androidx.compose.material.icons.filled.Close import androidx.compose.material.icons.filled.Person import androidx.compose.material.icons.filled.Search import androidx.compose.runtime.* import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.graphics.Color import androidx.compose.ui.platform.LocalContext import androidx.compose.ui.text.font.FontWeight import androidx.compose.ui.text.style.TextOverflow import androidx.compose.ui.unit.dp import androidx.compose.ui.unit.sp import com.flowpay.app.ui.theme.FlowpayDarkGray import com.flowpay.app.ui.theme.FlowpayLightGray import com.flowpay.app.ui.theme.FlowpayMediumGray import com.flowpay.app.ui.theme.FlowpayOutlineGray import com.flowpay.app.ui.theme.FlowpayTextGray import com.flowpay.app.ui.theme.FlowpayTextLightGray import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme import kotlinx.coroutines.Dispatchers import kotlinx.coroutines.withContext</ID>
-    <ID>ImportOrdering:DatabaseEncryptionMigrator.kt$import android.content.Context import android.util.Log import java.io.File import net.zetetic.database.sqlcipher.SQLiteDatabase</ID>
-    <ID>ImportOrdering:SetupActivity.kt$import android.content.Intent import android.os.Bundle import android.widget.Toast import androidx.activity.ComponentActivity import androidx.activity.compose.setContent import androidx.compose.foundation.background import androidx.compose.foundation.border import androidx.compose.foundation.clickable import androidx.compose.foundation.interaction.MutableInteractionSource import androidx.compose.foundation.layout.* import androidx.compose.foundation.rememberScrollState import androidx.compose.foundation.shape.CircleShape import androidx.compose.foundation.shape.RoundedCornerShape import androidx.compose.foundation.verticalScroll import androidx.compose.material.icons.Icons import androidx.compose.material.icons.filled.AccountBalance import androidx.compose.material.icons.filled.AccountBalanceWallet import androidx.compose.material.icons.filled.SimCard import androidx.compose.material.icons.filled.ArrowForward import androidx.compose.material.icons.outlined.Info import androidx.compose.material3.* import androidx.compose.material3.OutlinedTextFieldDefaults import androidx.compose.runtime.* import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.draw.alpha import androidx.compose.ui.draw.clip import androidx.compose.ui.draw.shadow import androidx.compose.ui.geometry.Offset import androidx.compose.ui.graphics.Brush import androidx.compose.ui.graphics.Color import androidx.compose.ui.graphics.Shadow import androidx.compose.ui.platform.LocalContext import androidx.compose.ui.res.stringResource import androidx.compose.ui.text.TextStyle import androidx.compose.ui.text.font.FontWeight import androidx.compose.ui.unit.dp import androidx.compose.ui.unit.sp import com.flowpay.app.ui.theme.FlowpayTheme import com.flowpay.app.ui.theme.BlueAccentTheme import com.flowpay.app.ui.theme.FlowpayDarkGray import com.flowpay.app.ui.theme.FlowpayDisabledGray import com.flowpay.app.ui.theme.FlowpayLightGray import com.flowpay.app.ui.theme.FlowpayMediumGray import com.flowpay.app.ui.theme.FlowpaySurfaceDim import com.flowpay.app.ui.theme.FlowpayTextLightGray import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme import com.flowpay.app.helpers.SetupHelper import com.flowpay.app.FlowpayApplication import com.flowpay.app.data.SettingsRepository import androidx.compose.runtime.CompositionLocalProvider import com.flowpay.app.R</ID>
-    <ID>ImportOrdering:TestConfigurationActivity.kt$import android.content.Intent import android.os.Bundle import androidx.activity.ComponentActivity import androidx.activity.compose.setContent import androidx.activity.result.contract.ActivityResultContracts import com.flowpay.app.constants.PermissionConstants import androidx.compose.animation.core.* import androidx.compose.foundation.background import androidx.compose.foundation.border import androidx.compose.foundation.clickable import androidx.compose.foundation.layout.* import androidx.compose.foundation.rememberScrollState import androidx.compose.foundation.shape.CircleShape import androidx.compose.foundation.shape.RoundedCornerShape import androidx.compose.foundation.verticalScroll import androidx.compose.material3.* import androidx.compose.runtime.* import androidx.compose.material.icons.Icons import androidx.compose.material.icons.filled.ArrowBack import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.draw.clip import androidx.compose.ui.draw.rotate import androidx.compose.ui.graphics.Brush import androidx.compose.ui.graphics.Color import androidx.compose.ui.graphics.vector.ImageVector import androidx.compose.ui.graphics.vector.path import androidx.compose.ui.platform.LocalContext import androidx.compose.ui.res.stringResource import androidx.compose.ui.text.font.FontFamily import androidx.compose.ui.text.font.FontWeight import androidx.compose.ui.text.style.TextAlign import androidx.compose.ui.unit.dp import androidx.compose.ui.unit.sp import com.flowpay.app.ui.theme.FlowpayTheme import com.flowpay.app.ui.theme.BlueAccentTheme import com.flowpay.app.ui.theme.FlowpayAccentGreen import com.flowpay.app.ui.theme.FlowpayDarkGray import com.flowpay.app.ui.theme.FlowpayLightGray import com.flowpay.app.ui.theme.FlowpayMediumGray import com.flowpay.app.ui.theme.FlowpayStatusWarning import com.flowpay.app.ui.theme.FlowpaySurfaceDim import com.flowpay.app.ui.theme.FlowpayTextGray import com.flowpay.app.ui.theme.FlowpayTextLightGray import com.flowpay.app.ui.theme.FlowpayTextPale import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme import com.flowpay.app.FlowpayApplication import com.flowpay.app.data.SettingsRepository import androidx.compose.runtime.CompositionLocalProvider import com.flowpay.app.R import com.flowpay.app.helpers.TestConfigurationHelper import com.flowpay.app.managers.CallType import com.flowpay.app.ui.dialogs.UssdProgressDialog import com.flowpay.app.ui.dialogs.Upi123ProgressDialog import android.widget.Toast import com.flowpay.app.helpers.SetupHelper import kotlinx.coroutines.delay</ID>
-    <ID>Indentation:CallManager.kt$CallManager$ </ID>
-    <ID>Indentation:CallOverlayService.kt$CallOverlayService$ </ID>
-    <ID>Indentation:CallOverlayService.kt$CallOverlayService.Companion$ </ID>
-    <ID>Indentation:ContactPickerDialog.kt$ </ID>
-    <ID>Indentation:PaymentResultActivity.kt$PaymentResultActivity$ </ID>
-    <ID>Indentation:PermissionManager.kt$PermissionManager$ </ID>
-    <ID>Indentation:QRScannerActivity.kt$QRScannerActivity$ </ID>
-    <ID>Indentation:SettingsActivity.kt$SettingsViewModel$ </ID>
-    <ID>Indentation:TransactionHistoryActivity.kt$ </ID>
     <ID>LargeClass:QRScannerActivity.kt$QRScannerActivity : ComponentActivity</ID>
     <ID>LongMethod:CallOverlayService.kt$CallOverlayService$private fun createSystemOverlay(phoneNumber: String, amount: String)</ID>
     <ID>LongMethod:ContactPickerDialog.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun ContactPickerDialog( onDismiss: () -&gt; Unit, onContactSelected: (Contact) -&gt; Unit )</ID>
     <ID>LongMethod:MainActivity.kt$@Composable fun PayContactDialog( onDismiss: () -&gt; Unit, onConfirm: (String, String) -&gt; Unit )</ID>
     <ID>LongMethod:MainActivity.kt$@Composable fun PaymentActionButtons( onQRScanClick: () -&gt; Unit, onPayContactClick: () -&gt; Unit, isUpi123Ready: Boolean, isScanning: Boolean, modifier: Modifier = Modifier )</ID>
-    <ID>LongMethod:MainActivity.kt$@Composable fun TransactionItem(payment: PaymentDetails)</ID>
     <ID>LongMethod:MainActivity.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MainScreen( onInitiateTransfer: (String, String) -&gt; Unit, onQRScanClick: () -&gt; Unit, onRequestOverlayPermission: () -&gt; Unit )</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
     <ID>LongMethod:PaymentResultActivity.kt$PaymentResultActivity$private fun loadTransactionData()</ID>
     <ID>LongMethod:QRScannerActivity.kt$QRScannerActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
+    <ID>LongMethod:QRScannerActivity.kt$QRScannerActivity$private fun startCamera()</ID>
     <ID>LongMethod:SettingsActivity.kt$@Composable private fun BankPickerDialog( selectedBank: Bank, onBankSelected: (Bank) -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
     <ID>LongMethod:SettingsActivity.kt$@Composable private fun PermissionRow( icon: ImageVector, title: String, subtitle: String, granted: Boolean, onRequest: () -&gt; Unit )</ID>
     <ID>LongMethod:SettingsActivity.kt$@Composable private fun SettingsRow( icon: ImageVector, title: String, value: String, destructive: Boolean = false, onClick: (() -&gt; Unit)? = null )</ID>
@@ -98,7 +58,6 @@
     <ID>MagicNumber:CallOverlayService.kt$CallOverlayService$800</ID>
     <ID>MagicNumber:CallOverlayService.kt$CallOverlayService.Companion$100</ID>
     <ID>MagicNumber:CallOverlayService.kt$CallOverlayService.Companion$500</ID>
-    <ID>MagicNumber:CallOverlayService.kt$CallOverlayService.Companion.&lt;no name provided&gt;$50</ID>
     <ID>MagicNumber:CallStateCoordinatorTest.kt$CallStateCoordinatorTest$10_000L</ID>
     <ID>MagicNumber:CallStateCoordinatorTest.kt$CallStateCoordinatorTest$1_000L</ID>
     <ID>MagicNumber:CallStateCoordinatorTest.kt$CallStateCoordinatorTest$4_000L</ID>
@@ -108,7 +67,6 @@
     <ID>MagicNumber:CallStateCoordinatorTest.kt$CallStateCoordinatorTest$9_000L</ID>
     <ID>MagicNumber:ContactPickerDialog.kt$10</ID>
     <ID>MagicNumber:DatabaseKeyManagerRecoveryTest.kt$DatabaseKeyManagerRecoveryTest.FakeWrapper$12</ID>
-    <ID>MagicNumber:Migrations.kt$Migrations.&lt;no name provided&gt;$3</ID>
     <ID>MagicNumber:PaymentResultActivity.kt$PaymentResultActivity$1.1f</ID>
     <ID>MagicNumber:PaymentResultActivity.kt$PaymentResultActivity$1000</ID>
     <ID>MagicNumber:PaymentResultActivity.kt$PaymentResultActivity$100f</ID>
@@ -124,10 +82,14 @@
     <ID>MagicNumber:PaymentResultActivity.kt$PaymentResultActivity.&lt;no name provided&gt;$1.2f</ID>
     <ID>MagicNumber:PaymentResultActivity.kt$PaymentResultActivity.&lt;no name provided&gt;$200</ID>
     <ID>MagicNumber:PaymentSessionManagerTest.kt$PaymentSessionManagerTest$10</ID>
+    <ID>MagicNumber:PaymentSessionManagerTest.kt$PaymentSessionManagerTest$1000L</ID>
     <ID>MagicNumber:PaymentSessionManagerTest.kt$PaymentSessionManagerTest$10_000</ID>
+    <ID>MagicNumber:PaymentSessionManagerTest.kt$PaymentSessionManagerTest$11</ID>
     <ID>MagicNumber:PaymentSessionManagerTest.kt$PaymentSessionManagerTest$1_000</ID>
+    <ID>MagicNumber:PaymentSessionManagerTest.kt$PaymentSessionManagerTest$200</ID>
     <ID>MagicNumber:PaymentSessionManagerTest.kt$PaymentSessionManagerTest$5</ID>
     <ID>MagicNumber:PaymentSessionManagerTest.kt$PaymentSessionManagerTest$5_000</ID>
+    <ID>MagicNumber:PaymentSessionManagerTest.kt$PaymentSessionManagerTest$60</ID>
     <ID>MagicNumber:PaymentState.kt$0.1f</ID>
     <ID>MagicNumber:PaymentState.kt$0.7f</ID>
     <ID>MagicNumber:QRCodeAnalyzer.kt$QRCodeAnalyzer$2000L</ID>
@@ -224,8 +186,6 @@
     <ID>MagicNumber:TransactionDetectorTest.kt$TransactionDetectorTest$6</ID>
     <ID>MagicNumber:TransactionDetectorTest.kt$TransactionDetectorTest$60</ID>
     <ID>MagicNumber:TransactionViewModel.kt$TransactionViewModel$10</ID>
-    <ID>MagicNumber:UnverifiedOutcomeObserverTest.kt$UnverifiedOutcomeObserverTest$0.4f</ID>
-    <ID>MagicNumber:UnverifiedOutcomeObserverTest.kt$UnverifiedOutcomeObserverTest$600_000</ID>
     <ID>MagicNumber:Upi123ProgressDialog.kt$10f</ID>
     <ID>MagicNumber:Upi123ProgressDialog.kt$12f</ID>
     <ID>MagicNumber:Upi123ProgressDialog.kt$14f</ID>
@@ -381,132 +341,35 @@
     <ID>MagicNumber:UssdProgressDialog.kt$9.97366f</ID>
     <ID>MatchingDeclarationName:AccentTheme.kt$FlowpayAccentTheme</ID>
     <ID>MatchingDeclarationName:ContactPickerDialog.kt$Contact</ID>
-    <ID>MaxLineLength:CallManager.kt$CallManager$Log.w(TAG, "Failed to restore call volume, expected: $originalCallVolume, actual: $currentCallVolume")</ID>
-    <ID>MaxLineLength:CallManager.kt$CallManager$Log.w(TAG, "Failed to restore call volume, expected: $originalCallVolume, actual: $currentVolume")</ID>
-    <ID>MaxLineLength:CallManager.kt$CallManager$audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, originalCallVolume, AudioManager.FLAG_SHOW_UI)</ID>
-    <ID>MaxLineLength:CallManager.kt$CallManager$return</ID>
     <ID>MaxLineLength:MainActivity.kt$message = "Flowpay needs access to your contacts so you can pick a recipient by name instead of typing their number."</ID>
     <ID>MaxLineLength:MainActivity.kt$message = "Flowpay needs overlay permission to show a payment UI anchor during the call. This keeps your transaction details visible while the call is in progress."</ID>
     <ID>MaxLineLength:MainActivity.kt$message = "Flowpay reads incoming bank SMS only while a payment is in progress, to detect the confirmation. It never reads your inbox and nothing leaves the device."</ID>
     <ID>MaxLineLength:MainActivityHelper.kt$MainActivityHelper$"which doesn't look like the ${selectedCarrier.replaceFirstChar { it.uppercase() }} SIM from setup. "</ID>
-    <ID>MaxLineLength:MainActivityHelper.kt$MainActivityHelper$uiCallback.showToast("UPI 123Pay allows up to ₹${AppConstants.UPI123PAY_MAX_AMOUNT.toLong()} per transaction")</ID>
-    <ID>MaxLineLength:OverlayLogger.kt$OverlayLogger$fun</ID>
-    <ID>MaxLineLength:QRScannerActivity.kt$QRScannerActivity$Toast.makeText(this, "Camera initialization failed: ${exc.message}", Toast.LENGTH_LONG).show()</ID>
-    <ID>MaxLineLength:QRScannerActivity.kt$QRScannerActivity$findViewById&lt;View&gt;(android.R.id.content).setBackgroundColor(ContextCompat.getColor(this, R.color.background_secondary))</ID>
-    <ID>MaxLineLength:QRScannerActivity.kt$QRScannerActivity$findViewById&lt;View&gt;(android.R.id.content).setBackgroundColor(ContextCompat.getColor(this, android.R.color.black))</ID>
     <ID>MaxLineLength:SettingsActivity.kt$SettingsViewModel$"camera" to (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)</ID>
     <ID>MaxLineLength:SettingsActivity.kt$SettingsViewModel$"contacts" to (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED)</ID>
     <ID>MaxLineLength:SettingsActivity.kt$SettingsViewModel$"overlay" to (if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.M) Settings.canDrawOverlays(context) else true)</ID>
-    <ID>MaxLineLength:SettingsActivity.kt$SettingsViewModel$"phone"</ID>
     <ID>MaxLineLength:SettingsActivity.kt$SettingsViewModel$"sms" to (ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED)</ID>
+    <ID>MaxLineLength:SettingsActivity.kt$SettingsViewModel$ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED</ID>
     <ID>MaxLineLength:SettingsActivity.kt$SettingsViewModel$ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED</ID>
     <ID>MaxLineLength:SetupHelper.kt$SetupHelper.Companion$return "Scan to pay is not available — USSD does not work for you on this device, so this feature can't be used."</ID>
     <ID>MaxLineLength:SmsParsingRegexTest.kt$SmsParsingRegexTest$"on 20-MAY-26. Avl bal Rs 12,345.67. Call 18002586161 to report fraud. Never share your UPI PIN with anyone."</ID>
     <ID>MaxLineLength:SmsTransactionParser.kt$SmsTransactionParser$"(?:Rs\\.?|INR|₹)\\s*[0-9,]+(?:\\.[0-9]{2})?\\s+(?:received|credited)\\s+from\\s+([a-zA-Z][a-zA-Z\\s\\.]+?)(?:\\s|\\.|,|;|$)"</ID>
     <ID>MaxLineLength:SmsTransactionParser.kt$SmsTransactionParser$"(?:Rs\\.?|INR|₹)\\s*[0-9,]+(?:\\.[0-9]{2})?\\s+(?:sent|paid|transferred)\\s+to\\s+([a-zA-Z][a-zA-Z\\s\\.]+?)(?:\\s|\\.|,|;|$)"</ID>
     <ID>MaxLineLength:SmsTransactionParser.kt$SmsTransactionParser$"to\\s+(?:merchant|M/s\\.?|Mr\\.?|Mrs\\.?|Ms\\.?)\\s*([a-zA-Z][a-zA-Z\\s\\.]+?)(?:\\s+(?:via|@|on|for)|\\.|,|;|$)"</ID>
-    <ID>MaxLineLength:TestConfigurationActivity.kt$TestConfigurationActivity.&lt;no name provided&gt;$runOnUiThread { android.widget.Toast.makeText(this@TestConfigurationActivity, message, android.widget.Toast.LENGTH_LONG).show() }</ID>
+    <ID>MaxLineLength:TestConfigurationActivity.kt$TestConfigurationActivity.&lt;no name provided&gt;$android.widget.Toast.makeText(this@TestConfigurationActivity, message, android.widget.Toast.LENGTH_LONG).show()</ID>
     <ID>MaxLineLength:TestConfigurationHelper.kt$TestConfigurationHelper$Log.d(TAG, "Configuration dialog shown after 25 seconds - showUssdDialog: $showUssdDialog, showUssdConfigurationOptions: $showUssdConfigurationOptions")</ID>
     <ID>MaxLineLength:TestConfigurationHelper.kt$TestConfigurationHelper$Log.d(TAG, "USSD timeout reached but conditions not met - ussdTesting: $ussdTesting, ussdTestCompleted: $ussdTestCompleted")</ID>
-    <ID>MaxLineLength:TestConfigurationHelper.kt$TestConfigurationHelper$Log.d(TAG, "initiateUpi123Test called - upi123TestCompleted: $upi123TestCompleted, upi123Testing: $upi123Testing")</ID>
-    <ID>MaxLineLength:TransactionDao.kt$TransactionDao$@Query("SELECT * FROM transactions WHERE recipientName LIKE :query OR phoneNumber LIKE :query ORDER BY timestamp DESC")</ID>
-    <ID>MaxLineLength:TransactionDao.kt$TransactionDao$@Query("UPDATE transactions SET status = 'UNVERIFIED' WHERE status = 'PENDING' AND deadlineAt IS NOT NULL AND deadlineAt &lt; :now")</ID>
-    <ID>MaxLineLength:TransactionDao.kt$TransactionDao$@Query("UPDATE transactions SET status = :newStatus WHERE transactionId = :transactionId AND status = :expectedStatus")</ID>
-    <ID>MaxLineLength:TransactionDetailDialog.kt$onCopy = { clipboardManager.setText(AnnotatedString(formatFullDate(transaction.timestamp))) }</ID>
-    <ID>MaxLineLength:Upi123CallStringBuilder.kt$Upi123CallStringBuilder$return Result.Invalid("UPI 123Pay allows up to ₹${AppConstants.UPI123PAY_MAX_AMOUNT.toLong()} per transaction")</ID>
-    <ID>MaximumLineLength:CallManager.kt$CallManager$ </ID>
     <ID>MaximumLineLength:MainActivity.kt$ </ID>
     <ID>MaximumLineLength:MainActivityHelper.kt$MainActivityHelper$ </ID>
-    <ID>MaximumLineLength:OverlayLogger.kt$OverlayLogger$ </ID>
-    <ID>MaximumLineLength:QRScannerActivity.kt$QRScannerActivity$ </ID>
     <ID>MaximumLineLength:SettingsActivity.kt$SettingsViewModel$ </ID>
     <ID>MaximumLineLength:SetupHelper.kt$SetupHelper.Companion$ </ID>
     <ID>MaximumLineLength:SmsParsingRegexTest.kt$SmsParsingRegexTest$ </ID>
     <ID>MaximumLineLength:SmsTransactionParser.kt$SmsTransactionParser$ </ID>
     <ID>MaximumLineLength:TestConfigurationActivity.kt$TestConfigurationActivity.&lt;no name provided&gt;$ </ID>
     <ID>MaximumLineLength:TestConfigurationHelper.kt$TestConfigurationHelper$ </ID>
-    <ID>MaximumLineLength:TransactionDao.kt$TransactionDao$ </ID>
-    <ID>MaximumLineLength:TransactionDetailDialog.kt$ </ID>
-    <ID>MaximumLineLength:Upi123CallStringBuilder.kt$Upi123CallStringBuilder$ </ID>
-    <ID>MultiLineIfElse:CallOverlayService.kt$CallOverlayService$dialogManager?.showTransactionCancelled()</ID>
-    <ID>MultiLineIfElse:CallOverlayService.kt$CallOverlayService$dialogManager?.showTransactionCancelledByUser()</ID>
-    <ID>MultiLineIfElse:ContactPickerDialog.kt$"No contacts found"</ID>
-    <ID>MultiLineIfElse:ContactPickerDialog.kt$"No matches for \"$searchQuery\""</ID>
-    <ID>MultiLineIfElse:PaymentSessionManagerTest.kt$PaymentSessionManagerTest.FakeStore$row</ID>
-    <ID>MultiLineIfElse:QRScannerActivity.kt$QRScannerActivity$R.drawable.bottom_action_button_active_bg</ID>
-    <ID>MultiLineIfElse:QRScannerActivity.kt$QRScannerActivity$R.drawable.bottom_action_button_bg</ID>
-    <ID>MultiLineIfElse:SetupActivity.kt$R.string.disclaimer_summary</ID>
-    <ID>MultiLineIfElse:SetupActivity.kt$R.string.disclaimer_text</ID>
-    <ID>MultiLineIfElse:TestConfigurationActivity.kt$Modifier</ID>
-    <ID>MultiLineIfElse:TestConfigurationActivity.kt$Modifier.clickable { testHelper.continueToMain() }</ID>
-    <ID>MultiLineIfElse:TransactionHistoryActivity.kt$"No matching transactions"</ID>
-    <ID>MultiLineIfElse:TransactionHistoryActivity.kt$"No transactions yet"</ID>
-    <ID>MultiLineIfElse:TransactionHistoryActivity.kt$"Transactions will appear here"</ID>
-    <ID>MultiLineIfElse:TransactionHistoryActivity.kt$"Try a different search"</ID>
-    <ID>MultiLineIfElse:TransactionHistoryActivity.kt$Color.White.copy(alpha = 0.22f)</ID>
-    <ID>MultiLineIfElse:TransactionHistoryActivity.kt$Color.White.copy(alpha = 0.35f)</ID>
-    <ID>NewLineAtEndOfFile:CallManager.kt$com.flowpay.app.managers.CallManager.kt</ID>
-    <ID>NoBlankLineBeforeRbrace:CallManager.kt$CallManager$ </ID>
-    <ID>NoBlankLineBeforeRbrace:CallOverlayService.kt$CallOverlayService$ </ID>
-    <ID>NoBlankLineBeforeRbrace:CallOverlayService.kt$CallOverlayService.Companion$ </ID>
-    <ID>NoBlankLineBeforeRbrace:PhoneNumberUtils.kt$PhoneNumberUtils$ </ID>
-    <ID>NoBlankLineBeforeRbrace:QRScannerActivity.kt$QRScannerActivity$ </ID>
-    <ID>NoBlankLineBeforeRbrace:SetupHelper.kt$SetupHelper.Companion$ </ID>
-    <ID>NoConsecutiveBlankLines:CallManager.kt$CallManager$ </ID>
-    <ID>NoConsecutiveBlankLines:CallOverlayService.kt$ </ID>
-    <ID>NoConsecutiveBlankLines:CallOverlayService.kt$CallOverlayService$ </ID>
-    <ID>NoConsecutiveBlankLines:ContactPickerDialog.kt$ </ID>
-    <ID>NoConsecutiveBlankLines:OverlayLogger.kt$ </ID>
-    <ID>NoConsecutiveBlankLines:PermissionManager.kt$PermissionManager$ </ID>
-    <ID>NoConsecutiveBlankLines:PhoneNumberUtils.kt$ </ID>
-    <ID>NoConsecutiveBlankLines:QRScannerActivity.kt$QRScannerActivity$ </ID>
-    <ID>NoConsecutiveBlankLines:TestConfigurationHelper.kt$TestConfigurationHelper$ </ID>
-    <ID>NoConsecutiveBlankLines:TransactionDao.kt$ </ID>
-    <ID>NoConsecutiveBlankLines:TransactionRepository.kt$ </ID>
-    <ID>NoConsecutiveBlankLines:TransactionViewModel.kt$ </ID>
-    <ID>NoMultipleSpaces:CallOverlayService.kt$CallOverlayService$ </ID>
-    <ID>NoMultipleSpaces:PaymentResultActivity.kt$PaymentResultActivity$ </ID>
-    <ID>NoMultipleSpaces:QRCodeParserTest.kt$QRCodeParserTest$ </ID>
-    <ID>NoMultipleSpaces:QRScannerActivity.kt$QRScannerActivity$ </ID>
-    <ID>NoMultipleSpaces:SmsParsingRegexTest.kt$SmsParsingRegexTest$ </ID>
-    <ID>NoMultipleSpaces:SmsTransactionParser.kt$SimpleTransaction$ </ID>
-    <ID>NoTrailingSpaces:CallManager.kt$CallManager$ </ID>
-    <ID>NoTrailingSpaces:CallManager.kt$CallManager.&lt;no name provided&gt;$ </ID>
-    <ID>NoTrailingSpaces:CallOverlayService.kt$CallOverlayService$ </ID>
-    <ID>NoTrailingSpaces:CallOverlayService.kt$CallOverlayService.Companion$ </ID>
-    <ID>NoTrailingSpaces:ContactPickerDialog.kt$ </ID>
-    <ID>NoTrailingSpaces:OverlayLogger.kt$OverlayLogger$ </ID>
-    <ID>NoTrailingSpaces:PaymentResultActivity.kt$PaymentResultActivity$ </ID>
-    <ID>NoTrailingSpaces:PaymentState.kt$PaymentState$ </ID>
-    <ID>NoTrailingSpaces:PermissionConstants.kt$PermissionConstants$ </ID>
-    <ID>NoTrailingSpaces:PermissionManager.kt$PermissionManager$ </ID>
-    <ID>NoTrailingSpaces:PhoneNumberUtils.kt$PhoneNumberUtils$ </ID>
-    <ID>NoTrailingSpaces:QRScannerActivity.kt$QRScannerActivity$ </ID>
-    <ID>NoTrailingSpaces:SettingsRepository.kt$SettingsRepository$ </ID>
-    <ID>NoTrailingSpaces:SetupHelper.kt$SetupHelper$ </ID>
-    <ID>NoTrailingSpaces:TestConfigurationHelper.kt$TestConfigurationHelper$ </ID>
-    <ID>NoTrailingSpaces:TransactionDao.kt$TransactionDao$ </ID>
-    <ID>NoTrailingSpaces:TransactionRepository.kt$TransactionRepository$ </ID>
-    <ID>NoTrailingSpaces:TransactionRepository.kt$TransactionRepository.Companion$ </ID>
-    <ID>NoTrailingSpaces:TransactionViewModel.kt$TransactionViewModel$ </ID>
-    <ID>NoTrailingSpaces:Upi123ProgressDialog.kt$ </ID>
-    <ID>NoTrailingSpaces:UssdProgressDialog.kt$ </ID>
-    <ID>NoUnusedImports:CallManager.kt$com.flowpay.app.managers.CallManager.kt</ID>
-    <ID>NoUnusedImports:CallOverlayService.kt$com.flowpay.app.services.CallOverlayService.kt</ID>
-    <ID>NoUnusedImports:MainActivity.kt$com.flowpay.app.MainActivity.kt</ID>
-    <ID>NoUnusedImports:MainActivityHelper.kt$com.flowpay.app.helpers.MainActivityHelper.kt</ID>
-    <ID>NoUnusedImports:PaymentSessionManagerTest.kt$com.flowpay.app.payment.PaymentSessionManagerTest.kt</ID>
-    <ID>NoUnusedImports:QRScannerActivity.kt$com.flowpay.app.features.qr_scanner.presentation.QRScannerActivity.kt</ID>
-    <ID>NoUnusedImports:SettingsActivity.kt$com.flowpay.app.ui.activities.SettingsActivity.kt</ID>
-    <ID>NoUnusedImports:SetupActivity.kt$com.flowpay.app.SetupActivity.kt</ID>
-    <ID>NoUnusedImports:SetupHelper.kt$com.flowpay.app.helpers.SetupHelper.kt</ID>
-    <ID>NoUnusedImports:TestConfigurationActivity.kt$com.flowpay.app.TestConfigurationActivity.kt</ID>
-    <ID>NoUnusedImports:TestConfigurationHelper.kt$com.flowpay.app.helpers.TestConfigurationHelper.kt</ID>
-    <ID>NoUnusedImports:TransactionHistoryActivity.kt$com.flowpay.app.ui.activities.TransactionHistoryActivity.kt</ID>
     <ID>NoWildcardImports:ContactPickerDialog.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>NoWildcardImports:ContactPickerDialog.kt$import androidx.compose.material3.*</ID>
     <ID>NoWildcardImports:ContactPickerDialog.kt$import androidx.compose.runtime.*</ID>
-    <ID>NoWildcardImports:PaymentResultActivity.kt$import android.graphics.*</ID>
     <ID>NoWildcardImports:SettingsActivity.kt$import androidx.compose.foundation.*</ID>
     <ID>NoWildcardImports:SettingsActivity.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>NoWildcardImports:SettingsActivity.kt$import androidx.compose.material.icons.filled.*</ID>
@@ -519,7 +382,6 @@
     <ID>NoWildcardImports:TestConfigurationActivity.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>NoWildcardImports:TestConfigurationActivity.kt$import androidx.compose.material3.*</ID>
     <ID>NoWildcardImports:TestConfigurationActivity.kt$import androidx.compose.runtime.*</ID>
-    <ID>NoWildcardImports:TransactionDao.kt$import androidx.room.*</ID>
     <ID>NoWildcardImports:TransactionDetailDialog.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>NoWildcardImports:TransactionDetailDialog.kt$import androidx.compose.material3.*</ID>
     <ID>NoWildcardImports:TransactionDetailDialog.kt$import androidx.compose.runtime.*</ID>
@@ -544,7 +406,6 @@
     <ID>PackageNaming:QRCodeParser.kt$package com.flowpay.app.features.qr_scanner.domain</ID>
     <ID>PackageNaming:QRCodeParserTest.kt$package com.flowpay.app.features.qr_scanner</ID>
     <ID>PackageNaming:QRScannerActivity.kt$package com.flowpay.app.features.qr_scanner.presentation</ID>
-    <ID>ParameterListWrapping:OverlayLogger.kt$OverlayLogger$(action: String, success: Boolean, error: String? = null, details: Map&lt;String, Any&gt; = emptyMap())</ID>
     <ID>ReturnCount:CallManager.kt$CallManager$fun initiateUPI123Call(phoneNumber: String, amount: String): Boolean</ID>
     <ID>ReturnCount:CallManager.kt$CallManager$fun terminateCall(): Boolean</ID>
     <ID>ReturnCount:CallOverlayService.kt$CallOverlayService$fun onCallDetected()</ID>
@@ -567,10 +428,6 @@
     <ID>ReturnCount:TransactionDetector.kt$TransactionDetector$@Synchronized fun processSMS(sender: String, body: String): SimpleTransaction?</ID>
     <ID>ReturnCount:TransactionDetector.kt$TransactionDetector$fun shouldProcessSMS(): Boolean</ID>
     <ID>ReturnCount:Upi123CallStringBuilder.kt$Upi123CallStringBuilder$fun build(serviceNumber: String, phoneNumber: String, amount: String): Result</ID>
-    <ID>SpacingBetweenDeclarationsWithAnnotations:CallManager.kt$CallManager$@Suppress("DEPRECATION") val terminated = telecomManager.endCall()</ID>
-    <ID>SpacingBetweenDeclarationsWithAnnotations:CallManager.kt$CallManager$@Volatile private var currentCallType: CallType? = null</ID>
-    <ID>SpacingBetweenDeclarationsWithAnnotations:QRCodeAnalyzer.kt$QRCodeAnalyzer$@Volatile private var isProcessing = false</ID>
-    <ID>SpreadOperator:AppDatabase.kt$AppDatabase.Companion$(*Migrations.ALL)</ID>
     <ID>SwallowedException:CallStateCoordinator.kt$CallStateCoordinator$e: SecurityException</ID>
     <ID>SwallowedException:PaymentResultActivity.kt$PaymentResultActivity$e: Exception</ID>
     <ID>SwallowedException:QRCodeParser.kt$QRCodeParser$e: Exception</ID>
@@ -610,59 +467,6 @@
     <ID>TooManyFunctions:TransactionViewModel.kt$TransactionViewModel : AndroidViewModel</ID>
     <ID>UnusedParameter:CallManager.kt$CallManager$onCallEnded: (CallType) -&gt; Unit</ID>
     <ID>UnusedParameter:QRScannerActivity.kt$QRScannerActivity$intent: Intent</ID>
-    <ID>UnusedParameter:QRScannerActivity.kt$QRScannerActivity$transactionData: com.flowpay.app.models.TransactionData?</ID>
-    <ID>UnusedPrivateMember:CallOverlayService.kt$CallOverlayService$private fun handleServiceError(error: Exception, context: String)</ID>
-    <ID>UnusedPrivateMember:QRScannerActivity.kt$QRScannerActivity$private fun navigateToSuccessScreen(transactionData: com.flowpay.app.models.TransactionData?)</ID>
-    <ID>UnusedPrivateMember:SettingsActivity.kt$@Composable private fun ToggleRow( icon: ImageVector, title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -&gt; Unit )</ID>
-    <ID>UnusedPrivateProperty:SetupActivity.kt$val context = LocalContext.current</ID>
-    <ID>UnusedPrivateProperty:SetupHelper.kt$SetupHelper.Companion$private const val TAG = "SetupHelper"</ID>
     <ID>UseCheckOrError:DatabaseEncryptionMigrator.kt$DatabaseEncryptionMigrator$throw IllegalStateException("Could not move encrypted database into place")</ID>
-    <ID>WildcardImport:ContactPickerDialog.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ContactPickerDialog.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:ContactPickerDialog.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:PaymentResultActivity.kt$import android.graphics.*</ID>
-    <ID>WildcardImport:SettingsActivity.kt$import androidx.compose.foundation.*</ID>
-    <ID>WildcardImport:SettingsActivity.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SettingsActivity.kt$import androidx.compose.material.icons.filled.*</ID>
-    <ID>WildcardImport:SettingsActivity.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SettingsActivity.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:SetupActivity.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SetupActivity.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:SetupActivity.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:TestConfigurationActivity.kt$import androidx.compose.animation.core.*</ID>
-    <ID>WildcardImport:TestConfigurationActivity.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TestConfigurationActivity.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TestConfigurationActivity.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:TransactionDao.kt$import androidx.room.*</ID>
-    <ID>WildcardImport:TransactionDetailDialog.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TransactionDetailDialog.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TransactionDetailDialog.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:TransactionHistoryActivity.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:TransactionHistoryActivity.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:TransactionHistoryActivity.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:Upi123ProgressDialog.kt$import androidx.compose.animation.core.*</ID>
-    <ID>WildcardImport:Upi123ProgressDialog.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:Upi123ProgressDialog.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:Upi123ProgressDialog.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:UssdProgressDialog.kt$import androidx.compose.animation.core.*</ID>
-    <ID>WildcardImport:UssdProgressDialog.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:UssdProgressDialog.kt$import androidx.compose.material3.*</ID>
-    <ID>WildcardImport:UssdProgressDialog.kt$import androidx.compose.runtime.*</ID>
-    <ID>Wrapping:CallManager.kt$CallManager$(</ID>
-    <ID>Wrapping:CallOverlayService.kt$CallOverlayService$(</ID>
-    <ID>Wrapping:CallOverlayService.kt$CallOverlayService$("CREATED", true, details = mapOf( "phoneNumber" to phoneNumber, "amount" to amount, "isOverlayActive" to isOverlayActive, "isOverlayShowing" to isOverlayShowing ))</ID>
-    <ID>Wrapping:CallOverlayService.kt$CallOverlayService$("SERVICE_CREATED", mapOf( "timestamp" to startTime ))</ID>
-    <ID>Wrapping:MainActivity.kt$MainActivity$(</ID>
-    <ID>Wrapping:MainActivity.kt$MainActivity$(this, object : MainActivityHelper.UICallback { override fun showToast(message: String) { runOnUiThread { Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show() } } override fun updatePaymentState(paymentState: com.flowpay.app.states.PaymentState) { Log.d(TAG, "Payment state updated: ${paymentState::class.simpleName}") } override fun navigateToSetup() { startActivity(Intent(this@MainActivity, SetupActivity::class.java)) finish() } override fun navigateToTestConfiguration() { startActivity(Intent(this@MainActivity, TestConfigurationActivity::class.java)) finish() } override fun finishActivity() { finish() } override fun showOverlayPermissionExplanation() { mainViewModel.onOverlayPermissionNeeded() } override fun launchQRScanner(intent: Intent) { qrScannerLauncher.launch(intent) } override fun requestPhonePermissions() { phonePermissionLauncher.launch(PermissionConstants.PHONE_PERMISSIONS) } })</ID>
-    <ID>Wrapping:PaymentResultActivity.kt$PaymentResultActivity$(</ID>
-    <ID>Wrapping:QRScannerActivity.kt$QRScannerActivity$(</ID>
-    <ID>Wrapping:QRScannerActivity.kt$QRScannerActivity$(cameraExecutor, QRCodeAnalyzer { qrCode -&gt; processQRCode(qrCode) })</ID>
-    <ID>Wrapping:SettingsActivity.kt$(</ID>
-    <ID>Wrapping:SettingsActivity.kt$SettingsViewModel$(</ID>
-    <ID>Wrapping:SetupActivity.kt$SetupActivity$(</ID>
-    <ID>Wrapping:SetupActivity.kt$SetupActivity$(this, object : SetupHelper.UICallback { override fun showToast(message: String) { runOnUiThread { Toast.makeText(this@SetupActivity, message, Toast.LENGTH_LONG).show() } } override fun navigateToTestConfiguration() { val intent = Intent(this@SetupActivity, TestConfigurationActivity::class.java) startActivity(intent) finish() } })</ID>
-    <ID>Wrapping:TestConfigurationActivity.kt$TestConfigurationActivity$(</ID>
-    <ID>Wrapping:TestConfigurationActivity.kt$TestConfigurationActivity$(this, object : TestConfigurationHelper.UICallback { override fun showToast(message: String) { runOnUiThread { android.widget.Toast.makeText(this@TestConfigurationActivity, message, android.widget.Toast.LENGTH_LONG).show() } } override fun updateUssdTesting(isTesting: Boolean) { // State will be managed by the composable } override fun updateUssdDialog(show: Boolean) { // State will be managed by the composable } override fun updateUssdTestCompleted(completed: Boolean) { // State will be managed by the composable } override fun updateUpi123Testing(isTesting: Boolean) { // State will be managed by the composable } override fun updateUpi123TestCompleted(completed: Boolean) { // State will be managed by the composable } override fun updateUpi123Dialog(show: Boolean) { // State will be managed by the composable } override fun updateUpi123ConfigurationOptions(show: Boolean) { // State will be managed by the composable } override fun updateVoiceTesting(isTesting: Boolean) { // State will be managed by the composable } override fun updateVoiceDialog(show: Boolean) { // State will be managed by the composable } override fun updateVoiceTestCompleted(completed: Boolean) { // State will be managed by the composable } override fun updateCallCompleteButton(show: Boolean) { // State will be managed by the composable } override fun updateUssdProgressMessage(message: String) { // State will be managed by the composable } override fun updateUssdConfigurationOptions(show: Boolean) { // State will be managed by the composable } override fun navigateToMain() { val intent = Intent(this@TestConfigurationActivity, MainActivity::class.java) startActivity(intent) finish() } override fun requestPhonePermissions() { phonePermissionLauncher.launch(PermissionConstants.PHONE_PERMISSIONS) } })</ID>
-    <ID>Wrapping:TestConfigurationActivity.kt$TestConfigurationActivity.&lt;no name provided&gt;$android.widget.Toast.makeText(this@TestConfigurationActivity, message, android.widget.Toast.LENGTH_LONG).show()</ID>
   </CurrentIssues>
 </SmellBaseline>
