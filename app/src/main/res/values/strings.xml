@@ -24,8 +24,28 @@
     
     <!-- Overlay Messages -->
     
-    <!-- Error Messages -->
-    
+    <!-- Error Messages. These reach the user through a Toast when an
+         operation fails. None of them interpolate an exception message:
+         release builds are minified, so `e.message` there reads as an
+         R8-obfuscated class name. The detail belongs in the adjacent
+         Log.e(TAG, "…", e) call, which carries the throwable. -->
+    <string name="error_permissions_denied">Some permissions were denied. Flowpay may not work correctly without them.</string>
+    <string name="error_call_permission_denied">Flowpay needs permission to place the call.</string>
+    <string name="error_call_failed">Could not start the payment call. Please try again.</string>
+    <string name="error_audio_permission">Flowpay needs permission to adjust call audio.</string>
+    <string name="error_audio_lower_failed">Could not lower the call volume.</string>
+    <string name="error_audio_restore_failed">Could not restore the call volume.</string>
+    <string name="error_qr_scanner_init">Could not open the QR scanner.</string>
+    <string name="error_camera_setup">Could not start the camera.</string>
+    <string name="error_qr_resume_failed">Scanning stopped. Close the scanner and open it again to retry.</string>
+
+    <!-- Fallback toasts, shown only when the payment-result dialog itself
+         cannot be displayed. They carry the same outcome as the dialog they
+         stand in for, shortened to fit a toast. -->
+    <string name="toast_payment_cancelled">Payment cancelled. No payment was processed.</string>
+    <string name="toast_payment_failed">Your bank reported the payment as failed.</string>
+    <string name="toast_awaiting_confirmation">Request sent — waiting for your bank\'s confirmation SMS.</string>
+
     <!-- Success Messages -->
 
     <!-- Home screen -->

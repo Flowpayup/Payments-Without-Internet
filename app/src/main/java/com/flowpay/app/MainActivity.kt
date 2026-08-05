@@ -125,11 +125,11 @@ import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.FlowpayTextPale
 import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
+import com.flowpay.app.utils.CurrencyFormat
 import com.flowpay.app.utils.findComponentActivity
 import com.flowpay.app.viewmodel.MainUiEvent
 import com.flowpay.app.viewmodel.MainViewModel
 import com.flowpay.app.viewmodel.TransactionViewModel
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -177,7 +177,7 @@ class MainActivity : ComponentActivity() {
     ) { results ->
         val granted = results.values.all { it }
         if (!granted) {
-            Toast.makeText(this, "Some permissions were denied. App may not work properly.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.error_permissions_denied, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1176,7 +1176,7 @@ private fun TransactionItemAmount(amount: Double) {
         modifier = Modifier.padding(start = 8.dp)
     ) {
         Text(
-            text = formatAmount(amount),
+            text = stringResource(R.string.amount_rupees, CurrencyFormat.inr(amount)),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = LocalFlowpayAccentTheme.current.headerGradientStart,
@@ -1443,11 +1443,6 @@ fun PermissionExplanationDialog(
 }
 
 // Utility functions
-fun formatAmount(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-    return formatter.format(amount)
-}
-
 fun formatDate(timestamp: Long): String {
     val formatter = SimpleDateFormat("dd MMM, HH:mm", Locale("en", "IN"))
     return formatter.format(Date(timestamp))

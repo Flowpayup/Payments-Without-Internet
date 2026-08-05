@@ -56,9 +56,9 @@ jobs:
           ! grep -rnE '"#[0-9A-Fa-f]{6,8}"' app/src/main/res/layout/ \
             || (echo "::error::Hex color in a layout — add it to colors.xml and reference @color/…" && exit 1)
 
-      - name: Copy gate — no hardcoded UI strings in Compose
+      - name: Copy gate — no hardcoded UI strings in Kotlin
         run: |
-          # HardcodedText lint only covers XML; this covers Compose. All
+          # HardcodedText lint only covers XML; this covers Kotlin. All
           # user-visible copy lives in strings.xml (stringResource/getString),
           # which keeps wording reviewable in one place and translation-ready.
           # Ratchet for the common single-line `Text("literal")` form; the
@@ -66,6 +66,15 @@ jobs:
           ! grep -rnE '(^|[^A-Za-z0-9_])Text\(\s*(text\s*=\s*)?"[^"]' \
             app/src/main/java/com/flowpay/app --include='*.kt' \
             || (echo "::error::Hardcoded string in a Compose Text(…) — move it to strings.xml" && exit 1)
+          # The View layer escapes both of the gates above: lint's
+          # HardcodedText never leaves XML, and the Compose ratchet only
+          # matches Text(. Sixteen user-visible literals accumulated in
+          # Toasts and TextViews behind that gap, five of them interpolating
+          # ${e.message} — which in a minified release renders an
+          # R8-obfuscated class name to the user. Cover the View surfaces too.
+          ! grep -rnE 'Toast\.makeText\([^,]+,\s*"|\.text\s*=\s*"|setText\("' \
+            app/src/main/java/com/flowpay/app --include='*.kt' \
+            || (echo "::error::Hardcoded string in a Toast/TextView — move it to strings.xml and pass the resource id" && exit 1)
 
       - name: Run unit tests
         run: ./gradlew test --no-daemon --stacktrace
