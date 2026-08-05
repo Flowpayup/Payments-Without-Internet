@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app
 
 import android.content.Intent
@@ -17,12 +20,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.*
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -32,13 +36,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flowpay.app.ui.theme.FlowpayTheme
+import com.flowpay.app.helpers.SetupHelper
 import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.FlowpayDarkGray
 import com.flowpay.app.ui.theme.FlowpayDisabledGray
@@ -46,12 +49,8 @@ import com.flowpay.app.ui.theme.FlowpayLightGray
 import com.flowpay.app.ui.theme.FlowpayMediumGray
 import com.flowpay.app.ui.theme.FlowpaySurfaceDim
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
+import com.flowpay.app.ui.theme.FlowpayTheme
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
-import com.flowpay.app.helpers.SetupHelper
-import com.flowpay.app.FlowpayApplication
-import com.flowpay.app.data.SettingsRepository
-import androidx.compose.runtime.CompositionLocalProvider
-import com.flowpay.app.R
 
 class SetupActivity : ComponentActivity() {
     private lateinit var setupHelper: SetupHelper
@@ -60,17 +59,20 @@ class SetupActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Initialize setup helper
-        setupHelper = SetupHelper(this, object : SetupHelper.UICallback {
-            override fun showToast(message: String) {
-                runOnUiThread { Toast.makeText(this@SetupActivity, message, Toast.LENGTH_LONG).show() }
-            }
+        setupHelper = SetupHelper(
+            this,
+            object : SetupHelper.UICallback {
+                override fun showToast(message: String) {
+                    runOnUiThread { Toast.makeText(this@SetupActivity, message, Toast.LENGTH_LONG).show() }
+                }
 
-            override fun navigateToTestConfiguration() {
-                val intent = Intent(this@SetupActivity, TestConfigurationActivity::class.java)
-                startActivity(intent)
-                finish()
+                override fun navigateToTestConfiguration() {
+                    val intent = Intent(this@SetupActivity, TestConfigurationActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
             }
-        })
+        )
 
         setTheme(R.style.Theme_Flowpay)
         // Edge-to-edge: Compose insets are the single source of padding (see MainActivity).
@@ -93,8 +95,6 @@ fun SetupScreen(setupHelper: SetupHelper) {
     var selectedSecondarySim by remember { mutableStateOf("") }
     var isDualSimEnabled by remember { mutableStateOf(false) }
     var disclaimerAccepted by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
 
     // Use helper methods for data
     val banks = setupHelper.getBanks()
@@ -687,8 +687,11 @@ fun DisclaimerSection(
                 ) {
                     Text(
                         text = stringResource(
-                            if (isExpanded) R.string.disclaimer_text
-                            else R.string.disclaimer_summary
+                            if (isExpanded) {
+                                R.string.disclaimer_text
+                            } else {
+                                R.string.disclaimer_summary
+                            }
                         ),
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.85f),

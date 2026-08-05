@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.payment
 
 import org.junit.Assert.assertEquals
@@ -36,18 +39,21 @@ class Upi123CallStringBuilderTest {
         )
     }
 
+    // The 123Pay IVR accepts amounts strictly below Rs 5,000, so Rs 4,999 is
+    // the highest that actually goes through.
     @Test
     fun `maximum allowed amount builds`() {
-        val result = buildValid(amount = "10000")
+        val result = buildValid(amount = "4999")
         assertEquals(
-            Upi123CallStringBuilder.Result.Valid("tel:08045163666,,1,9876543210,,10000,,1"),
+            Upi123CallStringBuilder.Result.Valid("tel:08045163666,,1,9876543210,,4999,,1"),
             result
         )
     }
 
     @Test
     fun `amount above 123pay cap is rejected`() {
-        assertInvalid(buildValid(amount = "10001"), "amount over cap")
+        assertInvalid(buildValid(amount = "5000"), "amount over cap")
+        assertInvalid(buildValid(amount = "10000"), "amount over cap")
     }
 
     @Test

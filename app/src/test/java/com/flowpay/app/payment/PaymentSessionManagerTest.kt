@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.payment
 
 import com.flowpay.app.data.Transaction
@@ -8,16 +11,23 @@ import com.flowpay.app.states.PaymentState
 import com.flowpay.app.telephony.CallSessionEvent
 import com.flowpay.app.telephony.CallStateSource
 import com.flowpay.app.telephony.DeviceCallState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -52,6 +62,13 @@ class PaymentSessionManagerTest {
         // thread-safety, not just single-threaded test-scheduler ordering.
         val rows = java.util.Collections.synchronizedMap(LinkedHashMap<String, Transaction>())
 
+        // Counts every write ATTEMPT, including ones the status guard rejects.
+        // The race regression tests assert that the caller which loses the
+        // claim issues no attempt at all, rather than relying on the guard to
+        // absorb a write that should never have been queued.
+        val transitionAttempts = java.util.concurrent.atomic.AtomicInteger(0)
+        val deletePendingAttempts = java.util.concurrent.atomic.AtomicInteger(0)
+
         override suspend fun insertPending(transaction: Transaction) {
             rows[transaction.transactionId] = transaction
         }
@@ -61,6 +78,7 @@ class PaymentSessionManagerTest {
             expectedStatus: String,
             newStatus: String
         ): Int {
+            transitionAttempts.incrementAndGet()
             val row = rows[transactionId] ?: return 0
             if (row.status != expectedStatus) return 0
             rows[transactionId] = row.copy(status = newStatus)
@@ -102,6 +120,7 @@ class PaymentSessionManagerTest {
         }
 
         override suspend fun deletePending(transactionId: String): Int {
+            deletePendingAttempts.incrementAndGet()
             val pending = rows[transactionId]?.status == TransactionStatus.PENDING
             if (pending) rows.remove(transactionId)
             return if (pending) 1 else 0
@@ -152,16 +171,48 @@ class PaymentSessionManagerTest {
         assertEquals(1, source.acquireCount)
     }
 
+    // A new payment supersedes one still in flight rather than being refused.
+    // Refusing stranded the user: a session the bank never confirmed stayed in
+    // progress for its whole deadline and blocked every attempt to pay,
+    // including a retry of the payment that had just failed.
     @Test
-    fun `second begin while active is rejected`() = runTest {
-        val (manager, _, _) = newManager()
+    fun `second begin supersedes the session still in flight`() = runTest {
+        val (manager, store, _) = newManager()
 
         val first = manager.begin("9876543210", "100")
         runCurrent()
-        val second = manager.begin("9123456780", "200")
+        assertEquals(TransactionStatus.PENDING, store.rows[first]!!.status)
 
-        assertNotNull(first)
-        assertNull("concurrent session must be rejected", second)
+        val second = manager.begin("9123456780", "200")
+        runCurrent()
+
+        assertNotEquals("the new payment must get its own id", first, second)
+        assertTrue(manager.paymentState.value is PaymentState.Initiating)
+        assertEquals("9123456780", store.rows[second]!!.phoneNumber)
+        assertEquals("200", store.rows[second]!!.amount)
+        // The superseded attempt was never confirmed, so under the
+        // "no confirmation, no record" rule it leaves no trace.
+        assertNull("superseded PENDING row must be discarded", store.rows[first])
+    }
+
+    // Superseding must never erase a row a confirmation already landed on —
+    // deletePending is guarded to PENDING for exactly this reason.
+    @Test
+    fun `superseding does not erase an already-confirmed row`() = runTest {
+        val (manager, store, source) = newManager()
+        val first = manager.begin("9876543210", "500")
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+        manager.onSmsConfirmed(bankSms(amount = "500"))
+        runCurrent()
+        assertEquals(TransactionStatus.SUCCESS, store.rows[first]!!.status)
+
+        manager.begin("9123456780", "200")
+        runCurrent()
+
+        assertNotNull("a confirmed row must survive a later payment", store.rows[first])
+        assertEquals(TransactionStatus.SUCCESS, store.rows[first]!!.status)
     }
 
     @Test
@@ -657,5 +708,122 @@ class PaymentSessionManagerTest {
 
         assertNull("A cancelled session must not claim a later SMS", claimed)
         assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
+    }
+
+    // ---- Claim-before-write invariant -------------------------------------
+    //
+    // Exactly one caller may reach a terminal state, and ONLY that caller may
+    // write. finishSession/onVerificationDeadline used to queue their row
+    // write before claiming, then re-check — so a cancel landing at the same
+    // instant as the bank's SMS could show "Payment successful" while the
+    // already-queued PENDING->CANCELLED write still ran, leaving history
+    // contradicting the screen the user was looking at.
+
+    @Test
+    fun `cancel after a confirmation claims nothing and writes nothing`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "500")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        assertEquals(txnId, manager.onSmsConfirmed(bankSms(amount = "500")))
+        runCurrent()
+        val attemptsAfterConfirm = store.transitionAttempts.get()
+
+        manager.onUserCancelled()
+        runCurrent()
+
+        assertTrue("SMS must own the outcome", manager.paymentState.value is PaymentState.Success)
+        assertEquals(TransactionStatus.SUCCESS, store.rows[txnId]!!.status)
+        assertEquals(
+            "The losing caller must not issue a write at all",
+            attemptsAfterConfirm,
+            store.transitionAttempts.get()
+        )
+    }
+
+    @Test
+    fun `deadline after a confirmation deletes nothing`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "500")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        assertEquals(txnId, manager.onSmsConfirmed(bankSms(amount = "500")))
+        runCurrent()
+
+        // Let the verification watchdog fire on a session that is already
+        // settled. It must not delete the row the confirmation just landed on.
+        advanceTimeBy(11 * 60 * 1000L)
+        runCurrent()
+
+        assertEquals(0, store.deletePendingAttempts.get())
+        assertNotNull("The confirmed row must survive the deadline", store.rows[txnId])
+        assertEquals(TransactionStatus.SUCCESS, store.rows[txnId]!!.status)
+    }
+
+    // The real interleaving, on real threads: a user tapping cancel at the
+    // same instant the bank's SMS lands. Whoever wins, the stored row and the
+    // state the UI renders must agree — that is the whole invariant.
+    @Test
+    fun `concurrent cancel and confirmation never disagree`() {
+        repeat(200) { iteration ->
+            val store = FakeStore()
+            val source = FakeCallStateSource()
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+            try {
+                val manager = PaymentSessionManager(
+                    store = store,
+                    coordinator = source,
+                    scope = scope
+                )
+                val txnId = manager.begin("9876543210", "500")!!
+                runBlocking {
+                    // The PENDING row must exist before the racers start,
+                    // otherwise this tests insert ordering rather than claiming.
+                    withTimeout(5_000) { while (store.rows[txnId] == null) yield() }
+                }
+
+                val barrier = java.util.concurrent.CyclicBarrier(2)
+                val smsThread = Thread {
+                    barrier.await()
+                    manager.onSmsConfirmed(bankSms(amount = "500"))
+                }
+                val cancelThread = Thread {
+                    barrier.await()
+                    manager.onUserCancelled()
+                }
+                smsThread.start()
+                cancelThread.start()
+                smsThread.join()
+                cancelThread.join()
+
+                runBlocking {
+                    withTimeout(5_000) {
+                        scope.coroutineContext[Job]!!.children.toList().forEach { it.join() }
+                    }
+                }
+
+                val expected = when (val s = manager.paymentState.value) {
+                    is PaymentState.Success -> TransactionStatus.SUCCESS
+                    is PaymentState.Cancelled -> TransactionStatus.CANCELLED
+                    else -> error("iteration $iteration: unexpected terminal state $s")
+                }
+                assertEquals(
+                    "iteration $iteration: stored row must match the reported outcome",
+                    expected,
+                    store.rows[txnId]!!.status
+                )
+                assertEquals(
+                    "iteration $iteration: only the winning caller may write",
+                    if (expected == TransactionStatus.CANCELLED) 1 else 0,
+                    store.transitionAttempts.get()
+                )
+            } finally {
+                scope.cancel()
+            }
+        }
     }
 }

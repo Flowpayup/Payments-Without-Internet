@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.payment
 
 import android.util.Log
@@ -84,14 +87,36 @@ class PaymentSessionManager(
     val paymentState: StateFlow<PaymentState> = _paymentState.asStateFlow()
 
     private val sessionLock = Any()
-    private var collectJob: Job? = null
-    private var watchdogJob: Job? = null
-    private var pendingInsertJob: Job? = null
+
+    // @Volatile, not plain vars: begin() publishes these AFTER releasing
+    // sessionLock, while the SMS-ingestion thread reads them under it (or,
+    // for pendingInsertJob, from a coroutine on Dispatchers.Default). Without
+    // a happens-before edge a confirming SMS could observe pendingInsertJob
+    // as null, skip the join(), and run confirmTransaction against a row
+    // insertPending had not written yet — updating 0 rows and losing the
+    // payment from history.
+    @Volatile private var collectJob: Job? = null
+
+    @Volatile private var watchdogJob: Job? = null
+
+    @Volatile private var pendingInsertJob: Job? = null
     private var coordinatorAcquired = false
 
     /**
-     * Starts a new payment session and records a PENDING row.
-     * Returns the client transaction id, or null if a session is already active.
+     * Starts a new payment session and records a PENDING row. Always succeeds.
+     *
+     * A new payment SUPERSEDES any session still in flight. This used to be
+     * refused with "a payment is already in progress", which stranded the user:
+     * a session the bank never confirmed stayed in progress for its full
+     * verification deadline, and every attempt to pay in the meantime was
+     * blocked — including a retry of the very payment that had failed.
+     *
+     * Superseding is safe because a session is not what decides an outcome —
+     * the bank's SMS is. The superseded PENDING row is discarded (nothing ever
+     * confirmed it, so under the "no confirmation, no record" rule it must
+     * leave no trace), and the caller re-arms the SMS window for the new
+     * amount, so a confirmation matching what the user just entered still
+     * lands on the new session exactly as before.
      *
      * [upiId] and [source] let the QR flow record what it actually knows (a
      * payee VPA, provenance QR) — the QR flow used to bypass the session
@@ -102,12 +127,17 @@ class PaymentSessionManager(
         amount: String,
         upiId: String? = null,
         source: String = TransactionSource.MANUAL
-    ): String? {
+    ): String {
         val initiating: PaymentState.Initiating
+        val supersededTxnId: String?
         synchronized(sessionLock) {
-            if (_paymentState.value.isInProgress()) {
-                Log.w(TAG, "begin() rejected - a payment session is already active")
-                return null
+            val previous = _paymentState.value
+            supersededTxnId = if (previous.isInProgress()) {
+                Log.w(TAG, "begin() supersedes the session still in flight")
+                cleanupLocked()
+                previous.getTransactionIdValue()
+            } else {
+                null
             }
             initiating = PaymentState.Initiating(phoneNumber, amount)
             _paymentState.value = initiating
@@ -120,6 +150,16 @@ class PaymentSessionManager(
         val txnId = initiating.transactionId
         val now = clock()
         val deadlineAt = now + verificationDeadlineMs
+
+        // Drop the superseded row. deletePending is guarded to PENDING, so a
+        // confirmation that landed on it a moment earlier is never erased.
+        if (supersededTxnId != null) {
+            val previousInsert = pendingInsertJob
+            scope.launch {
+                previousInsert?.join()
+                store.deletePending(supersededTxnId)
+            }
+        }
 
         pendingInsertJob = scope.launch {
             // Older stale sessions are discarded before a new one starts.
@@ -301,7 +341,9 @@ class PaymentSessionManager(
                     state is PaymentState.InProgress && event.durationMs < minRealCallDurationMs -> {
                         finishSession(TransactionStatus.CANCELLED) { phone, amount, txnId ->
                             PaymentState.Cancelled(
-                                phone, amount, txnId,
+                                phone,
+                                amount,
+                                txnId,
                                 "Call ended before the payment flow could complete"
                             )
                         }
@@ -334,25 +376,28 @@ class PaymentSessionManager(
      * the ingestion pipeline records it as a standalone transaction.
      */
     private fun onVerificationDeadline() {
-        val state = synchronized(sessionLock) { _paymentState.value }
-        if (!state.isInProgress()) return
-        val txnId = state.getTransactionIdValue() ?: return
+        // Claim FIRST, write second. Queueing the delete before the claim let a
+        // confirming SMS win the lock (showing "Payment successful") while the
+        // already-queued deletePending still ran, removing the very row that
+        // confirmation had just landed on — success on screen, nothing in
+        // history. Claiming inside the lock means only the winner writes.
+        val txnId = synchronized(sessionLock) {
+            val s = _paymentState.value
+            if (!s.isInProgress()) return
+            val id = s.getTransactionIdValue() ?: return
+            _paymentState.value = PaymentState.Timeout(
+                timeoutType = TimeoutType.BANK_VERIFICATION,
+                phoneNumber = s.getPhoneNumberValue() ?: "",
+                amount = s.getAmountValue() ?: "",
+                transactionId = id
+            )
+            cleanupLocked()
+            id
+        }
 
         scope.launch {
             pendingInsertJob?.join()
             store.deletePending(txnId)
-        }
-        synchronized(sessionLock) {
-            val s = _paymentState.value
-            if (s.isInProgress()) {
-                _paymentState.value = PaymentState.Timeout(
-                    timeoutType = TimeoutType.BANK_VERIFICATION,
-                    phoneNumber = s.getPhoneNumberValue() ?: "",
-                    amount = s.getAmountValue() ?: "",
-                    transactionId = txnId
-                )
-                cleanupLocked()
-            }
         }
         Log.w(TAG, "No bank SMS before deadline - unconfirmed session discarded")
     }
@@ -361,24 +406,28 @@ class PaymentSessionManager(
         rowStatus: String,
         terminalState: (phone: String, amount: String, txnId: String) -> PaymentState
     ) {
-        val state = synchronized(sessionLock) { _paymentState.value }
-        if (!state.isInProgress()) return
-        val txnId = state.getTransactionIdValue() ?: return
+        // Claim FIRST, write second — same invariant as onSmsConfirmed. When
+        // the write was queued before the claim, a cancel landing at the same
+        // instant as the bank's SMS could show "Payment successful" while the
+        // already-queued PENDING->CANCELLED transition still ran, leaving
+        // history contradicting the screen the user was looking at. Only the
+        // caller that actually claims the terminal state may write.
+        val txnId = synchronized(sessionLock) {
+            val s = _paymentState.value
+            if (!s.isInProgress()) return
+            val id = s.getTransactionIdValue() ?: return
+            _paymentState.value = terminalState(
+                s.getPhoneNumberValue() ?: "",
+                s.getAmountValue() ?: "",
+                id
+            )
+            cleanupLocked()
+            id
+        }
 
         scope.launch {
             pendingInsertJob?.join()
             store.transitionStatus(txnId, TransactionStatus.PENDING, rowStatus)
-        }
-        synchronized(sessionLock) {
-            val s = _paymentState.value
-            if (s.isInProgress()) {
-                _paymentState.value = terminalState(
-                    s.getPhoneNumberValue() ?: "",
-                    s.getAmountValue() ?: "",
-                    txnId
-                )
-                cleanupLocked()
-            }
         }
     }
 

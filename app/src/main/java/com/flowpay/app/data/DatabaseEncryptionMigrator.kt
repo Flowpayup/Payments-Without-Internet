@@ -1,9 +1,12 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.data
 
 import android.content.Context
 import android.util.Log
-import java.io.File
 import net.zetetic.database.sqlcipher.SQLiteDatabase
+import java.io.File
 
 /**
  * One-time plaintext → SQLCipher migration, plus key-loss recovery.
@@ -58,7 +61,12 @@ internal object DatabaseEncryptionMigrator {
 
         // Empty key = plaintext database opened through SQLCipher.
         val plain = SQLiteDatabase.openDatabase(
-            dbFile.absolutePath, "", null, SQLiteDatabase.OPEN_READWRITE, null, null
+            dbFile.absolutePath,
+            "",
+            null,
+            SQLiteDatabase.OPEN_READWRITE,
+            null,
+            null
         )
         val version = plain.version
         try {
@@ -74,7 +82,12 @@ internal object DatabaseEncryptionMigrator {
 
         // Carry the schema version so Room doesn't re-run migrations.
         val encrypted = SQLiteDatabase.openDatabase(
-            encryptedFile.absolutePath, passphrase, null, SQLiteDatabase.OPEN_READWRITE, null, null
+            encryptedFile.absolutePath,
+            passphrase,
+            null,
+            SQLiteDatabase.OPEN_READWRITE,
+            null,
+            null
         )
         try {
             encrypted.version = version
@@ -92,7 +105,12 @@ internal object DatabaseEncryptionMigrator {
     private fun recoverIfUnreadable(dbFile: File, passphrase: String) {
         try {
             SQLiteDatabase.openDatabase(
-                dbFile.absolutePath, passphrase, null, SQLiteDatabase.OPEN_READONLY, null, null
+                dbFile.absolutePath,
+                passphrase,
+                null,
+                SQLiteDatabase.OPEN_READONLY,
+                null,
+                null
             ).close()
         } catch (e: Exception) {
             Log.w(TAG, "Encrypted DB unreadable with current key - starting fresh (history lost)", e)

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.helpers
 
 import com.flowpay.app.payment.sms.SmsTransactionParser
@@ -110,10 +113,10 @@ class SmsParsingRegexTest {
         // Headers shaped like real DLT bank senders, for banks NOT in the
         // keyword map (a keyword match would win before the fallback).
         val body = "Rs 100 debited via UPI. Ref 123456789012"
-        assertEquals("Bank", SmsTransactionParser.detectBank("VK-DBSBNK", body))   // alphanumeric DLT header
+        assertEquals("Bank", SmsTransactionParser.detectBank("VK-DBSBNK", body)) // alphanumeric DLT header
         assertEquals("Bank", SmsTransactionParser.detectBank("AD-BOIUPI-S", body)) // suffixed DLT header
-        assertEquals("Bank", SmsTransactionParser.detectBank("561616", body))      // numeric shortcode
-        assertEquals("Bank", SmsTransactionParser.detectBank("CTBBNK", body))      // bare 6-letter header
+        assertEquals("Bank", SmsTransactionParser.detectBank("561616", body)) // numeric shortcode
+        assertEquals("Bank", SmsTransactionParser.detectBank("CTBBNK", body)) // bare 6-letter header
     }
 
     @Test

@@ -1,12 +1,15 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.helpers
 
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import com.flowpay.app.FlowpayApplication
+import com.flowpay.app.R
 import com.flowpay.app.SetupActivity
 import com.flowpay.app.TestConfigurationActivity
 import com.flowpay.app.constants.AppConstants
@@ -131,31 +134,46 @@ class MainActivityHelper(
      * so the database knows about the attempt even if the process dies
      * mid-call. The session reaches SUCCESS only via a confirming bank SMS.
      */
-    fun initiateTransfer(phoneNumber: String, amount: String) {
-        Log.d(TAG, "Initiating transfer")
-
-        // Validate input
+    /**
+     * Validates what the user typed, reporting the first problem found.
+     * Returns false when the transfer must not proceed.
+     *
+     * The amount ceiling is the 123Pay IVR's, not a generic input limit: the
+     * IVR rejects anything from ₹5,000 up, and it does so *mid-call*, after
+     * the user has already dialled. Catching it here turns a confusing failed
+     * call into a clear message before anything is placed.
+     */
+    @Suppress("ReturnCount") // one guard clause per rule reads clearer than one accumulated condition
+    private fun isTransferInputValid(phoneNumber: String, amount: String): Boolean {
         if (phoneNumber.isBlank() || amount.isBlank()) {
             uiCallback.showToast("Please enter both phone number and amount")
-            return
+            return false
         }
-
-        // Validate phone number
         if (!PaymentInputValidator.isValidPhoneNumber(phoneNumber)) {
             uiCallback.showToast("Please enter valid 10-digit number")
-            return
+            return false
         }
-
-        // Validate amount against the 123Pay per-transaction cap
         val amountValue = amount.toDoubleOrNull()
         if (amountValue == null || amountValue < AppConstants.MIN_AMOUNT_VALUE) {
             uiCallback.showToast("Please enter valid amount")
-            return
+            return false
         }
         if (amountValue > AppConstants.UPI123PAY_MAX_AMOUNT) {
-            uiCallback.showToast("UPI 123Pay allows up to ₹${AppConstants.UPI123PAY_MAX_AMOUNT.toLong()} per transaction")
-            return
+            uiCallback.showToast(
+                context.getString(
+                    R.string.error_amount_above_123pay_cap,
+                    AppConstants.UPI123PAY_MAX_AMOUNT.toLong()
+                )
+            )
+            return false
         }
+        return true
+    }
+
+    fun initiateTransfer(phoneNumber: String, amount: String) {
+        Log.d(TAG, "Initiating transfer")
+
+        if (!isTransferInputValid(phoneNumber, amount)) return
 
         // Check phone permissions only (camera/contacts handled separately)
         if (permissionManager?.hasPhonePermissions() != true) {
@@ -179,12 +197,10 @@ class MainActivityHelper(
             return
         }
 
-        // PENDING row is written before anything is dialled
+        // PENDING row is written before anything is dialled. begin() always
+        // succeeds — a new payment supersedes any session still in flight
+        // rather than being refused.
         val transactionId = sessionManager.begin(phoneNumber, amount)
-        if (transactionId == null) {
-            uiCallback.showToast("A payment is already in progress")
-            return
-        }
 
         // Gate SMS detection to this operation window. The session txnId is
         // persisted so a confirmation arriving after a process death can be

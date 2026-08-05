@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.payment.sms
 
 import android.os.Parcelable
@@ -16,8 +19,8 @@ data class SimpleTransaction(
     val timestamp: Long = System.currentTimeMillis(),
     val upiId: String? = null,
     val transactionType: String = "DEBIT",
-    val recipientName: String? = null,  // who money was sent to
-    val phoneNumber: String? = null      // phone number if available
+    val recipientName: String? = null, // who money was sent to
+    val phoneNumber: String? = null // phone number if available
 ) : Parcelable
 
 /**
@@ -38,16 +41,43 @@ data class SimpleTransaction(
  */
 object SmsTransactionParser {
 
+    /**
+     * Words that can follow a payee name in a bank template but are never part
+     * of it. Without them a failure template — "Rs.200 paid to Kirana Store has
+     * failed" — has nothing to stop the lazy name group before end-of-string,
+     * so the row renders its payee as "Kirana Store Has Failed" (observed on a
+     * real device, 2026-08-01).
+     *
+     * The `\b` at the use site is what keeps real names that merely *begin*
+     * with one of these intact: Hasty Traders, Hasmukh Patel, Ismail Khan,
+     * Notandas Stores, Arewa Foods.
+     */
+    private const val NAME_STOP_WORDS =
+        "has|have|had|was|were|is|are|will|could|did|does|failed|declined|unsuccessful|not|due"
+
+    /**
+     * Where a payee name ends: a following keyword, or punctuation, or the end
+     * of the body. Deliberately NOT a bare `\s` — that stops at the first
+     * space and truncates every multi-word payee to one word ("KIRANA STORE"
+     * → "Kirana", "BIG MERCHANT" → "Big"), which is exactly what the standard
+     * HDFC template used to produce (observed on a real device, 2026-08-01).
+     * `from` is included because "sent to NAME from <bank> A/c ..." is the
+     * most common Indian debit template.
+     */
+    private const val NAME_TERMINATOR =
+        "(?:\\s+(?:via|@|on|for|from|to|UPI|Ref)\\b|\\s+(?:$NAME_STOP_WORDS)\\b|\\.|,|;|$)"
+
     // Name extraction patterns - CASE-INSENSITIVE
     private val RECIPIENT_PATTERNS = listOf(
         // Pattern for "sent to NAME" or "paid to NAME"
-        "(?:sent|paid|transferred)\\s+to\\s+([a-zA-Z][a-zA-Z\\s\\.]+?)(?:\\s+(?:via|@|on|for|UPI|Ref)|\\.|,|;|$)",
+        "(?:sent|paid|transferred)\\s+to\\s+([a-zA-Z][a-zA-Z\\s\\.]+?)$NAME_TERMINATOR",
 
         // Pattern for "to NAME via/@ UPI"
         "to\\s+([a-zA-Z][a-zA-Z\\s\\.]+?)\\s+(?:via|@)",
 
         // Pattern for "to merchant NAME"
-        "to\\s+(?:merchant|M/s\\.?|Mr\\.?|Mrs\\.?|Ms\\.?)\\s*([a-zA-Z][a-zA-Z\\s\\.]+?)(?:\\s+(?:via|@|on|for)|\\.|,|;|$)",
+        "to\\s+(?:merchant|M/s\\.?|Mr\\.?|Mrs\\.?|Ms\\.?)\\s*([a-zA-Z][a-zA-Z\\s\\.]+?)" +
+            "(?:\\s+(?:via|@|on|for)\\b|\\s+(?:$NAME_STOP_WORDS)\\b|\\.|,|;|$)",
 
         // Pattern for "Payment to NAME of Rs"
         "Payment\\s+to\\s+([a-zA-Z][a-zA-Z\\s\\.]+?)\\s+(?:of|for)\\s+(?:Rs|INR|₹)",
@@ -56,7 +86,8 @@ object SmsTransactionParser {
         "([a-zA-Z][a-zA-Z\\s\\.]+?)\\s*[-–]\\s*(?:Rs|INR|₹)",
 
         // Additional patterns for common formats
-        "(?:Rs\\.?|INR|₹)\\s*[0-9,]+(?:\\.[0-9]{2})?\\s+(?:sent|paid|transferred)\\s+to\\s+([a-zA-Z][a-zA-Z\\s\\.]+?)(?:\\s|\\.|,|;|$)",
+        "(?:Rs\\.?|INR|₹)\\s*[0-9,]+(?:\\.[0-9]{2})?\\s+(?:sent|paid|transferred)\\s+to\\s+" +
+            "([a-zA-Z][a-zA-Z\\s\\.]+?)$NAME_TERMINATOR",
 
         // Pattern for simple "to NAME" without via/UPI
         "\\bto\\s+([a-zA-Z][a-zA-Z\\s\\.]{2,30})(?:\\s+(?:on|dated|ref)|\\.|,|;|$)",
@@ -76,7 +107,8 @@ object SmsTransactionParser {
         "from\\s+([a-zA-Z][a-zA-Z\\s\\.]+?)\\s+(?:via|@)",
 
         // Additional pattern for credit messages
-        "(?:Rs\\.?|INR|₹)\\s*[0-9,]+(?:\\.[0-9]{2})?\\s+(?:received|credited)\\s+from\\s+([a-zA-Z][a-zA-Z\\s\\.]+?)(?:\\s|\\.|,|;|$)",
+        "(?:Rs\\.?|INR|₹)\\s*[0-9,]+(?:\\.[0-9]{2})?\\s+(?:received|credited)\\s+from\\s+" +
+            "([a-zA-Z][a-zA-Z\\s\\.]+?)$NAME_TERMINATOR",
 
         // Pattern for simple "from NAME"
         "\\bfrom\\s+([a-zA-Z][a-zA-Z\\s\\.]{2,30})(?:\\s+(?:on|dated|ref)|\\.|,|;|$)",

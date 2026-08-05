@@ -34,7 +34,8 @@
                 android:layout_height="60dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_check_white"
-                android:tint="@android:color/white" />
+                android:tint="@android:color/white"
+                android:importantForAccessibility="no" />
 
         </FrameLayout>
 
@@ -116,6 +117,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
+                    android:layout_marginStart="12dp"
                     tools:text="John Doe"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
@@ -145,6 +147,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
+                    android:layout_marginStart="12dp"
                     tools:text="HDFC Bank"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
@@ -172,6 +175,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
+                    android:layout_marginStart="12dp"
                     tools:text="TXN123456"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
@@ -201,6 +205,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
+                    android:layout_marginStart="12dp"
                     tools:text="01 Jan 2024, 12:00 PM"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
@@ -229,6 +234,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
+                    android:layout_marginStart="12dp"
                     tools:text="user@upi"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"

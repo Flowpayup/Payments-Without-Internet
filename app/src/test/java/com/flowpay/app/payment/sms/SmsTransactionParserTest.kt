@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.payment.sms
 
 import com.flowpay.app.data.TransactionStatus
@@ -410,5 +413,69 @@ class SmsTransactionParserTest {
 
         assertNotNull(result)
         assertTrue(result!!.transactionId.endsWith("_42"))
+    }
+
+    // A failure template used to leave the payee as "Kirana Store Has Failed"
+    // — the lazy name group had nothing to stop it before end-of-string, so
+    // the status words were captured and title-cased into the name. Seen on a
+    // real device on 2026-08-01, on a row the user could open and read.
+    @Test
+    fun `failure templates do not absorb status words into the payee name`() {
+        val bodies = listOf(
+            "Rs.200.00 paid to Kirana Store has failed. HDFC Bank",
+            "Rs.200 paid to Kirana Store has failed",
+            "Payment of Rs 200 sent to Kirana Store was declined"
+        )
+
+        for (body in bodies) {
+            val result = SmsTransactionParser.parse("VK-HDFCBK", body, null)
+            assertNotNull("expected a match for: $body", result)
+            assertEquals("payee must stop before the status words: $body", "Kirana Store", result!!.recipientName)
+        }
+    }
+
+    // The bare `\s` terminator used to stop the payee at the FIRST space, so
+    // every multi-word merchant was truncated to one word on the most common
+    // Indian debit template ("sent to NAME from <bank> A/c ..."). Stored rows
+    // on a real device read "Kirana", "Tea", "Book" — all truncations of
+    // "KIRANA STORE", "TEA STALL", "BOOK STORE". Found on device 2026-08-01.
+    @Test
+    fun `multi-word payee names are not truncated at the first space`() {
+        // cleanupName deliberately title-cases for display; what matters here
+        // is that BOTH words survive.
+        val cases = mapOf(
+            "Rs.500.00 sent to KIRANA STORE from HDFC Bank A/c **1234 via UPI ref 512233440091"
+                to "Kirana Store",
+            "Rs.100000.00 sent to BIG MERCHANT from HDFC Bank A/c **1234 via UPI ref 512233441000"
+                to "Big Merchant",
+            "Rs.300 sent to TEA STALL from HDFC Bank A/c **1234 via UPI ref 99"
+                to "Tea Stall"
+        )
+
+        for ((body, expected) in cases) {
+            val result = SmsTransactionParser.parse("VK-HDFCBK", body, null)
+            assertNotNull("expected a match for: $body", result)
+            assertEquals("payee must not stop at the first space: $body", expected, result!!.recipientName)
+        }
+    }
+
+    // The stop-word list must not truncate real payees that merely BEGIN with
+    // one of those words. These are the names that would break a naive fix.
+    @Test
+    fun `payee names beginning with a status word survive intact`() {
+        val cases = mapOf(
+            "Rs.100 paid to Hasty Traders via UPI" to "Hasty Traders",
+            "Rs.100 paid to Hasmukh Patel via UPI" to "Hasmukh Patel",
+            "Rs.100 paid to Ismail Khan via UPI" to "Ismail Khan",
+            "Rs.100 paid to Notandas Stores via UPI" to "Notandas Stores",
+            "Rs.100 sent to Arewa Foods via UPI" to "Arewa Foods",
+            "Rs.100 sent to Isabella Fernandes via UPI" to "Isabella Fernandes"
+        )
+
+        for ((body, expected) in cases) {
+            val result = SmsTransactionParser.parse("VK-HDFCBK", body, null)
+            assertNotNull("expected a match for: $body", result)
+            assertEquals(expected, result!!.recipientName)
+        }
     }
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- QR scanner chrome spacing, applied on top of the system-bar insets -->
+    <dimen name="qr_chrome_gap">20dp</dimen>
+    <dimen name="qr_bottom_bar_gap">48dp</dimen>
+</resources>

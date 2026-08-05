@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.payment
 
 import com.flowpay.app.constants.AppConstants
@@ -46,7 +49,10 @@ object Upi123CallStringBuilder {
             return Result.Invalid("Minimum amount is ₹${AppConstants.MIN_AMOUNT_VALUE.toLong()}")
         }
         if (value > AppConstants.UPI123PAY_MAX_AMOUNT.toLong()) {
-            return Result.Invalid("UPI 123Pay allows up to ₹${AppConstants.UPI123PAY_MAX_AMOUNT.toLong()} per transaction")
+            return Result.Invalid(
+                "Maximum ₹${AppConstants.UPI123PAY_MAX_AMOUNT.toLong()} per payment — " +
+                    "the UPI 123Pay IVR does not accept ₹5,000 or more"
+            )
         }
 
         return Result.Valid("tel:$service,,1,$phone,,$value,,1")

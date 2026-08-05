@@ -1,9 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.helpers
 
 import android.content.Context
-import android.content.Intent
-import android.widget.Toast
-import com.flowpay.app.TestConfigurationActivity
 
 /**
  * Helper class containing all business logic for SetupActivity
@@ -14,7 +14,6 @@ class SetupHelper(
     private val uiCallback: UICallback
 ) {
     companion object {
-        private const val TAG = "SetupHelper"
         private const val PREFS = "FlowpayPrefs"
         private const val KEY_USER_REPORTED_USSD_NOT_WORKING = "user_reported_ussd_not_working"
 
@@ -59,7 +58,6 @@ class SetupHelper(
             }
             return "Scan to pay is not available — USSD does not work for you on this device, so this feature can't be used."
         }
-
     }
 
     /**
@@ -228,14 +226,14 @@ class SetupHelper(
      */
     fun completeSetup(setupData: SetupData) {
         val validationResult = validateForm(setupData)
-        
+
         if (validationResult.isValid) {
             // Save setup data
             saveSetupData(setupData)
-            
+
             // Show success message
             uiCallback.showToast("Setup completed successfully!")
-            
+
             // Navigate to test configuration
             uiCallback.navigateToTestConfiguration()
         } else {

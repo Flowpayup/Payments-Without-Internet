@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.managers
 
 import android.Manifest
@@ -6,16 +9,15 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.net.Uri
-import android.os.Build
 import android.telecom.TelecomManager
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.compose.runtime.mutableStateOf
-import com.flowpay.app.constants.PermissionConstants
+import androidx.core.content.ContextCompat
 import com.flowpay.app.constants.AppConstants
+import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.payment.Upi123CallStringBuilder
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -24,26 +26,27 @@ enum class CallType {
 }
 
 class CallManager(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "CallManager"
     }
-    
+
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-    
+
     private var originalCallVolume: Int = 0
     private var previousAudioMode: Int = AudioManager.MODE_NORMAL
     private var isAudioMuted = false
-    
+
     // Call state tracking - thread-safe with proper synchronization
     private var _isCallInProgress = mutableStateOf(false)
+
     @Volatile
     private var currentCallType: CallType? = null
     private var onCallEndedCallback: ((CallType) -> Unit)? = null
     private var onUssdSessionComplete: (() -> Unit)? = null
     private var phoneStateListener: PhoneStateListener? = null
-    
+
     // Synchronization objects for thread safety
     private val audioLock = Any()
     private val callStateLock = Any()
@@ -60,32 +63,32 @@ class CallManager(private val context: Context) {
             onCallEndedCallback = callback
         }
     }
-    
+
     private fun setUssdSessionCompleteCallback(callback: (() -> Unit)?) {
         synchronized(callbackLock) {
             onUssdSessionComplete = callback
         }
     }
-    
+
     private fun getCallEndedCallback(): ((CallType) -> Unit)? {
         synchronized(callbackLock) {
             return onCallEndedCallback
         }
     }
-    
+
     private fun getUssdSessionCompleteCallback(): (() -> Unit)? {
         synchronized(callbackLock) {
             return onUssdSessionComplete
         }
     }
-    
+
     private fun clearCallbacks() {
         synchronized(callbackLock) {
             onCallEndedCallback = null
             onUssdSessionComplete = null
         }
     }
-    
+
     /**
      * Initiates a call - simplified without cycle tracking
      */
@@ -97,37 +100,38 @@ class CallManager(private val context: Context) {
         onUssdComplete: (() -> Unit)? = null
     ) {
         // Check permissions using centralized constants
-        if (ContextCompat.checkSelfPermission(context, PermissionConstants.CRITICAL_PERMISSIONS[0]) != 
-            android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, PermissionConstants.CRITICAL_PERMISSIONS[0]) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
             Log.e(TAG, "CALL_PHONE permission not granted")
             return
         }
-        
+
         // Handle USSD calls using ACTION_CALL (simplified)
         if (callType == CallType.USSD) {
             handleUSSDCall(phoneNumber, onUssdComplete)
             return
         }
-        
+
         // Set up call tracking with thread safety
         synchronized(callStateLock) {
             currentCallType = callType
             setCallEndedCallback(onCallEnded)
             _isCallInProgress.value = true
         }
-        
+
         // Create and register phone state listener for non-USSD calls
         synchronized(listenerLock) {
             phoneStateListener = createPhoneStateListener(onCallEnded)
             telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
         }
-        
+
         // Initiate the call
         val intent = Intent(Intent.ACTION_CALL).apply {
             data = Uri.parse("tel:$phoneNumber")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        
+
         try {
             context.startActivity(intent)
             Log.d(TAG, "Call initiated: $callType")
@@ -153,7 +157,7 @@ class CallManager(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Handle USSD calls using ACTION_CALL (simplified)
      */
@@ -186,7 +190,7 @@ class CallManager(private val context: Context) {
             }
             telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
         }
-        
+
         // Initiate the USSD call using ACTION_CALL
         // URL encode the USSD code to preserve special characters like #
         val encodedUssdCode = Uri.encode(ussdCode)
@@ -194,7 +198,7 @@ class CallManager(private val context: Context) {
             data = Uri.parse("tel:$encodedUssdCode")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        
+
         try {
             context.startActivity(intent)
             Log.d(TAG, "USSD call initiated: $ussdCode")
@@ -210,7 +214,7 @@ class CallManager(private val context: Context) {
             unregisterPhoneStateListener()
         }
     }
-    
+
     /**
      * Creates phone state listener for non-USSD calls
      */
@@ -225,7 +229,7 @@ class CallManager(private val context: Context) {
                     else -> "UNKNOWN($state)"
                 }
                 Log.d(TAG, "Call State: $stateName")
-                
+
                 when (state) {
                     TelephonyManager.CALL_STATE_IDLE -> {
                         if (_isCallInProgress.value) {
@@ -252,7 +256,7 @@ class CallManager(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Ends current call
      */
@@ -262,7 +266,7 @@ class CallManager(private val context: Context) {
             currentCallType = null
             clearCallbacks()
         }
-        
+
         // Unregister phone state listener
         synchronized(listenerLock) {
             phoneStateListener?.let { listener ->
@@ -271,24 +275,29 @@ class CallManager(private val context: Context) {
             phoneStateListener = null
         }
     }
-    
+
     /**
      * Checks if call is in progress
      */
     fun isCallInProgress(): Boolean = _isCallInProgress.value
-    
+
     /**
      * Constructs the UPI123 call string in the format: tel:<serviceNumber>,,1,<phoneNumber>,,<amount>,,1
      * Validation and construction live in the pure, unit-tested Upi123CallStringBuilder.
      */
     fun constructUPI123CallString(phoneNumber: String, amount: String): String {
-        return when (val result = Upi123CallStringBuilder.build(AppConstants.DEFAULT_UPI_SERVICE_NUMBER, phoneNumber, amount)) {
+        return when (
+            val result = Upi123CallStringBuilder.build(
+                AppConstants.DEFAULT_UPI_SERVICE_NUMBER,
+                phoneNumber,
+                amount
+            )
+        ) {
             is Upi123CallStringBuilder.Result.Valid -> result.callString
             is Upi123CallStringBuilder.Result.Invalid -> throw IllegalArgumentException(result.reason)
         }
     }
-    
-    
+
     /**
      * Initiates a UPI123 call with the given phone number and amount
      */
@@ -341,7 +350,7 @@ class CallManager(private val context: Context) {
             false
         }
     }
-    
+
     /**
      * Mutes all audio streams for seamless call experience
      * @return true if successful, false otherwise
@@ -349,36 +358,35 @@ class CallManager(private val context: Context) {
     fun muteCallAudio(): Boolean {
         synchronized(audioLock) {
             return try {
-            Log.d(TAG, "Attempting to mute call audio")
-            
-            // Store original audio settings with error checking
-            originalCallVolume = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
-            previousAudioMode = audioManager.mode
-            
-            // Set audio mode for call with validation
-            audioManager.mode = AudioManager.MODE_IN_CALL
-            if (audioManager.mode != AudioManager.MODE_IN_CALL) {
-                Log.w(TAG, "Failed to set audio mode to MODE_IN_CALL")
-                return false
-            }
-            
-            // Mute microphone and speaker
-            audioManager.isMicrophoneMute = true
-            audioManager.isSpeakerphoneOn = false
+                Log.d(TAG, "Attempting to mute call audio")
 
-            // Mute ONLY the voice-call stream. Ring/alarm/notification streams
-            // must never be touched — silencing a user's alarm clock during a
-            // 35-second payment call is real-world harm.
-            try {
-                audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, 0, 0)
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to mute voice-call stream", e)
-            }
+                // Store original audio settings with error checking
+                originalCallVolume = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
+                previousAudioMode = audioManager.mode
 
-            isAudioMuted = true
-            Log.d(TAG, "Call audio muted")
-            true
-            
+                // Set audio mode for call with validation
+                audioManager.mode = AudioManager.MODE_IN_CALL
+                if (audioManager.mode != AudioManager.MODE_IN_CALL) {
+                    Log.w(TAG, "Failed to set audio mode to MODE_IN_CALL")
+                    return false
+                }
+
+                // Mute microphone and speaker
+                audioManager.isMicrophoneMute = true
+                audioManager.isSpeakerphoneOn = false
+
+                // Mute ONLY the voice-call stream. Ring/alarm/notification streams
+                // must never be touched — silencing a user's alarm clock during a
+                // 35-second payment call is real-world harm.
+                try {
+                    audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, 0, 0)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to mute voice-call stream", e)
+                }
+
+                isAudioMuted = true
+                Log.d(TAG, "Call audio muted")
+                true
             } catch (e: SecurityException) {
                 Log.e(TAG, "Security exception while muting audio", e)
                 Toast.makeText(context, "Permission required to control audio", Toast.LENGTH_SHORT).show()
@@ -390,7 +398,7 @@ class CallManager(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Restores all audio streams to original settings
      * @return true if successful, false otherwise
@@ -398,32 +406,34 @@ class CallManager(private val context: Context) {
     fun unmuteCallAudio(): Boolean {
         synchronized(audioLock) {
             return try {
-            Log.d(TAG, "Restoring call audio")
-            
-            // Restore audio mode with validation
-            audioManager.mode = previousAudioMode
-            if (audioManager.mode != previousAudioMode) {
-                Log.w(TAG, "Failed to restore audio mode to $previousAudioMode")
-            }
-            
-            // Unmute microphone
-            audioManager.isMicrophoneMute = false
+                Log.d(TAG, "Restoring call audio")
 
-            // Restore the voice-call volume (the only stream mute touches)
-            try {
-                audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, originalCallVolume, 0)
-                val currentCallVolume = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
-                if (currentCallVolume != originalCallVolume) {
-                    Log.w(TAG, "Failed to restore call volume, expected: $originalCallVolume, actual: $currentCallVolume")
+                // Restore audio mode with validation
+                audioManager.mode = previousAudioMode
+                if (audioManager.mode != previousAudioMode) {
+                    Log.w(TAG, "Failed to restore audio mode to $previousAudioMode")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to restore call volume", e)
-            }
 
-            isAudioMuted = false
-            Log.d(TAG, "Call audio restored successfully")
-            true
-            
+                // Unmute microphone
+                audioManager.isMicrophoneMute = false
+
+                // Restore the voice-call volume (the only stream mute touches)
+                try {
+                    audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, originalCallVolume, 0)
+                    val currentCallVolume = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
+                    if (currentCallVolume != originalCallVolume) {
+                        Log.w(
+                            TAG,
+                            "Failed to restore call volume, expected: $originalCallVolume, actual: $currentCallVolume"
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to restore call volume", e)
+                }
+
+                isAudioMuted = false
+                Log.d(TAG, "Call audio restored successfully")
+                true
             } catch (e: SecurityException) {
                 Log.e(TAG, "Security exception while restoring audio", e)
                 Toast.makeText(context, "Permission required to control audio", Toast.LENGTH_SHORT).show()
@@ -435,7 +445,7 @@ class CallManager(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Sets call volume to minimum (1) for IVR calls
      * @return true if successful, false otherwise
@@ -444,22 +454,22 @@ class CallManager(private val context: Context) {
         synchronized(audioLock) {
             return try {
                 Log.d(TAG, "Setting call volume to minimum (1)")
-                
+
                 // Store original call volume if not already stored
                 if (originalCallVolume == 0) {
                     originalCallVolume = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
                     Log.d(TAG, "Stored original call volume: $originalCallVolume")
                 }
-                
+
                 // Set audio mode for call
                 audioManager.mode = AudioManager.MODE_IN_CALL
-                
+
                 // Set call volume to 1 (minimum audible level)
                 audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, 1, AudioManager.FLAG_SHOW_UI)
                 val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
-                
+
                 Log.d(TAG, "Call volume set to: $currentVolume (target was 1)")
-                
+
                 if (currentVolume <= 1) {
                     Log.d(TAG, "Call volume set to minimum successfully")
                     true
@@ -467,7 +477,6 @@ class CallManager(private val context: Context) {
                     Log.w(TAG, "Failed to set call volume to 1, current volume: $currentVolume")
                     false
                 }
-                
             } catch (e: SecurityException) {
                 Log.e(TAG, "Security exception while setting call volume", e)
                 false
@@ -477,7 +486,7 @@ class CallManager(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Restores call volume to original level
      * @return true if successful, false otherwise
@@ -486,29 +495,35 @@ class CallManager(private val context: Context) {
         synchronized(audioLock) {
             return try {
                 Log.d(TAG, "Restoring call volume to original level: $originalCallVolume")
-                
+
                 if (originalCallVolume > 0) {
                     // Restore audio mode
                     audioManager.mode = previousAudioMode
-                    
+
                     // Restore call volume
-                    audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, originalCallVolume, AudioManager.FLAG_SHOW_UI)
+                    audioManager.setStreamVolume(
+                        AudioManager.STREAM_VOICE_CALL,
+                        originalCallVolume,
+                        AudioManager.FLAG_SHOW_UI
+                    )
                     val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
-                    
+
                     Log.d(TAG, "Call volume restored to: $currentVolume (expected: $originalCallVolume)")
-                    
+
                     if (currentVolume == originalCallVolume) {
                         Log.d(TAG, "Call volume restored successfully")
                         true
                     } else {
-                        Log.w(TAG, "Failed to restore call volume, expected: $originalCallVolume, actual: $currentVolume")
+                        Log.w(
+                            TAG,
+                            "Failed to restore call volume, expected: $originalCallVolume, actual: $currentVolume"
+                        )
                         false
                     }
                 } else {
                     Log.w(TAG, "No original call volume stored, cannot restore")
                     false
                 }
-                
             } catch (e: SecurityException) {
                 Log.e(TAG, "Security exception while restoring call volume", e)
                 false
@@ -518,7 +533,7 @@ class CallManager(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Shows the call overlay for UPI123 protection using the new service
      */
@@ -531,7 +546,7 @@ class CallManager(private val context: Context) {
             Log.e(TAG, "Failed to show call overlay", e)
         }
     }
-    
+
     /**
      * Hides the call overlay using the new service
      */
@@ -544,7 +559,7 @@ class CallManager(private val context: Context) {
             Log.e(TAG, "Failed to hide call overlay", e)
         }
     }
-    
+
     /**
      * Terminates the active call via TelecomManager.endCall().
      *
@@ -567,6 +582,7 @@ class CallManager(private val context: Context) {
                 return false
             }
             val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+
             @Suppress("DEPRECATION")
             val terminated = telecomManager.endCall()
             Log.d(TAG, "TelecomManager.endCall() -> $terminated")
@@ -585,8 +601,7 @@ class CallManager(private val context: Context) {
             false
         }
     }
-    
-    
+
     /**
      * Cleanup method to release all resources and prevent memory leaks
      */
@@ -603,7 +618,7 @@ class CallManager(private val context: Context) {
                 Log.e(TAG, "Error during audio cleanup", e)
             }
         }
-        
+
         synchronized(callStateLock) {
             try {
                 // Clear all callbacks and state
@@ -614,7 +629,7 @@ class CallManager(private val context: Context) {
                 Log.e(TAG, "Error during state cleanup", e)
             }
         }
-        
+
         // Unregister phone state listener
         synchronized(listenerLock) {
             try {
@@ -626,15 +641,15 @@ class CallManager(private val context: Context) {
                 Log.e(TAG, "Error unregistering phone state listener", e)
             }
         }
-        
+
         Log.d(TAG, "CallManager cleanup completed")
     }
-    
+
     /**
      * Checks if audio is currently muted
      */
     fun isAudioMuted(): Boolean = isAudioMuted
-    
+
     /**
      * Gets the current call state
      */

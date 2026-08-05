@@ -20,6 +20,7 @@
     <!-- SIM Carriers -->
     
     <!-- Validation Messages -->
+    <string name="error_amount_above_123pay_cap">Maximum ₹%1$d per payment — the UPI 123Pay IVR does not accept ₹5,000 or more.</string>
     
     <!-- Overlay Messages -->
     
@@ -76,6 +77,7 @@
     <string name="payment_status_unverified">No Confirmation Received</string>
     <string name="label_bank">Bank</string>
     <string name="label_transaction_id">Transaction ID</string>
+    <string name="label_bank_reference">Bank reference</string>
     <string name="label_date_time">Date &amp; Time</string>
     <string name="label_upi_id">UPI ID</string>
     <string name="action_done">Done</string>
@@ -93,11 +95,20 @@
     <string name="overlay_audio_muted">Call volume lowered</string>
     <string name="overlay_terminate">Cancel payment</string>
     <string name="overlay_connecting">Connecting to the UPI service…</string>
+    <string name="overlay_sending_request">Sending your payment request…</string>
+    <string name="overlay_pin_notice">Flowpay never asks for your UPI PIN. Your bank will call you — enter your PIN on that call.</string>
+    <string name="overlay_request_sent">Request sent. Waiting for your bank\'s confirmation SMS…</string>
     <string name="amount_rupees">₹%1$s</string>
     <string name="percent_format">%1$d%%</string>
 
+    <!-- Shown over the live camera when a scanned code is not a usable UPI QR -->
+    <string name="qr_invalid_banner">Not a valid UPI payment QR — %1$s. Try another code.</string>
     <!-- QR scanner steps -->
     <string name="qr_torch">Torch</string>
+    <string name="qr_pick_from_gallery">Scan a QR code from your gallery</string>
+    <string name="qr_gallery_no_code">No QR code found in that image</string>
+    <string name="qr_gallery_unreadable">That image could not be opened</string>
+
     <string name="qr_steps_title">Follow These Steps</string>
     <string name="qr_step_paste_vpa">1. Paste the VPA from clipboard</string>
     <string name="qr_step_enter_amount">2. Enter the amount</string>

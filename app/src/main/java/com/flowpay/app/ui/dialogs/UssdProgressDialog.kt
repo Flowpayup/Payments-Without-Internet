@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.ui.dialogs
 
 import androidx.compose.animation.core.*
@@ -82,7 +85,7 @@ private fun UssdProgressDialogContent(
         ),
         label = "alpha"
     )
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,9 +118,9 @@ private fun UssdProgressDialogContent(
                         modifier = Modifier.size(48.dp)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 Text(
                     text = if (showConfigurationOptions) {
                         stringResource(R.string.ussd_dlg_setup_complete_title)
@@ -129,9 +132,9 @@ private fun UssdProgressDialogContent(
                     color = Color.White,
                     textAlign = TextAlign.Center
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Text(
                     text = if (showConfigurationOptions) {
                         stringResource(R.string.ussd_dlg_setup_complete_body)
@@ -144,9 +147,9 @@ private fun UssdProgressDialogContent(
                     textAlign = TextAlign.Center,
                     lineHeight = 24.sp
                 )
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
-                
+
                 if (showConfigurationOptions) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -170,7 +173,7 @@ private fun UssdProgressDialogContent(
                                 textAlign = TextAlign.Center
                             )
                         }
-                        
+
                         Button(
                             onClick = onConfigured,
                             modifier = Modifier
@@ -198,9 +201,9 @@ private fun UssdProgressDialogContent(
                         color = LocalFlowpayAccentTheme.current.accent,
                         trackColor = FlowpayLightGray
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Text(
                         text = progressMessage,
                         fontSize = 14.sp,

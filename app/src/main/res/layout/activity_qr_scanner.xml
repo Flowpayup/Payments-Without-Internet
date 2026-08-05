@@ -75,7 +75,6 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginBottom="72dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -89,6 +88,20 @@
             android:scaleType="centerInside"
             android:padding="18dp"
             android:contentDescription="@string/qr_torch"
+            app:tint="@color/white" />
+
+        <!-- Same 64dp box, same background and padding as the torch so the
+             pair reads as one symmetric group centred on the screen. -->
+        <ImageButton
+            android:id="@+id/btnGallery"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="28dp"
+            android:background="@drawable/bottom_action_button_bg"
+            android:src="@drawable/ic_gallery"
+            android:scaleType="centerInside"
+            android:padding="18dp"
+            android:contentDescription="@string/qr_pick_from_gallery"
             app:tint="@color/white" />
 
     </LinearLayout>
@@ -123,9 +136,11 @@
     <FrameLayout
         android:id="@+id/instructionsBox"
         android:layout_width="0dp"
-        android:layout_height="190dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_height="wrap_content"
+        android:minHeight="190dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="20dp"
         android:background="@drawable/instructions_card_bg"
         android:elevation="8dp"
         android:visibility="gone"
@@ -150,9 +165,10 @@
         <LinearLayout
             android:id="@+id/instructionsExpanded"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="22dp"
             android:gravity="center_vertical"
             android:visibility="gone">
 
@@ -195,16 +211,40 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Invalid-scan banner: sits OVER the live preview so a bad QR never
+         blanks the camera. Auto-hides and scanning continues. -->
+    <TextView
+        android:id="@+id/tvScanError"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="@drawable/scan_error_banner_bg"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:lineSpacingExtra="2dp"
+        android:padding="16dp"
+        android:gravity="center"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottomActionBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Hidden: Status Text -->
     <TextView
         android:id="@+id/tvStatus"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textColor="@color/white"
         android:textSize="16sp"
+        android:lineSpacingExtra="4dp"
+        android:gravity="center"
+        android:textAlignment="center"
         android:visibility="gone"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@+id/progressBar"
+        android:layout_marginTop="28dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintTop_toBottomOf="@+id/instructionsBox"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

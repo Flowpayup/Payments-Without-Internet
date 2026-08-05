@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.features.qr_scanner
 
 import com.flowpay.app.features.qr_scanner.domain.QRCodeParser
@@ -79,11 +82,11 @@ class QRCodeParserTest {
 
     @Test
     fun `structurally invalid vpas are rejected`() {
-        invalid("upi://pay?pa=x@")          // no handle
-        invalid("upi://pay?pa=@bank")       // no local part
-        invalid("upi://pay?pa=a@b@c")       // double @
+        invalid("upi://pay?pa=x@") // no handle
+        invalid("upi://pay?pa=@bank") // no local part
+        invalid("upi://pay?pa=a@b@c") // double @
         invalid("upi://pay?pa=has space@ybl")
-        invalid("upi://pay?pa=a@1bank")     // handle must start with a letter
+        invalid("upi://pay?pa=a@1bank") // handle must start with a letter
     }
 
     @Test
@@ -91,8 +94,8 @@ class QRCodeParserTest {
         invalid("upi://pay?pa=ok@ybl&am=abc")
         invalid("upi://pay?pa=ok@ybl&am=0")
         invalid("upi://pay?pa=ok@ybl&am=-5")
-        invalid("upi://pay?pa=ok@ybl&am=100001")  // above ceiling
-        invalid("upi://pay?pa=ok@ybl&am=10.555")  // three decimal places
+        invalid("upi://pay?pa=ok@ybl&am=100001") // above ceiling
+        invalid("upi://pay?pa=ok@ybl&am=10.555") // three decimal places
     }
 
     @Test

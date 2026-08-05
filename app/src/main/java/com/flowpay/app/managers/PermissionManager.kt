@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.managers
 
 import android.Manifest
@@ -22,7 +25,7 @@ class PermissionManager(private val activity: Activity) {
             }
         }
     }
-    
+
     /**
      * Checks if all required permissions are granted
      */
@@ -45,7 +48,7 @@ class PermissionManager(private val activity: Activity) {
      */
     fun hasPhonePermissions(): Boolean {
         return isPermissionGranted(Manifest.permission.CALL_PHONE) &&
-                isPermissionGranted(Manifest.permission.READ_PHONE_STATE)
+            isPermissionGranted(Manifest.permission.READ_PHONE_STATE)
     }
 
     /**
@@ -66,7 +69,7 @@ class PermissionManager(private val activity: Activity) {
      * Alias for readability in some call sites
      */
     fun hasOverlayPermission(): Boolean = checkOverlayPermission()
-    
+
     /**
      * The system "draw over other apps" settings intent, or null if the
      * permission is already granted (or unnecessary below API M). Callers
@@ -82,15 +85,14 @@ class PermissionManager(private val activity: Activity) {
             Uri.parse("package:${activity.packageName}")
         )
     }
-    
+
     /**
      * Checks if a specific permission is granted
      */
     fun isPermissionGranted(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_GRANTED
     }
-    
-    
+
     /**
      * Gets the list of missing permissions
      */
@@ -99,8 +101,7 @@ class PermissionManager(private val activity: Activity) {
             ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED
         }
     }
-    
-    
+
     /**
      * Checks if overlay permission is available for services
      * This replaces inline checks in USSDOverlayService and UssdSetupOverlayService

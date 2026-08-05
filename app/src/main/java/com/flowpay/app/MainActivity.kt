@@ -1,6 +1,9 @@
-// MainActivity.kt - UI Only
-// Glasses + Signal Check features removed to match this tree's slim
-// MainActivityHelper (6-method UICallback, no Meta/glasses dependencies).
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+//
+// Home screen: the entry point to both payment rails (Scan QR and Pay
+// Contact), recent payments, and settings. UI only — the transfer
+// orchestration and permission gating live in MainActivityHelper.
 
 package com.flowpay.app
 
@@ -20,7 +23,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -88,7 +90,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -103,7 +104,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.flowpay.app.R
 import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.data.PaymentDetails
@@ -209,41 +209,44 @@ class MainActivity : ComponentActivity() {
         window.decorView.post { enforceBlackStatusBar() }
 
         // Initialize helper with UI callbacks (matches the 6-method UICallback)
-        helper = MainActivityHelper(this, object : MainActivityHelper.UICallback {
-            override fun showToast(message: String) {
-                runOnUiThread { Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show() }
-            }
+        helper = MainActivityHelper(
+            this,
+            object : MainActivityHelper.UICallback {
+                override fun showToast(message: String) {
+                    runOnUiThread { Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show() }
+                }
 
-            override fun updatePaymentState(paymentState: com.flowpay.app.states.PaymentState) {
-                Log.d(TAG, "Payment state updated: ${paymentState::class.simpleName}")
-            }
+                override fun updatePaymentState(paymentState: com.flowpay.app.states.PaymentState) {
+                    Log.d(TAG, "Payment state updated: ${paymentState::class.simpleName}")
+                }
 
-            override fun navigateToSetup() {
-                startActivity(Intent(this@MainActivity, SetupActivity::class.java))
-                finish()
-            }
+                override fun navigateToSetup() {
+                    startActivity(Intent(this@MainActivity, SetupActivity::class.java))
+                    finish()
+                }
 
-            override fun navigateToTestConfiguration() {
-                startActivity(Intent(this@MainActivity, TestConfigurationActivity::class.java))
-                finish()
-            }
+                override fun navigateToTestConfiguration() {
+                    startActivity(Intent(this@MainActivity, TestConfigurationActivity::class.java))
+                    finish()
+                }
 
-            override fun finishActivity() {
-                finish()
-            }
+                override fun finishActivity() {
+                    finish()
+                }
 
-            override fun showOverlayPermissionExplanation() {
-                mainViewModel.onOverlayPermissionNeeded()
-            }
+                override fun showOverlayPermissionExplanation() {
+                    mainViewModel.onOverlayPermissionNeeded()
+                }
 
-            override fun launchQRScanner(intent: Intent) {
-                qrScannerLauncher.launch(intent)
-            }
+                override fun launchQRScanner(intent: Intent) {
+                    qrScannerLauncher.launch(intent)
+                }
 
-            override fun requestPhonePermissions() {
-                phonePermissionLauncher.launch(PermissionConstants.PHONE_PERMISSIONS)
+                override fun requestPhonePermissions() {
+                    phonePermissionLauncher.launch(PermissionConstants.PHONE_PERMISSIONS)
+                }
             }
-        })
+        )
 
         helper.initialize()
 

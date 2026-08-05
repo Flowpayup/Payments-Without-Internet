@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.constants
 
 import android.Manifest
@@ -6,7 +9,7 @@ import android.Manifest
  * Centralized permission constants to avoid duplication and ensure consistency
  */
 object PermissionConstants {
-    
+
     // Standard Android permissions required by the app
     val REQUIRED_PERMISSIONS = arrayOf(
         Manifest.permission.CALL_PHONE,
@@ -16,7 +19,7 @@ object PermissionConstants {
         Manifest.permission.READ_CONTACTS,
         Manifest.permission.VIBRATE
     )
-    
+
     // Critical permissions that are absolutely necessary for core functionality
     val CRITICAL_PERMISSIONS = arrayOf(
         Manifest.permission.CALL_PHONE,

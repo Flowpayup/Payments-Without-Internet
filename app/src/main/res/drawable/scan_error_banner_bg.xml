@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Inline banner shown over the live camera when a scanned code isn't a usable
+  UPI QR. Deliberately sits ON the preview rather than replacing it, so the
+  user can simply aim at a different code without the scanner appearing to
+  crash.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/scan_error_banner_bg" />
+    <corners android:radius="16dp" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/overlay_alert_red" />
+</shape>

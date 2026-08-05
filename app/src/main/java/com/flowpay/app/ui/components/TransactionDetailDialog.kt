@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.ui.components
 
 import androidx.compose.foundation.background
@@ -39,7 +42,8 @@ import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.ui.theme.statusColor
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun TransactionDetailDialog(
@@ -158,7 +162,23 @@ fun TransactionDetailDialog(
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        // Transaction ID
+                        // Bank reference — the number from the bank's own SMS,
+                        // the one a user would actually quote back to their
+                        // bank in a dispute. Shown first and only when the
+                        // bank supplied one (a PENDING row has none yet).
+                        if (!transaction.bankRef.isNullOrEmpty()) {
+                            DetailRow(
+                                label = stringResource(R.string.label_bank_reference),
+                                value = transaction.bankRef,
+                                onCopy = { clipboardManager.setText(AnnotatedString(transaction.bankRef)) }
+                            )
+                            DetailDivider()
+                        }
+
+                        // Transaction ID — Flowpay's own internal id. Kept
+                        // separate from the bank reference above: the two are
+                        // never the same value, and only the bank reference is
+                        // something the user's bank can look up.
                         DetailRow(
                             label = stringResource(R.string.label_transaction_id),
                             value = transaction.transactionId,
@@ -210,7 +230,11 @@ fun TransactionDetailDialog(
                         DetailRow(
                             label = stringResource(R.string.label_date_time),
                             value = formatFullDate(transaction.timestamp),
-                            onCopy = { clipboardManager.setText(AnnotatedString(formatFullDate(transaction.timestamp))) }
+                            onCopy = {
+                                clipboardManager.setText(
+                                    AnnotatedString(formatFullDate(transaction.timestamp))
+                                )
+                            }
                         )
                     }
                 }

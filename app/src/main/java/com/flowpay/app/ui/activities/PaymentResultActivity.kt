@@ -1,10 +1,13 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Flowpay
+
 package com.flowpay.app.ui.activities
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Intent
-import android.graphics.*
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -25,11 +28,13 @@ import com.flowpay.app.MainActivity
 import com.flowpay.app.R
 import com.flowpay.app.data.TransactionStatus
 import com.flowpay.app.helpers.TransactionDetector
+import com.flowpay.app.utils.CurrencyFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class PaymentResultActivity : AppCompatActivity() {
-    
+
     private lateinit var statusCircle: View
     private lateinit var tickImageView: ImageView
     private lateinit var statusText: TextView
@@ -41,17 +46,17 @@ class PaymentResultActivity : AppCompatActivity() {
     private lateinit var dateTimeText: TextView
     private lateinit var upiIdLayout: LinearLayout
     private lateinit var upiIdText: TextView
-    private lateinit var recipientLayout: LinearLayout  // NEW
-    private lateinit var recipientLabel: TextView      // NEW
-    private lateinit var recipientText: TextView       // NEW
+    private lateinit var recipientLayout: LinearLayout // NEW
+    private lateinit var recipientLabel: TextView // NEW
+    private lateinit var recipientText: TextView // NEW
     private lateinit var doneButton: Button
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // Set system UI to black theme
         setupSystemUI()
-        
+
         setContentView(R.layout.activity_payment_success)
 
         initViews()
@@ -89,9 +94,9 @@ class PaymentResultActivity : AppCompatActivity() {
         dateTimeText = findViewById(R.id.tv_date_time)
         upiIdLayout = findViewById(R.id.layout_upi_id)
         upiIdText = findViewById(R.id.tv_upi_id)
-        recipientLayout = findViewById(R.id.layout_recipient)  // NEW
+        recipientLayout = findViewById(R.id.layout_recipient) // NEW
         recipientLabel = findViewById(R.id.tv_recipient_label) // NEW
-        recipientText = findViewById(R.id.tv_recipient_name)   // NEW
+        recipientText = findViewById(R.id.tv_recipient_name) // NEW
         doneButton = findViewById(R.id.btn_done)
 
         resetViewsForAnimation()
@@ -110,7 +115,7 @@ class PaymentResultActivity : AppCompatActivity() {
         detailsCard.alpha = 0f
         doneButton.alpha = 0f
     }
-    
+
     private fun loadTransactionData() {
         val transactionId = intent.getStringExtra("transaction_id") ?: "N/A"
         val amount = intent.getStringExtra("amount") ?: "0"
@@ -119,9 +124,9 @@ class PaymentResultActivity : AppCompatActivity() {
         val timestamp = intent.getLongExtra("timestamp", System.currentTimeMillis())
         val upiId = intent.getStringExtra("upi_id")
         val transactionType = intent.getStringExtra("transaction_type") ?: "DEBIT"
-        val recipientName = intent.getStringExtra("recipient_name")  // NEW
-        val phoneNumber = intent.getStringExtra("phone_number")      // NEW
-        
+        val recipientName = intent.getStringExtra("recipient_name") // NEW
+        val phoneNumber = intent.getStringExtra("phone_number") // NEW
+
         // Get operation type from detector
         val detector = TransactionDetector.getInstance(this)
         val operationType = detector.getOperationType() ?: ""
@@ -170,7 +175,7 @@ class PaymentResultActivity : AppCompatActivity() {
         }
         tickImageView.setColorFilter(ContextCompat.getColor(this, android.R.color.white))
         amountText.text = getString(R.string.amount_rupees, formatAmount(amount))
-        
+
         // Handle recipient/sender display - UPDATED LOGIC
         when {
             !recipientName.isNullOrEmpty() -> {
@@ -196,13 +201,13 @@ class PaymentResultActivity : AppCompatActivity() {
                 recipientLayout.visibility = View.GONE
             }
         }
-        
+
         // Bank name - show if different from recipient
         bankNameText.text = bankName
-        
+
         transactionIdText.text = transactionId
         dateTimeText.text = formatDateTime(timestamp)
-        
+
         // Show UPI ID if available
         if (!upiId.isNullOrEmpty()) {
             upiIdLayout.visibility = View.VISIBLE
@@ -229,26 +234,19 @@ class PaymentResultActivity : AppCompatActivity() {
         amountText.setTextColor(color)
     }
 
-    private fun formatAmount(amount: String): String {
-        return try {
-            val value = amount.toDouble()
-            String.format(Locale.getDefault(), "%,.2f", value)
-        } catch (e: Exception) {
-            amount
-        }
-    }
-    
+    private fun formatAmount(amount: String): String = CurrencyFormat.inr(amount)
+
     private fun formatDateTime(timestamp: Long): String {
         val formatter = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
         return formatter.format(Date(timestamp))
     }
-    
+
     private fun startAnimations() {
         // Animate tick with draw effect
         Handler(Looper.getMainLooper()).postDelayed({
             animateTickMark()
         }, 300)
-        
+
         // Fade in status text (and its explainer line, when visible)
         Handler(Looper.getMainLooper()).postDelayed({
             statusText.animate()
@@ -260,7 +258,7 @@ class PaymentResultActivity : AppCompatActivity() {
                 .setDuration(500)
                 .start()
         }, 800)
-        
+
         // Fade in amount
         Handler(Looper.getMainLooper()).postDelayed({
             amountText.animate()
@@ -277,7 +275,7 @@ class PaymentResultActivity : AppCompatActivity() {
                 }
                 .start()
         }, 1200)
-        
+
         // Slide up details card
         Handler(Looper.getMainLooper()).postDelayed({
             detailsCard.translationY = 100f
@@ -288,7 +286,7 @@ class PaymentResultActivity : AppCompatActivity() {
                 .setInterpolator(AccelerateDecelerateInterpolator())
                 .start()
         }, 1600)
-        
+
         // Fade in done button
         Handler(Looper.getMainLooper()).postDelayed({
             doneButton.animate()
@@ -297,14 +295,14 @@ class PaymentResultActivity : AppCompatActivity() {
                 .start()
         }, 2000)
     }
-    
+
     private fun animateTickMark() {
         tickImageView.alpha = 1f
-        
+
         val animator = ValueAnimator.ofFloat(0f, 1f)
         animator.duration = 1000
         animator.interpolator = AccelerateDecelerateInterpolator()
-        
+
         animator.addUpdateListener { animation ->
             val progress = animation.animatedValue as Float
             // Create custom tick drawing animation
@@ -312,7 +310,7 @@ class PaymentResultActivity : AppCompatActivity() {
             tickImageView.scaleY = progress
             tickImageView.rotation = progress * 360f
         }
-        
+
         animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
                 tickImageView.rotation = 0f
@@ -331,10 +329,10 @@ class PaymentResultActivity : AppCompatActivity() {
                     .start()
             }
         })
-        
+
         animator.start()
     }
-    
+
     private fun navigateToMain() {
         val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
@@ -342,7 +340,7 @@ class PaymentResultActivity : AppCompatActivity() {
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         finish()
     }
-    
+
     private fun setupSystemUI() {
         // Make status bar and navigation bar black (minSdk 29 — no guard needed)
         window.statusBarColor = Color.BLACK
@@ -363,15 +361,17 @@ class PaymentResultActivity : AppCompatActivity() {
         } else {
             // API 29 has no WindowInsetsController — the legacy flags stay.
             @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                     or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                     or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                     or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN)
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                )
         }
     }
-    
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
