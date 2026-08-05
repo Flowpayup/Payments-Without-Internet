@@ -75,6 +75,13 @@ jobs:
           ! grep -rnE 'Toast\.makeText\([^,]+,\s*"|\.text\s*=\s*"|setText\("' \
             app/src/main/java/com/flowpay/app --include='*.kt' \
             || (echo "::error::Hardcoded string in a Toast/TextView — move it to strings.xml and pass the resource id" && exit 1)
+          # And the app's own UI-callback helpers, which route to a Toast one
+          # frame later and so hid another 23 literals from the check above.
+          # This list is the project's user-facing message entry points; add
+          # to it when a new one appears.
+          ! grep -rnE '(showToast|showError|showMessage|showInvalidQrCode)\(\s*"' \
+            app/src/main/java/com/flowpay/app --include='*.kt' \
+            || (echo "::error::Hardcoded string passed to a UI callback — move it to strings.xml and pass getString(…)" && exit 1)
 
       - name: Run unit tests
         run: ./gradlew test --no-daemon --stacktrace

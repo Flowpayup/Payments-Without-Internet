@@ -4,6 +4,7 @@
 package com.flowpay.app.helpers
 
 import android.content.Context
+import com.flowpay.app.R
 
 /**
  * Helper class containing all business logic for SetupActivity
@@ -232,7 +233,7 @@ class SetupHelper(
             saveSetupData(setupData)
 
             // Show success message
-            uiCallback.showToast("Setup completed successfully!")
+            uiCallback.showToast(context.getString(R.string.status_setup_complete))
 
             // Navigate to test configuration
             uiCallback.navigateToTestConfiguration()

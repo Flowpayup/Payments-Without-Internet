@@ -20,6 +20,7 @@ import com.flowpay.app.R
 import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.payment.Upi123CallStringBuilder
+import com.flowpay.app.payment.messageFor
 import java.util.concurrent.atomic.AtomicBoolean
 
 enum class CallType {
@@ -295,7 +296,8 @@ class CallManager(private val context: Context) {
             )
         ) {
             is Upi123CallStringBuilder.Result.Valid -> result.callString
-            is Upi123CallStringBuilder.Result.Invalid -> throw IllegalArgumentException(result.reason)
+            is Upi123CallStringBuilder.Result.Invalid ->
+                throw IllegalArgumentException(result.reason.name)
         }
     }
 
@@ -311,8 +313,12 @@ class CallManager(private val context: Context) {
             )
             val callString = when (result) {
                 is Upi123CallStringBuilder.Result.Invalid -> {
-                    Log.e(TAG, "UPI123 call rejected: ${result.reason}")
-                    Toast.makeText(context, result.reason, Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "UPI123 call rejected: ${result.reason.name}")
+                    Toast.makeText(
+                        context,
+                        result.reason.messageFor(context),
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return false
                 }
                 is Upi123CallStringBuilder.Result.Valid -> result.callString

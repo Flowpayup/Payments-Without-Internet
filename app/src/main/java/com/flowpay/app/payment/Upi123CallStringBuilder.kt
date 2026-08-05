@@ -23,9 +23,28 @@ object Upi123CallStringBuilder {
     private val PHONE_REGEX = Regex(AppConstants.PHONE_NUMBER_PATTERN)
     private val WHOLE_RUPEES_REGEX = Regex("^[0-9]{1,6}$")
 
+    /**
+     * Why a dial string could not be built.
+     *
+     * A reason is an enum rather than an English sentence so this object can
+     * stay free of Android — the copy the user sees lives in `strings.xml`
+     * like all other copy, and the mapping happens at the UI edge
+     * ([messageFor][com.flowpay.app.payment.messageFor]). Building the
+     * sentence here would have put user-facing text in a pure, unit-tested
+     * money-path class where no copy gate looks for it.
+     */
+    enum class Reason {
+        SERVICE_NUMBER,
+        RECIPIENT_NUMBER,
+        AMOUNT_NOT_WHOLE_RUPEES,
+        AMOUNT_NOT_A_NUMBER,
+        AMOUNT_BELOW_MINIMUM,
+        AMOUNT_ABOVE_CAP,
+    }
+
     sealed class Result {
         data class Valid(val callString: String) : Result()
-        data class Invalid(val reason: String) : Result()
+        data class Invalid(val reason: Reason) : Result()
     }
 
     fun build(serviceNumber: String, phoneNumber: String, amount: String): Result {
@@ -34,25 +53,22 @@ object Upi123CallStringBuilder {
         val rupees = amount.trim()
 
         if (!SERVICE_NUMBER_REGEX.matches(service)) {
-            return Result.Invalid("Invalid UPI service number")
+            return Result.Invalid(Reason.SERVICE_NUMBER)
         }
         if (!PHONE_REGEX.matches(phone)) {
-            return Result.Invalid("Recipient must be a 10-digit mobile number")
+            return Result.Invalid(Reason.RECIPIENT_NUMBER)
         }
         // The IVR consumes whole-rupee DTMF digits; decimals cannot be dialled.
         if (!WHOLE_RUPEES_REGEX.matches(rupees)) {
-            return Result.Invalid("Amount must be whole rupees (digits only)")
+            return Result.Invalid(Reason.AMOUNT_NOT_WHOLE_RUPEES)
         }
         val value = rupees.toLongOrNull()
-            ?: return Result.Invalid("Amount must be a number")
+            ?: return Result.Invalid(Reason.AMOUNT_NOT_A_NUMBER)
         if (value < AppConstants.MIN_AMOUNT_VALUE.toLong()) {
-            return Result.Invalid("Minimum amount is ₹${AppConstants.MIN_AMOUNT_VALUE.toLong()}")
+            return Result.Invalid(Reason.AMOUNT_BELOW_MINIMUM)
         }
         if (value > AppConstants.UPI123PAY_MAX_AMOUNT.toLong()) {
-            return Result.Invalid(
-                "Maximum ₹${AppConstants.UPI123PAY_MAX_AMOUNT.toLong()} per payment — " +
-                    "the UPI 123Pay IVR does not accept ₹5,000 or more"
-            )
+            return Result.Invalid(Reason.AMOUNT_ABOVE_CAP)
         }
 
         return Result.Valid("tel:$service,,1,$phone,,$value,,1")

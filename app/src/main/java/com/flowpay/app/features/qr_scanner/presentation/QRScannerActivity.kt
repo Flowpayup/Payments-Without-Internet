@@ -45,6 +45,7 @@ import com.flowpay.app.data.TransactionSource
 import com.flowpay.app.data.UPIData
 import com.flowpay.app.features.qr_scanner.domain.QRCodeAnalyzer
 import com.flowpay.app.features.qr_scanner.domain.QRCodeParser
+import com.flowpay.app.features.qr_scanner.domain.messageFor
 import com.flowpay.app.helpers.SetupHelper
 import com.flowpay.app.helpers.TransactionDetector
 import com.flowpay.app.managers.PermissionManager
@@ -123,7 +124,7 @@ class QRScannerActivity : ComponentActivity() {
         if (isGranted) {
             dialUSSD()
         } else {
-            showError("Phone call permission is required for USSD payments")
+            showError(getString(R.string.error_call_permission_required_payments))
         }
     }
 
@@ -390,7 +391,7 @@ class QRScannerActivity : ComponentActivity() {
                             if (!isActivityAlive()) return@runOnUiThread
                             Toast.makeText(
                                 this,
-                                "Camera initialization failed: ${exc.message}",
+                                R.string.error_camera_init_failed,
                                 Toast.LENGTH_LONG
                             ).show()
                         }
@@ -446,13 +447,13 @@ class QRScannerActivity : ComponentActivity() {
                     initiateUSSDPayment(result.data)
                 }
                 is QRCodeParser.ParseResult.Invalid -> {
-                    Log.w("QRScanner", "QR rejected: ${result.reason}")
-                    showInvalidQrCode(result.reason)
+                    Log.w("QRScanner", "QR rejected: ${result.reason.name}")
+                    showInvalidQrCode(result.reason.messageFor(this))
                 }
             }
         } catch (e: Exception) {
             Log.e("QRScanner", "Error processing QR code", e)
-            showError("Error processing QR code. Please try again.")
+            showError(getString(R.string.error_qr_processing))
             // Reset processing flag on error
             isProcessingQRCode = false
         }
@@ -471,7 +472,7 @@ class QRScannerActivity : ComponentActivity() {
             // Validate VPA
             if (upiData.vpa.isBlank()) {
                 Log.e("QRScanner", "VPA is blank, cannot proceed")
-                showError("Invalid VPA. Please scan a valid UPI QR code.")
+                showError(getString(R.string.error_qr_invalid_vpa))
                 return
             }
 
@@ -499,12 +500,12 @@ class QRScannerActivity : ComponentActivity() {
                     dialUSSD()
                 } catch (e: Exception) {
                     Log.e("QRScanner", "Failed to dial USSD: ${e.message}", e)
-                    showError("Failed to initiate USSD call: ${e.message}")
+                    showError(getString(R.string.error_ussd_call_failed))
                 }
             }, 1000) // 1 second delay to ensure overlay is ready
         } catch (e: Exception) {
             Log.e("QRScanner", "Unexpected error in proceedWithPayment: ${e.message}", e)
-            showError("An unexpected error occurred: ${e.message}")
+            showError(getString(R.string.error_unexpected))
         }
     }
 
@@ -537,7 +538,7 @@ class QRScannerActivity : ComponentActivity() {
         } catch (e: IllegalStateException) {
             Log.e("QRScanner", "Failed to start SMS monitoring: ${e.message}")
             sessionManager?.onDialFailed("Could not start SMS monitoring")
-            showError("Failed to initialize payment system. Please try again.")
+            showError(getString(R.string.error_payment_init_failed))
             false
         }
     }
@@ -631,7 +632,7 @@ class QRScannerActivity : ComponentActivity() {
             // could adopt an unrelated confirmation.
             FlowpayApplication.from(this)?.paymentSessionManager
                 ?.onDialFailed("Could not start the payment call")
-            showError("Failed to initiate USSD call: ${e.message}")
+            showError(getString(R.string.error_ussd_call_failed))
         }
     }
 
@@ -936,7 +937,7 @@ class QRScannerActivity : ComponentActivity() {
             Log.e("QRScanner", "Showing error: $message")
 
             // Show error on black screen
-            updateBlackScreenStatus("Error: $message")
+            updateBlackScreenStatus(getString(R.string.qr_error_prefix, message))
             tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light))
 
             // Show toast for additional feedback

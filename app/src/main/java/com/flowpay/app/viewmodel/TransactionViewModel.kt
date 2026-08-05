@@ -4,8 +4,10 @@
 package com.flowpay.app.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.flowpay.app.R
 import com.flowpay.app.data.PaymentDetails
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.repository.TransactionRepository
@@ -34,6 +36,13 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
      * first DB toucher (home screen), so resolution is deferred to IO here
      * instead of an eager field initialiser.
      */
+    private companion object {
+        const val TAG = "TransactionViewModel"
+    }
+
+    /** Strings for the error banner come from resources, never from an exception message. */
+    private val app: Application get() = getApplication()
+
     private suspend fun repository(): TransactionRepository =
         withContext(Dispatchers.IO) { TransactionRepository.getInstance(getApplication()) }
 
@@ -91,7 +100,8 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                 // the home screen while the data was loading perfectly well.
                 throw e
             } catch (e: Exception) {
-                _error.value = "Failed to load transactions: ${e.message}"
+                Log.e(TAG, "Failed to load transactions", e)
+                _error.value = app.getString(R.string.error_load_transactions)
                 _isLoading.value = false
             }
         }
@@ -108,7 +118,8 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = "Failed to open transaction: ${e.message}"
+                Log.e(TAG, "Failed to open transaction", e)
+                _error.value = app.getString(R.string.error_open_transaction)
             }
         }
     }
@@ -158,7 +169,8 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = "Failed to delete transaction: ${e.message}"
+                Log.e(TAG, "Failed to delete transaction", e)
+                _error.value = app.getString(R.string.error_delete_transaction)
             }
         }
     }
@@ -175,7 +187,8 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = "Failed to delete transaction: ${e.message}"
+                Log.e(TAG, "Failed to delete transaction", e)
+                _error.value = app.getString(R.string.error_delete_transaction)
             }
         }
     }
@@ -191,7 +204,8 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = "Failed to clear transactions: ${e.message}"
+                Log.e(TAG, "Failed to clear transactions", e)
+                _error.value = app.getString(R.string.error_clear_transactions)
             }
         }
     }
