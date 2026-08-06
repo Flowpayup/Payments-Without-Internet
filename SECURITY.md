@@ -15,9 +15,14 @@ are not backported — update to the newest release.
 
 ## Verifying you have a genuine build
 
-Flowpay is distributed as a directly-installed APK, so the signing certificate
-is the trust anchor. Fake UPI apps are common in India, and an APK claiming to
-be Flowpay can come from anywhere; this fingerprint is how you tell.
+**No APK has been published.** This repository distributes source only —
+build it yourself with [Running it](README.md#running-it). Any APK you
+encounter claiming to be Flowpay did not come from here.
+
+If a signed build is ever published, the signing certificate is the trust
+anchor. Fake UPI apps are common in India, and an APK claiming to be Flowpay
+can come from anywhere; the fingerprint below is how you would tell. It is
+committed now, ahead of any release, so it cannot be back-dated later.
 
 ```
 Release signing certificate SHA-256:
@@ -41,8 +46,7 @@ A change to this fingerprint in a future version means the signing key changed.
 That is not normal; ask before installing.
 
 Building from source remains fully supported and needs none of this — see
-[Running it](README.md#running-it). The release procedure is in
-[docs/RELEASING.md](docs/RELEASING.md).
+[Running it](README.md#running-it).
 
 ## Reporting a vulnerability
 

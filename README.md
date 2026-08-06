@@ -41,8 +41,8 @@ UPI-linked SIM:
 - the permission deny-paths, and the clipboard-wipe and audio-restore
   behaviours.
 
-Whether you build this or install a release APK, you are ahead of that gate.
-Start with a trivial amount. Payment outcomes are decided **solely** by your
+There is no published APK — you build this yourself, which puts you ahead of
+that gate. Start with a trivial amount. Payment outcomes are decided **solely** by your
 bank's confirmation SMS — if it does not arrive, Flowpay records nothing,
 which is deliberate and explained in [docs/FAQ.md](docs/FAQ.md).
 
@@ -173,7 +173,7 @@ If you want to skim the code without running it, the build also works without an
 
 **Signed release build:** copy `keystore.properties.example` to `keystore.properties`, fill in your signing-key details, then run `./gradlew assembleRelease`. The `keystore.properties` file and any `*.jks`/`*.keystore` files are gitignored, so signing material is never committed. Without a keystore, `assembleRelease` stops rather than handing you an unsigned, uninstallable APK — pass `-PallowUnsigned` if that's what you actually want.
 
-**Verify a build:** check a downloaded APK with `apksigner verify --print-certs <apk>` and compare the SHA-256 fingerprint against the one committed in [SECURITY.md](SECURITY.md) — not against the release notes, which whoever published the release also wrote. If it doesn't match, it isn't ours.
+**No APK is published here** — this repo ships source, and building it yourself is the supported path. The release signing certificate's SHA-256 fingerprint is nonetheless committed in [SECURITY.md](SECURITY.md), ahead of any release, so that if a signed build ever appears you can check it with `apksigner verify --print-certs <apk>` against a fingerprint that predates it. Any APK claiming to be Flowpay today did not come from this project.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the system fits together, [docs/FAQ.md](docs/FAQ.md) for the trust/permissions questions, [docs/TESTING.md](docs/TESTING.md) for how outcomes are verified, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
 
@@ -217,7 +217,7 @@ Dialling `*99#` and initiating IVR calls may incur charges from your telecom ope
 
 ### Permissions and data handling
 
-Flowpay reads SMS locally to detect transaction confirmations. **SMS contents never leave your device.** No data is uploaded anywhere — the app has no backend. Because the SMS-read permission usage falls outside Google Play's restricted-permission policies, the app is distributed only as a directly-installed APK and is not available on Google Play. If you publish a fork, you are responsible for your own Play Store compliance review.
+Flowpay reads SMS locally to detect transaction confirmations. **SMS contents never leave your device.** No data is uploaded anywhere — the app has no backend. Because the SMS-read permission usage falls outside Google Play's restricted-permission policies, the app is not available on Google Play and is distributed as source that you build yourself. If you publish a fork, you are responsible for your own Play Store compliance review.
 
 ### Trademarks
 

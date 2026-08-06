@@ -5,15 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-08-05
+## 1.0.0 - 2026-08-05
 
-The first public release.
+The first public **source** release: the code is opened, and that is the whole
+of it. No APK is published and no build is distributed — you build it yourself,
+per [Running it](README.md#running-it).
 
-Distributed as a directly-installed APK — Flowpay is not on Google Play,
-because its SMS-permission usage falls outside Play's restricted-permission
-policy. Verify any download against the signing fingerprint committed in
-[SECURITY.md](SECURITY.md); building from source is equally supported, per
-[Running it](README.md#running-it).
+Flowpay could not go on Google Play in any case, because its SMS-permission
+usage falls outside Play's restricted-permission policy.
 
 **The physical-device gate in [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)
 has not been completed** — see the README's *Project status* for exactly which
