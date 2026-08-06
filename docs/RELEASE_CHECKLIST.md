@@ -5,16 +5,16 @@
 > injected SMS, and a minified release build running the camera — but the
 > items needing a live UPI-linked SIM have not.
 >
-> A signed release build now exists, so nothing except this list stands
-> between the code and a published APK. That makes running it the gate, not a
-> formality. The README's *Project status* section lists the unproven items,
-> so anyone installing knows what they are ahead of.
+> No APK is distributed — this repository ships source — so the people this
+> gate protects are the ones who clone it and build it themselves. That makes
+> running it the gate, not a formality. The README's *Project status* section
+> lists the unproven items, so anyone building knows what they are ahead of.
 
 Layers 1–3 in [TESTING.md](TESTING.md) are hermetic: they run without a SIM
 or a bank, and they can't catch a telco changing `*99#` behavior or a bank
 quietly reformatting its SMS template. This checklist is Layer 4 — the
 one human-in-the-loop check that catches what the hermetic layers can't,
-run once per release against real hardware before publishing.
+run against real hardware before anyone trusts a build with real money.
 
 This is deliberately manual and deliberately honest about being manual:
 no CI can dial a real Indian SIM.
@@ -27,8 +27,9 @@ SMS-injection tool; see the money-path scenarios in
 `*99#`, real-₹1, and QR items genuinely require a live UPI-linked SIM.
 
 If an item can't be run on the hardware you have, leave it unchecked and say
-so in the release notes. An unchecked box is information; a checked box that
-wasn't actually verified is a lie the next maintainer inherits.
+so in the README's *Project status* section. An unchecked box is information;
+a checked box that wasn't actually verified is a lie the next maintainer
+inherits.
 
 ## Prerequisites
 
@@ -126,8 +127,8 @@ routing, overlays over the system dialer, and real clipboard behavior.
 ## After the checklist
 
 Record which carrier(s) and bank(s) this checklist was run against in the
-release notes — that's useful signal for anyone hitting a carrier-specific
-issue later. If any step fails, do not publish; file the failure as an
-issue first (see the bug report template, which specifically asks for
-carrier/SIM details) and fix or explicitly document the limitation before
-cutting the release.
+README's *Project status* section — that's useful signal for anyone hitting a
+carrier-specific issue later. If any step fails, file it as an issue first
+(see the bug report template, which specifically asks for carrier/SIM
+details), then fix it or state the limitation plainly in *Project status*
+rather than leaving it implied.

@@ -31,9 +31,9 @@ There is no path by which it could observe your PIN.
 
 Google Play's restricted-permission policy effectively bars apps that use SMS
 permissions for this kind of use case. Rather than compromise the design,
-Flowpay is distributed as a directly-installed APK and (being fully FOSS) is
-suitable for F-Droid-style stores. See the README's "Verify a build" note for
-how to check a release APK against its signing certificate.
+Flowpay is published as source that you build yourself. Being fully FOSS, it
+would also suit an F-Droid-style store, but it is not in one today and no
+prebuilt APK is distributed from here.
 
 ### How can a payment succeed if the app can't reach the internet?
 
