@@ -14,6 +14,15 @@ jobs:
     name: test + assembleDebug + lintDebug
     runs-on: ubuntu-latest
 
+    # Declaring `permissions` at all sets every scope not listed here to
+    # `none`. The top-level block grants only `contents: read`, which left
+    # `pull-requests: none` — and the secret scan below needs to enumerate a
+    # PR's commits. Granted at job level, read-only, so the rest of the job
+    # keeps least privilege.
+    permissions:
+      contents: read
+      pull-requests: read
+
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -24,6 +33,22 @@ jobs:
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # This step failed with HTTP 403 on EVERY pull request, for two
+          # separate permission reasons — a red X on a *security* step caused
+          # by permissions rather than by anything in the diff, which just
+          # trains contributors to ignore the check.
+          #
+          #  1. Reading the PR's commit list needs `pull-requests: read`,
+          #     which the top-level `contents: read` block had zeroed out.
+          #     Fixed by the job-level `permissions` above.
+          #  2. Posting the findings comment needs `pull-requests: WRITE`,
+          #     which a PR from Dependabot or a fork never gets regardless of
+          #     what the workflow asks for. So the comment is switched off
+          #     rather than left to fail.
+          #
+          # The scan itself is unaffected: findings still fail the step, and
+          # they are printed in the job log and the run summary.
+          GITLEAKS_ENABLE_COMMENTS: "false"
 
       - name: Set up JDK 17
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
