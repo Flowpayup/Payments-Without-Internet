@@ -43,7 +43,6 @@ import com.flowpay.app.BuildConfig
 import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.R
 import com.flowpay.app.SetupActivity
-import com.flowpay.app.TestConfigurationActivity
 import com.flowpay.app.data.SettingsRepository
 import com.flowpay.app.repository.TransactionRepository
 import com.flowpay.app.ui.theme.BlueAccentTheme
@@ -305,17 +304,6 @@ fun SettingsScreen(
                             title = "Primary SIM",
                             value = primarySim,
                             onClick = { showSimPicker = true }
-                        )
-                        GroupDivider()
-                        SettingsRow(
-                            icon = Icons.Default.Dialpad,
-                            title = "Payment Setup",
-                            value = "*99# / UPI 123",
-                            onClick = {
-                                context.startActivity(
-                                    Intent(context, TestConfigurationActivity::class.java)
-                                )
-                            }
                         )
                     }
                 }
