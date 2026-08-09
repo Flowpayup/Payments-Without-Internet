@@ -124,7 +124,6 @@ data class SettingsState(
     val ussdTimeout: Int = 30,
     val smsDetectionEnabled: Boolean = true,
     val overlayEnabled: Boolean = true,
-    val notificationsEnabled: Boolean = true,
     val debugMode: Boolean = false,
     val setupCompleted: Boolean = true,
     val permissions: Map<String, Boolean> = emptyMap()
@@ -161,19 +160,7 @@ class SettingsViewModel : androidx.lifecycle.ViewModel() {
         state = state.copy(overlayEnabled = !state.overlayEnabled)
     }
 
-    fun toggleNotifications() {
-        state = state.copy(notificationsEnabled = !state.notificationsEnabled)
-    }
-
     fun refreshPermissions(context: Context) {
-        // Runtime-gated only on API 33+; below that, notifications post freely.
-        val notificationsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(
-                context, Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
         val perms = mapOf(
             "phone" to (
                 ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED &&
@@ -182,8 +169,7 @@ class SettingsViewModel : androidx.lifecycle.ViewModel() {
             "camera" to (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED),
             "sms" to (ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED),
             "contacts" to (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED),
-            "overlay" to (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(context) else true),
-            "notifications" to notificationsGranted
+            "overlay" to (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(context) else true)
         )
         state = state.copy(permissions = perms)
     }
@@ -196,7 +182,6 @@ class SettingsViewModel : androidx.lifecycle.ViewModel() {
             ussdTimeout = saved.ussdTimeout,
             smsDetectionEnabled = saved.smsDetectionEnabled,
             overlayEnabled = saved.overlayEnabled,
-            notificationsEnabled = saved.notificationsEnabled,
             debugMode = saved.debugMode,
             setupCompleted = saved.setupCompleted
         )
@@ -357,18 +342,6 @@ fun SettingsScreen(
                                 onRequestPermissions(arrayOf(Manifest.permission.READ_CONTACTS))
                             }
                         )
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            GroupDivider()
-                            PermissionRow(
-                                icon = Icons.Default.Notifications,
-                                title = "Notifications",
-                                subtitle = "Payment outcome alerts",
-                                granted = state.permissions["notifications"] ?: false,
-                                onRequest = {
-                                    onRequestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
-                                }
-                            )
-                        }
                     }
                 }
 

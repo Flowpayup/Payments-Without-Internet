@@ -126,19 +126,18 @@ class TransactionDetectorTest {
     }
 
     @Test
-    fun `same SMS body is claimed exactly once across both pipelines`() {
-        // The broadcast receiver sees the DLT header ("VK-HDFCBK") while the
-        // notification listener sees the messaging app's display name
-        // ("HDFC Bank") for the SAME message. The claim key is body-only
-        // because a sender-qualified key never collided across pipelines and
-        // the dedup silently double-recorded payments — this is the
-        // regression test for that bug.
+    fun `same SMS body is claimed exactly once`() {
+        // The claim key is body-only, not sender-qualified, so a redelivered
+        // SMS_RECEIVED broadcast (or a repeat debug injection) for the exact
+        // same message can never be claimed twice. A sender-qualified key
+        // would let cosmetic sender differences slip past the dedup and
+        // silently double-record a payment — this is the regression test.
         val body = "Rs 4,999.00 debited from A/c XX9012 for UPI txn 425512345678 -ICICI Bank"
 
-        assertTrue("first pipeline claims the SMS", detector.tryClaimSms(body))
-        assertFalse("second pipeline must lose the claim for the same body", detector.tryClaimSms(body))
+        assertTrue("first claim on this body succeeds", detector.tryClaimSms(body))
+        assertFalse("a repeat claim on the same body must lose", detector.tryClaimSms(body))
         assertFalse(
-            "whitespace differences between pipelines must still dedupe",
+            "whitespace differences in a redelivery must still dedupe",
             detector.tryClaimSms("  " + body.replace(" ", "  "))
         )
         assertTrue(

@@ -411,7 +411,6 @@
     <ID>ReturnCount:CallManager.kt$CallManager$fun terminateCall(): Boolean</ID>
     <ID>ReturnCount:CallOverlayService.kt$CallOverlayService$fun onCallDetected()</ID>
     <ID>ReturnCount:ContextExt.kt$fun Context.findComponentActivity(): ComponentActivity?</ID>
-    <ID>ReturnCount:FlowpayNotificationListener.kt$FlowpayNotificationListener$override fun onNotificationPosted(sbn: StatusBarNotification)</ID>
     <ID>ReturnCount:MainActivityHelper.kt$MainActivityHelper$fun initiateTransfer(phoneNumber: String, amount: String)</ID>
     <ID>ReturnCount:MainActivityHelper.kt$MainActivityHelper$private fun warnIfVoiceSimMismatch()</ID>
     <ID>ReturnCount:PaymentSessionManager.kt$PaymentSessionManager$fun onSmsConfirmed(parsed: SimpleTransaction): String?</ID>
@@ -440,7 +439,6 @@
     <ID>TooGenericExceptionCaught:CallStateCoordinator.kt$CallStateCoordinator$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ContactPickerDialog.kt$e: Exception</ID>
     <ID>TooGenericExceptionCaught:DatabaseEncryptionMigrator.kt$DatabaseEncryptionMigrator$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:FlowpayNotificationListener.kt$FlowpayNotificationListener$e: Exception</ID>
     <ID>TooGenericExceptionCaught:MainActivityHelper.kt$MainActivityHelper$e: Exception</ID>
     <ID>TooGenericExceptionCaught:PaymentResultActivity.kt$PaymentResultActivity$e: Exception</ID>
     <ID>TooGenericExceptionCaught:QRCodeParser.kt$QRCodeParser$e: Exception</ID>
