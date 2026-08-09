@@ -457,6 +457,51 @@ class SmsTransactionParserTest {
         }
     }
 
+    // The three bodies above all say "paid to" / "sent to", so they are caught
+    // by the FIRST recipient pattern — the one that already shared
+    // NAME_TERMINATOR. That made the stop-word guard look complete when it was
+    // not: a template with no verb before the payee falls through to the bare
+    // "to NAME" fallback, which carried its own terminator list with no stop
+    // words and a greedy quantifier. On a real device (2026-08-09) that
+    // rendered "Big Merchant Has Failed" on the result screen and wrote it to
+    // history; the longer "was declined by your bank" variant overran the
+    // 30-character ceiling and produced no payee at all.
+    @Test
+    fun `failure templates with no verb before the payee still stop at the status words`() {
+        val cases = mapOf(
+            "Your payment of Rs.850.00 to BIG MERCHANT has failed. Ref 850999888777"
+                to "Big Merchant",
+            "Payment of Rs.300.00 to SHARMA GENERAL STORE was declined by your bank. Ref 300111222"
+                to "Sharma General Store",
+            "Rs.450.00 to CORNER TEA STALL could not be processed. Ref 450111"
+                to "Corner Tea Stall"
+        )
+
+        for ((body, expected) in cases) {
+            val result = SmsTransactionParser.parse("VK-HDFCBK", body, null)
+            assertNotNull("expected a match for: $body", result)
+            assertEquals("payee must stop before the status words: $body", expected, result!!.recipientName)
+        }
+    }
+
+    // The same fallback must keep resolving the templates it always handled —
+    // a date or a ref keyword after the payee, with no status words in sight.
+    @Test
+    fun `bare to-NAME fallback still resolves date and ref terminated payees`() {
+        val cases = mapOf(
+            "Rs.250.00 debited from A/c XX9999 to CAFE COFFEE DAY on 09-Aug-26. Ref 250333444"
+                to "Cafe Coffee Day",
+            "Rs.75.00 debited from A/c XX9999 to METRO STORE dated 09-Aug-26"
+                to "Metro Store"
+        )
+
+        for ((body, expected) in cases) {
+            val result = SmsTransactionParser.parse("VK-HDFCBK", body, null)
+            assertNotNull("expected a match for: $body", result)
+            assertEquals("payee must survive intact: $body", expected, result!!.recipientName)
+        }
+    }
+
     // The bare `\s` terminator used to stop the payee at the FIRST space, so
     // every multi-word merchant was truncated to one word on the most common
     // Indian debit template ("sent to NAME from <bank> A/c ..."). Stored rows
