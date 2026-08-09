@@ -99,18 +99,7 @@
             android:enabled="true"
             android:exported="false" />
 
-        <!-- Notification Listener Service — opt-in fallback SMS detection -->
-        <service
-            android:name=".services.FlowpayNotificationListener"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-
-        <!-- SMS BroadcastReceiver — primary SMS transaction detection -->
+        <!-- SMS BroadcastReceiver — the single SMS ingestion path -->
         <receiver
             android:name=".receivers.SimpleSMSReceiver"
             android:exported="true"

@@ -17,11 +17,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * The live SMS -> transaction pipeline, shared by every ingestion entry
- * point: [SimpleSMSReceiver] (the real broadcast receiver), the
- * notification-listener fallback, and, in debug builds only,
- * `DebugSmsInjectionReceiver`. Keeping this in one place means the debug
- * injection tool exercises exactly the same code a real bank SMS would go
- * through — parsing, session confirmation, persistence, and the
+ * point: [SimpleSMSReceiver] (the real broadcast receiver) and, in debug
+ * builds only, `DebugSmsInjectionReceiver`. Keeping this in one place means
+ * the debug injection tool exercises exactly the same code a real bank SMS
+ * would go through — parsing, session confirmation, persistence, and the
  * result-screen launch — not a parallel reimplementation of it.
  */
 object SmsIngestionPipeline {
