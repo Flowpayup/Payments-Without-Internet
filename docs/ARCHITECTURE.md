@@ -95,15 +95,12 @@ most careful area.
 ```
                  ┌─────────────────────────────┐
   bank SMS ─────▶│ SimpleSMSReceiver           │  priority-999 broadcast
-                 │ (RECEIVE_SMS, primary)      │  receiver; goAsync + 8s cap
+                 │ (RECEIVE_SMS)               │  receiver; goAsync + 8s cap
                  └──────────────┬──────────────┘
                                 │
-  (fallback, opt-in / when      │      ┌──────────────────────────────┐
-   RECEIVE_SMS ungranted) ─────▶│      │ FlowpayNotificationListener  │
-                                │      └───────────────┬──────────────┘
-                 shouldProcessSMS() + tryClaimSms()    │  (cross-pipeline dedup)
-                                └───────────┬──────────┘
-                                            ▼
+                 shouldProcessSMS() + tryClaimSms()
+                                │
+                                ▼
                         SmsTransactionParser.parse()   ← PURE, Context-free, tested
                                             │
                                 SmsIngestionPipeline.ingest()
@@ -124,18 +121,21 @@ most careful area.
   window* (only SMS arriving while a payment is in flight are eligible;
   sized to the verification deadline plus a grace margin, so a slow bank SMS
   is never dropped here while the session still awaits it) and the dedup
-  that stops the two pipelines from double-processing one message.
-- **Dedup** is two-layered: `tryClaimSms` (a body-only normalized-key claim —
-  the receiver sees the DLT header while the listener sees the messaging
-  app's display name for the same SMS, and the truncated notification text
-  and full PDU also converge to one key) and `@Synchronized processSMS`
-  re-checking the operation window under lock — whichever pipeline enters
-  first consumes it.
-- Both pipelines share [`SmsIngestionPipeline`](../app/src/main/java/com/flowpay/app/receivers/SmsIngestionPipeline.kt)
-  end-to-end — parsing, session confirmation or orphaned-row reattach,
-  persistence, broadcasts, the result notification, and the result-screen
-  launch. The debug SMS-injection tool drives the same pipeline, so tests
-  exercise the exact production path (see [TESTING.md](TESTING.md)).
+  that stops a redelivered SMS broadcast from double-processing one message.
+- **Dedup** is `tryClaimSms` (a body-only normalized-key claim) plus
+  `@Synchronized processSMS` re-checking the operation window under lock.
+- [`SmsIngestionPipeline`](../app/src/main/java/com/flowpay/app/receivers/SmsIngestionPipeline.kt)
+  is the single path from a claimed SMS to an outcome — parsing, session
+  confirmation or orphaned-row reattach, persistence, broadcasts, the result
+  notification, and the result-screen launch. The debug SMS-injection tool
+  drives the same pipeline, so tests exercise the exact production path (see
+  [TESTING.md](TESTING.md)).
+- There used to be a second ingestion path, a `NotificationListenerService`
+  fallback for when `RECEIVE_SMS` was denied. It was removed: the setting
+  that would have enabled it was never wired to anything in the UI, so it
+  could never actually run, while still sitting in the manifest as an
+  exported `BIND_NOTIFICATION_LISTENER_SERVICE` component. `RECEIVE_SMS` is
+  the only SMS ingestion path now.
 
 ## Telephony and the call overlay
 
@@ -210,8 +210,7 @@ gate blocks reintroducing raw-body logging).
 - **Activities**: `MainActivity` (sole LAUNCHER, exported), plus Setup /
   TestConfiguration / QRScanner / PaymentResult (`singleTask`) /
   TransactionHistory / Settings (all `exported=false`).
-- **Services**: `CallOverlayService`; `FlowpayNotificationListener`
-  (notification-listener, opt-in SMS fallback).
+- **Services**: `CallOverlayService`.
 - **Receiver**: `SimpleSMSReceiver` (priority-999, guarded by `BROADCAST_SMS`).
 - **Debug only**: `DebugSmsInjectionReceiver` lives in `src/debug/` and is
   absent from release builds entirely.
@@ -236,14 +235,15 @@ Honest about what isn't consolidated, and why:
 
 - **`CallManager` is instantiated per-caller** (main flow, test screen,
   overlay service) and the legacy generic `initiateCall()` path still uses a
-  deprecated per-call `PhoneStateListener`. Both are used only by the
-  `TestConfiguration` connectivity-test screen, whose USSD/123Pay dial flow
-  can't be exercised without a real Indian SIM. Rewiring it to the
-  app-scoped `CallStateCoordinator` is deferred rather than done unverified.
+  deprecated per-call `PhoneStateListener`. Both are reachable only from the
+  `TestConfiguration` connectivity-test screen, a narrow, low-traffic surface
+  that doesn't justify rewiring to the app-scoped `CallStateCoordinator` for
+  its own sake.
 - **`PaymentResultActivity` remains a classic-View screen.** It's launched
-  from background receivers with specific window/`singleTask` behavior; a
-  blind Compose rewrite of a payment-outcome screen that can't be
-  device-tested isn't worth the regression risk for pattern purity alone.
+  from background receivers with specific window/`singleTask` behavior that a
+  Compose rewrite would have to reproduce exactly for no user-facing gain —
+  pattern purity alone isn't worth the regression surface on a
+  payment-outcome screen.
 - The **permissive SMS matcher** is intentional — banks phrase confirmations
   inconsistently, and the downstream tiers (a debit with a mismatched amount
   is dropped outright — it isn't this payment's confirmation, and the
