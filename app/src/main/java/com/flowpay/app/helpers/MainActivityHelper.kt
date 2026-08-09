@@ -254,9 +254,11 @@ class MainActivityHelper(
             }
             if (!matches) {
                 uiCallback.showToast(
-                    "Note: this call will use your default calling SIM ($voiceCarrier), " +
-                        "which doesn't look like the ${selectedCarrier.replaceFirstChar { it.uppercase() }} SIM from setup. " +
-                        "If the payment fails, switch your default calling SIM."
+                    context.getString(
+                        R.string.warn_voice_sim_mismatch,
+                        voiceCarrier,
+                        selectedCarrier.replaceFirstChar { it.uppercase() }
+                    )
                 )
             }
         } catch (e: SecurityException) {

@@ -13,9 +13,8 @@ import com.flowpay.app.payment.sms.SmsTransactionParser
 /**
  * Stateful orchestration around [SmsTransactionParser]: the
  * SharedPreferences-backed operation window (only SMS arriving while a
- * payment is in flight are eligible) and cross-pipeline dedup so the
- * broadcast receiver and the notification listener never double-process
- * one SMS.
+ * payment is in flight are eligible) and dedup so one SMS is never
+ * processed twice.
  *
  * All actual bank-SMS matching logic lives in [SmsTransactionParser], which
  * is pure and directly unit-testable without a Context.
@@ -58,10 +57,10 @@ class TransactionDetector private constructor(context: Context) {
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
-    // Recently claimed SMS fingerprints (sender|body hash -> claim time).
-    // Both ingestion pipelines (broadcast receiver + notification listener)
-    // call tryClaimSms() before processing, so the same message is parsed
-    // and persisted exactly once even when both fire near-simultaneously.
+    // Recently claimed SMS fingerprints (body hash -> claim time). Every
+    // ingestion entry point calls tryClaimSms() before processing, so a
+    // message is parsed and persisted exactly once even if the platform
+    // delivers the same SMS_RECEIVED broadcast more than once.
     private val recentSmsClaims = object : LinkedHashMap<String, Long>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean = size > 64
     }

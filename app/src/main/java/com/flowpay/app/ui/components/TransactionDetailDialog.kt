@@ -175,18 +175,6 @@ fun TransactionDetailDialog(
                             DetailDivider()
                         }
 
-                        // Transaction ID — Flowpay's own internal id. Kept
-                        // separate from the bank reference above: the two are
-                        // never the same value, and only the bank reference is
-                        // something the user's bank can look up.
-                        DetailRow(
-                            label = stringResource(R.string.label_transaction_id),
-                            value = transaction.transactionId,
-                            onCopy = { clipboardManager.setText(AnnotatedString(transaction.transactionId)) }
-                        )
-
-                        DetailDivider()
-
                         // Bank
                         DetailRow(
                             label = stringResource(R.string.label_bank),

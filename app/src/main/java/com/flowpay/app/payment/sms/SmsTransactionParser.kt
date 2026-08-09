@@ -65,7 +65,7 @@ object SmsTransactionParser {
      * most common Indian debit template.
      */
     private const val NAME_TERMINATOR =
-        "(?:\\s+(?:via|@|on|for|from|to|UPI|Ref)\\b|\\s+(?:$NAME_STOP_WORDS)\\b|\\.|,|;|$)"
+        "(?:\\s+(?:via|@|on|dated|for|from|to|UPI|Ref)\\b|\\s+(?:$NAME_STOP_WORDS)\\b|\\.|,|;|$)"
 
     // Name extraction patterns - CASE-INSENSITIVE
     private val RECIPIENT_PATTERNS = listOf(
@@ -89,8 +89,21 @@ object SmsTransactionParser {
         "(?:Rs\\.?|INR|₹)\\s*[0-9,]+(?:\\.[0-9]{2})?\\s+(?:sent|paid|transferred)\\s+to\\s+" +
             "([a-zA-Z][a-zA-Z\\s\\.]+?)$NAME_TERMINATOR",
 
-        // Pattern for simple "to NAME" without via/UPI
-        "\\bto\\s+([a-zA-Z][a-zA-Z\\s\\.]{2,30})(?:\\s+(?:on|dated|ref)|\\.|,|;|$)",
+        // Pattern for simple "to NAME" without via/UPI.
+        //
+        // This is the fallback every template reaches when no verb precedes
+        // the payee — "Your payment of Rs.850.00 to BIG MERCHANT has failed."
+        // has no `sent/paid/transferred to`, so patterns 0 and 5 never fire.
+        // It used to carry its own terminator list (`on|dated|ref`) with no
+        // stop words and a GREEDY quantifier, so it preferred the longest
+        // capture that still reached a terminator and swallowed the status
+        // clause: the payee rendered as "Big Merchant Has Failed", and
+        // "…to SHARMA GENERAL STORE was declined by your bank." blew the
+        // 30-character ceiling and rendered no payee at all. Both were
+        // observed on a real device (2026-08-09) and both persist into
+        // transaction history. Sharing NAME_TERMINATOR (and matching lazily,
+        // as patterns 0 and 5 already do) makes the stop words apply here too.
+        "\\bto\\s+([a-zA-Z][a-zA-Z\\s\\.]{2,40}?)$NAME_TERMINATOR",
 
         // Pattern for VPA format (name from UPI ID)
         "to\\s+([a-zA-Z][a-zA-Z0-9\\s]+?)@",
@@ -119,8 +132,10 @@ object SmsTransactionParser {
         "(?:Rs\\.?|INR|₹)\\s*[0-9,]+(?:\\.[0-9]{2})?\\s+(?:received|credited)\\s+from\\s+" +
             "([a-zA-Z][a-zA-Z\\s\\.]+?)$NAME_TERMINATOR",
 
-        // Pattern for simple "from NAME"
-        "\\bfrom\\s+([a-zA-Z][a-zA-Z\\s\\.]{2,30})(?:\\s+(?:on|dated|ref)|\\.|,|;|$)",
+        // Pattern for simple "from NAME" — the credit-side twin of
+        // RECIPIENT_PATTERNS' bare "to NAME" fallback, and it had the same
+        // greedy, stop-word-free terminator. Kept in step with it.
+        "\\bfrom\\s+([a-zA-Z][a-zA-Z\\s\\.]{2,40}?)$NAME_TERMINATOR",
 
         // Pattern for sender VPA
         "from\\s+([a-zA-Z][a-zA-Z0-9\\s]+?)@"
@@ -374,15 +389,13 @@ object SmsTransactionParser {
     }
 
     /**
-     * Cross-pipeline dedupe key, built from the BODY only. The two pipelines
-     * see different sender strings for the same SMS — the broadcast receiver
-     * gets the DLT header ("VK-HDFCBK") while the notification listener gets
-     * the messaging app's display name ("HDFC Bank") — so a sender-qualified
-     * key would never collide across pipelines and the dedup would silently
-     * not deduplicate. The body is also normalised (whitespace collapsed,
-     * capped at 120 chars, below any plausible notification truncation point)
-     * so the listener's truncated EXTRA_TEXT and the receiver's full PDU
-     * converge to the same key.
+     * Dedupe key, built from the BODY only and deliberately not qualified by
+     * sender: the same message can reach us with different sender strings
+     * (a DLT header like "VK-HDFCBK" from the platform, a plain name from the
+     * debug injector), so a sender-qualified key would silently fail to
+     * deduplicate. The body is normalised too — whitespace collapsed and
+     * capped at 120 chars — so cosmetically different deliveries of one
+     * message converge to the same key.
      */
     internal fun claimKey(body: String): String {
         return body.trim().replace(Regex("\\s+"), " ").take(120)

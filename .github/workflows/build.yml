@@ -167,18 +167,23 @@ jobs:
           # removed and helpers were consolidated. New code must come in clean.
           IDS=$(grep -c "<ID>" app/detekt-baseline.xml || echo 0)
           echo "Detekt baseline currently absorbs $IDS findings"
-          if [ "$IDS" -gt 467 ]; then
-            echo "::error::detekt-baseline.xml grew beyond the frozen budget (467). Fix new detekt findings instead of re-baselining."
+          if [ "$IDS" -gt 465 ]; then
+            echo "::error::detekt-baseline.xml grew beyond the frozen budget (465). Fix new detekt findings instead of re-baselining."
             exit 1
           fi
 
-      - name: Upload debug APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        if: success()
-        with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          retention-days: 14
+      # No debug APK is uploaded. On a public repository every Actions
+      # artifact is world-downloadable, and this one would be the most
+      # authentic-looking Flowpay build in existence — produced by the
+      # project's own CI. It is also the most dangerous one to install:
+      # `android:debuggable=true` exposes the SQLCipher database and the key
+      # prefs to `adb run-as`, it carries `DebugSmsInjectionReceiver`
+      # exported with no permission (so any zero-permission app on the phone
+      # can fake a "Payment Successful" screen and a SUCCESS row), and it is
+      # signed with the public Android debug key, so anyone can trojan it and
+      # ship an in-place upgrade. SECURITY.md tells readers no Flowpay APK is
+      # published anywhere; publishing one here would make that guidance
+      # actively harmful. The build below still proves the app compiles.
 
       - name: Upload lint report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

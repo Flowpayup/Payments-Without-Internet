@@ -108,7 +108,7 @@ Design rules the code enforces:
 - **`READ_SMS` is not requested.** The app only receives incoming SMS (`RECEIVE_SMS`) while a payment operation is active; it never reads the inbox.
 - **SMS are only inspected inside an explicit payment window** — a ~10-minute operation (a 10-minute verification deadline plus a 30-second grace margin) started when the user initiates a transfer; outside it, incoming messages are never read. Bank matching itself is deliberately permissive keyword matching (field-proven against real bank templates), so the operation window — not sender authentication — is the primary control.
 - **Stored summaries are built constructively** from parsed fields (amount/status/bank/ref), so account numbers and balances in message prose can never reach the database.
-- **The notification-listener fallback is opt-in** when `RECEIVE_SMS` is granted, halving the SMS ingestion surface by default.
+- **There is one SMS ingestion path.** A notification-listener fallback used to exist alongside the broadcast receiver; it was removed as dead code — the setting that would have enabled it was never wired to anything, so it could never run. Removing it also drops the app's only `BIND_NOTIFICATION_LISTENER_SERVICE` component, so nothing in the app can read notification content from other apps.
 - CI rejects log statements that interpolate SMS bodies in payment-critical packages.
 
 ## Known deferred issues
@@ -145,8 +145,11 @@ look like oversights:
   diagnostic. This is intentional — logs are the main way a payments app leaks
   PII, and the app has no crash reporting and no `INTERNET` permission — but it
   does mean a user-reported problem comes with a stack trace and nothing else.
-  The R8 `mapping.txt` archived by the release workflow is what makes that
-  trace readable.
+  Deobfuscating one needs the R8 `mapping.txt` from the exact build that
+  produced it. CI does not archive this anywhere — there is no release
+  workflow — so whoever built the release (see README's "Signed release
+  build") is the only source for it; it is written locally to
+  `app/build/outputs/mapping/release/mapping.txt` on every `assembleRelease`.
 
 If you spot something else with security implications hiding behind a baseline,
 please report it.

@@ -27,7 +27,6 @@ class SettingsRepository(private val context: Context) {
         val ussdTimeout: Int = 30,
         val smsDetectionEnabled: Boolean = true,
         val overlayEnabled: Boolean = true,
-        val notificationsEnabled: Boolean = true,
         val debugMode: Boolean = false,
         val setupCompleted: Boolean = false,
         val testConfigCompleted: Boolean = false
@@ -39,7 +38,6 @@ class SettingsRepository(private val context: Context) {
             putInt("ussd_timeout", settings.ussdTimeout)
             putBoolean("sms_detection_enabled", settings.smsDetectionEnabled)
             putBoolean("overlay_enabled", settings.overlayEnabled)
-            putBoolean("notifications_enabled", settings.notificationsEnabled)
             putBoolean("debug_mode", settings.debugMode)
             putBoolean("setup_completed", settings.setupCompleted)
             putBoolean("test_config_completed", settings.testConfigCompleted)
@@ -53,7 +51,6 @@ class SettingsRepository(private val context: Context) {
             ussdTimeout = prefs.getInt("ussd_timeout", 30),
             smsDetectionEnabled = prefs.getBoolean("sms_detection_enabled", true),
             overlayEnabled = prefs.getBoolean("overlay_enabled", true),
-            notificationsEnabled = prefs.getBoolean("notifications_enabled", true),
             debugMode = prefs.getBoolean("debug_mode", false),
             setupCompleted = prefs.getBoolean("setup_completed", false),
             testConfigCompleted = prefs.getBoolean("test_config_completed", false)

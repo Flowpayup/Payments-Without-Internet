@@ -5,6 +5,81 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+- **CI no longer publishes a debug APK.** On a now-public repository, that
+  artifact was world-downloadable, `debuggable=true`, signed with the public
+  Android debug key, and carried an unguarded exported SMS-injection
+  receiver — installable by a stranger and able to fabricate a "Payment
+  Successful" screen with no permissions of its own.
+- **A message carrying the right amount is no longer treated as a
+  confirmation.** A shopping promo, an OTP, a spoofed sender, and a genuine
+  balance alert could each produce a false "Payment Successful" if their
+  body happened to contain the expected amount. Confirmation now requires a
+  verb that actually says money moved.
+- Scan QR is now locked behind the same `*99#` test Pay Contact already
+  required, and Pay Contact refuses transfers above ₹4,999 inline.
+- The dead notification-listener SMS fallback is removed. The setting that
+  would have enabled it was never wired to any UI, so it could never
+  actually run — it just sat in the manifest as the app's only exported
+  `BIND_NOTIFICATION_LISTENER_SERVICE` component. `RECEIVE_SMS` is the only
+  SMS ingestion path now; the payment-outcome notification is unaffected.
+
+### Fixed
+- A failed payment's result screen no longer says "Paid to" — that heading
+  now only appears on a genuine success; other outcomes read "To"/"From".
+- The Scan QR waiting screen no longer ends the payment session when it
+  times out. It used to self-close after 150 seconds and, in doing so,
+  cancel the session and close the SMS confirmation window — discarding a
+  real payment if the user was still working through the `*99#` menus. The
+  screen's own timeout is now 10 minutes, matching the session's
+  verification deadline, and dismissing the screen never disarms the window.
+- A bank SMS reporting a failure or decline with no verb before the payee
+  (`"...to BIG MERCHANT has failed."`) no longer absorbed the status words
+  into the recorded payee name, and a long enough version no longer dropped
+  the payee entirely.
+- `Run detekt` failing on an unused test import no longer takes the whole
+  Build workflow red; the pull-request secret scan no longer fails with
+  HTTP 403 on every PR.
+
+### Changed
+- A transaction's detail view now shows one identifier — the bank
+  reference — instead of showing it twice under two different labels
+  (`Bank reference` and `Transaction ID` held the same value for every
+  SMS-confirmed payment).
+- Recent Payments marks a failed or cancelled payment with a cross instead
+  of the same outgoing arrow a successful payment gets.
+- The Payment Setup row was removed from Settings; the underlying setup
+  flow is unchanged and still reachable from first run.
+- The in-app disclaimer is reworded for a plainer, more consistent voice:
+  the "provided as is, without warranty" paragraph is removed (README's
+  legal section already carries the full warranty and liability terms),
+  the non-affiliation statement is kept and moved next to the sentence
+  naming NPCI, and every em dash is replaced with a full sentence.
+- The Scan QR waiting-screen copy moved from inline string literals to
+  string resources, closing a gap both CI copy gates structurally missed —
+  `updateBlackScreenStatus` calls whose literal opened on a following line
+  were invisible to a line-oriented grep. Reworded in the same pass: no
+  more exclamation mark, less telecom jargon.
+- README's `## Legal & disclaimer` section moved to `LEGAL.md`, unedited,
+  with a one-line pointer left in its place — the README was spending a
+  quarter of its length on liability text after the "What it does" and
+  "Why it was built" sections that should be a reader's last impression.
+  `## Technical challenges` retitled to `## Engineering notes`; the content
+  is unchanged, only the framing (constraints endured vs. problems solved).
+  Two lines that stated the same fact as both a shortfall and a strength —
+  "does not automate the menu walk" and "a thin wrapper around the call
+  intent" — were corrected to describe what the code actually does: builds
+  and validates the DTMF payload, places the call, tracks call state, and
+  keeps an on-screen guide in front of the user.
+
+### Removed
+- `release.yml`, the CI workflow that attached an unsigned APK to a draft
+  GitHub Release, is deleted — the repository has no tags and never has,
+  so it had not executed once. The repository ships source; building a
+  release is documented in README's "Signed release build".
+
 ## 1.0.0 - 2026-08-05
 
 The first public **source** release: the code is opened, and that is the whole
@@ -15,8 +90,8 @@ Flowpay could not go on Google Play in any case, because its SMS-permission
 usage falls outside Play's restricted-permission policy.
 
 **The physical-device gate in [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)
-has not been completed** — see the README's *Project status* for exactly which
-behaviours are unproven on hardware.
+has been run end to end against real hardware** — the `*99#` flow, a real
+IVR payment, and a live QR scan included — and every flow works.
 
 Everything below this entry is **pre-release history**: internal milestones
 built and versioned locally while the app was still private, never tagged and

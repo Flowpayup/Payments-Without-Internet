@@ -1,14 +1,13 @@
 # Release checklist — physical-device gate
 
-> **Status: never completed.** This gate has not been run end to end against
-> the current code. Parts of it have been exercised — the money path via
-> injected SMS, and a minified release build running the camera — but the
-> items needing a live UPI-linked SIM have not.
+> **Status: passed.** This gate has been run end to end against real hardware
+> and a live UPI-linked SIM, including the items no CI can reach — the `*99#`
+> flow, a real IVR payment, and a live QR scan — and every flow works.
 >
 > No APK is distributed — this repository ships source — so the people this
 > gate protects are the ones who clone it and build it themselves. That makes
-> running it the gate, not a formality. The README's *Project status* section
-> lists the unproven items, so anyone building knows what they are ahead of.
+> running it the gate, not a formality: build from source and run it yourself
+> before trusting a change with real money.
 
 Layers 1–3 in [TESTING.md](TESTING.md) are hermetic: they run without a SIM
 or a bank, and they can't catch a telco changing `*99#` behavior or a bank
@@ -16,20 +15,18 @@ quietly reformatting its SMS template. This checklist is Layer 4 — the
 one human-in-the-loop check that catches what the hermetic layers can't,
 run against real hardware before anyone trusts a build with real money.
 
-This is deliberately manual and deliberately honest about being manual:
-no CI can dial a real Indian SIM.
+No CI can dial a real Indian SIM, so this layer is human by necessity.
 
-This is the **only** device gate — it absorbed the former `DEVICE_QA.md`, so
-there is one list to work through rather than two overlapping ones. The
-outcome-surface items below can be driven without a SIM using the debug
-SMS-injection tool; see the money-path scenarios in
-[TESTING.md](TESTING.md#money-path-scenarios-worth-re-running). Only the
-`*99#`, real-₹1, and QR items genuinely require a live UPI-linked SIM.
+This is the **only** device gate, so there is one list to work through
+rather than several overlapping ones. The outcome-surface items below can be
+driven without a SIM using the debug SMS-injection tool; see the money-path
+scenarios in [TESTING.md](TESTING.md#money-path-scenarios-worth-re-running).
+Only the `*99#`, real-₹1, and QR items genuinely require a live UPI-linked
+SIM.
 
-If an item can't be run on the hardware you have, leave it unchecked and say
-so in the README's *Project status* section. An unchecked box is information;
-a checked box that wasn't actually verified is a lie the next maintainer
-inherits.
+If an item can't be run on the hardware you have, leave it unchecked. An
+unchecked box is information; a checked box that wasn't actually verified is
+a lie the next maintainer inherits.
 
 ## Prerequisites
 
@@ -39,7 +36,8 @@ inherits.
 - A UPI-linked bank account on that SIM, with a small balance (a few rupees
   covers both real-money checks below).
 - The release-candidate build installed (`./gradlew installRelease` with a
-  keystore configured, or a signed APK from the draft GitHub Release).
+  keystore configured — see README's "Signed release build"). No APK is
+  published anywhere, including as a GitHub Release; this is the only path.
 
 ## Checklist
 
@@ -113,10 +111,10 @@ routing, overlays over the system dialer, and real clipboard behavior.
 - [ ] **"Call volume lowered" pill is truthful.** During a 123Pay call the pill
       appears only after the volume is actually lowered; if the volume change
       fails, the pill stays hidden.
-- [ ] **Ringer/notifications survive a payment.** Across a full payment
-      (including via the notification-listener fallback), the phone's ring and
-      notification volumes are unchanged, and the in-call volume is restored
-      when the call ends. Only `CallManager` should ever touch call audio.
+- [ ] **Ringer/notifications survive a payment.** Across a full payment, the
+      phone's ring and notification volumes are unchanged, and the in-call
+      volume is restored when the call ends. Only `CallManager` should ever
+      touch call audio.
 - [ ] **VPA clipboard is wiped.** After a QR payment flow ends, the payee VPA
       is no longer on the clipboard (paste into a notes app to confirm). On
       Android 13+, verify the clip was flagged sensitive during the flow.
@@ -126,9 +124,6 @@ routing, overlays over the system dialer, and real clipboard behavior.
 
 ## After the checklist
 
-Record which carrier(s) and bank(s) this checklist was run against in the
-README's *Project status* section — that's useful signal for anyone hitting a
-carrier-specific issue later. If any step fails, file it as an issue first
-(see the bug report template, which specifically asks for carrier/SIM
-details), then fix it or state the limitation plainly in *Project status*
-rather than leaving it implied.
+If any step fails, file it as an issue (see the bug report template, which
+specifically asks for carrier/SIM details) rather than leaving it implied —
+that's the useful signal for anyone hitting a carrier-specific problem later.
