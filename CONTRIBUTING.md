@@ -6,7 +6,11 @@ Thanks for your interest in contributing. This guide covers everything you need 
 
 - **JDK 17** (Temurin recommended — matches CI)
 - **Android SDK** with `compileSdk = 35`, `minSdk = 29`
-- **Android Studio Hedgehog (2023.1.1) or later** for the IDE experience
+- **Android Studio Ladybug (2024.2.1) or later** for the IDE experience — this
+  project uses AGP `8.7.2` (`gradle/libs.versions.toml`), and older Studio
+  releases refuse to sync a project on an AGP newer than they bundle. Check
+  [Android Studio ⇄ AGP compatibility](https://developer.android.com/build/releases/past-releases)
+  if this project's AGP version has moved on since this was written.
 - A device or emulator running **Android 10 (API 29)** or higher
 
 ## First-time setup
@@ -33,7 +37,7 @@ That single line is all the local configuration the build needs.
 ./gradlew :app:lintDebug             # run lint (must pass)
 ```
 
-JVM unit tests live in `app/src/test/` (`Upi123CallStringBuilderTest`, `PaymentSessionManagerTest`, `SmsTransactionParserTest`, `SmsParsingRegexTest`, `SmsIngestionPipelineTest`, `TransactionDetectorTest`, `CallStateCoordinatorTest`, `PaymentWindowObserverTest`, `PaymentInputValidatorTest`, `DatabaseKeyManagerRecoveryTest`, `TransactionMappingTest`, `QRCodeParserTest`, `QRCodeAnalyzerDecodeTest`). There are no instrumented tests at present — see [docs/TESTING.md](docs/TESTING.md) Layer 2 for why, and what must come back with the next schema change. CI runs `./gradlew test` on every push, so keep them green and add coverage for new logic where it makes sense. See [docs/TESTING.md](docs/TESTING.md) for the full verification story, including a debug-only tool for replaying bank SMS through the live pipeline without a real bank.
+JVM unit tests live in `app/src/test/` (`Upi123CallStringBuilderTest`, `PaymentSessionManagerTest`, `SmsTransactionParserTest`, `SmsParsingRegexTest`, `SmsIngestionPipelineTest`, `TransactionDetectorTest`, `CallStateCoordinatorTest`, `PaymentWindowObserverTest`, `PaymentInputValidatorTest`, `DatabaseKeyManagerRecoveryTest`, `TransactionMappingTest`, `QRCodeParserTest`, `QRCodeAnalyzerDecodeTest`, `CurrencyFormatTest`). There are no instrumented tests at present — see [docs/TESTING.md](docs/TESTING.md) Layer 2 for why, and what must come back with the next schema change. CI runs `./gradlew test` on every push, so keep them green and add coverage for new logic where it makes sense. See [docs/TESTING.md](docs/TESTING.md) for the full verification story, including a debug-only tool for replaying bank SMS through the live pipeline without a real bank.
 
 ### Adding a bank SMS template
 
@@ -58,12 +62,12 @@ app/src/main/java/com/flowpay/app/
 ├── managers/                        # CallManager, PermissionManager, etc.
 ├── payment/                         # PaymentSessionManager, SMS parser, validators
 ├── receivers/                       # SMS BroadcastReceiver + ingestion pipeline
-├── services/                        # call-overlay, notification listener
+├── services/                        # call-overlay service
 ├── ui/                              # Compose screens + theme
 └── utils/                           # small utilities
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit — the payment state machine, the dual SMS-ingestion pipeline, the composition root, and the deliberate simplifications.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit — the payment state machine, the SMS-ingestion pipeline, the composition root, and the deliberate simplifications.
 
 ## Branching
 

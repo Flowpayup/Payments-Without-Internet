@@ -14,46 +14,12 @@ Flowpay tackles a problem millions of people in India hit every day: UPI payment
 
 ---
 
-## Project status — read this before you install it
-
-**This has not completed its hardware test pass.** This app moves real money,
-so here is exactly what has and has not been verified.
-
-**Verified, on every commit:** the full unit suite on both the debug and the
-release variant, lint, detekt, a coverage floor on the payment-critical
-packages, and a release build under a fixed size budget. The bank-SMS parser,
-the payment state machine, the DTMF dial-string builder and the QR parser are
-all covered by hermetic tests. See [docs/TESTING.md](docs/TESTING.md).
-
-**Verified on a real device, once:** the money path end to end via injected
-bank SMS (dual-verb templates confirm, mismatched amounts are rejected with
-the window left open, unrelated credits are ignored, duplicates are deduped),
-and that the minified release build installs and streams the camera.
-
-**Not yet verified on hardware** — the items in
-[docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) that need a live
-UPI-linked SIM:
-
-- a real end-to-end ₹1 payment through the UPI 123Pay IVR,
-- the `*99#` USSD flow against a live telco,
-- a live QR camera scan of a real merchant code,
-- the dual-SIM voice-SIM mismatch warning,
-- the permission deny-paths, and the clipboard-wipe and audio-restore
-  behaviours.
-
-There is no published APK — you build this yourself, which puts you ahead of
-that gate. Start with a trivial amount. Payment outcomes are decided **solely** by your
-bank's confirmation SMS — if it does not arrive, Flowpay records nothing,
-which is deliberate and explained in [docs/FAQ.md](docs/FAQ.md).
-
----
-
 ## What it does
 
 Flowpay wraps the two offline UPI rails that already exist on every Indian smartphone but are buried behind UX so poor that almost nobody uses them:
 
-- **`*99#` USSD flow** — dial the shortcode, navigate the menu, send money. Flowpay places the call and gives the user a payment UI to start from. It does **not** automate the menu walk or parse USSD responses — the user navigates the telco menu manually.
-- **UPI 123Pay IVR flow** — the call-based payment flow NPCI launched in 2022 for feature phones. Flowpay invokes it from a smartphone with a thin wrapper around the call intent.
+- **`*99#` USSD flow** — dial the shortcode, navigate the menu, send money. Flowpay places the call and gives the user a payment UI to start from.
+- **UPI 123Pay IVR flow** — the call-based payment flow NPCI launched in 2022 for feature phones. Flowpay builds and validates the DTMF payload, places the call, tracks call state throughout, and keeps an on-screen guide in front of the user for the duration.
 
 Each entry point uses the rail that fits it:
 
@@ -66,7 +32,7 @@ Each entry point uses the rail that fits it:
 
 So Flowpay ships both. Jio users get the full offline payment experience through the 123Pay IVR rail, with nothing removed and no feature compromise; the USSD rail serves the operators where it does work. Using two rails instead of one is what makes "payments without internet" true for every Indian SIM rather than most of them.
 
-Both rails work without internet. Both are usable today on any Indian SIM with any UPI-linked bank account. No registration with Flowpay, no server, no account creation. The app is a client over rails that already exist.
+Both rails work without internet. Both are usable today on any Indian SIM with any UPI-linked bank account. No registration with Flowpay, no server, no account creation.
 
 **Flowpay uses no accessibility service** — it cannot read your screen or any other app. It never sees your UPI PIN, which is entered directly into your bank's IVR/dialer flow; the app only triggers the dialer and reads bank-confirmation SMS locally on the device.
 
@@ -88,9 +54,9 @@ UPI Lite, UPI Lite X, and 123Pay exist on paper as offline rails. In practice, L
 
 Flowpay brings these existing offline rails together behind a single smartphone-native UI, so paying without internet is something a user can actually do.
 
-## Technical challenges
+## Engineering notes
 
-Building on telco-era rails comes with real constraints. These are the hard parts Flowpay works around:
+Telco-era rails don't give you much to work with. Here's what Flowpay had to solve:
 
 **USSD is slow by design.** Each `*99#` interaction is a synchronous menu walk over GSM signalling — round trips take roughly a minute, and the menus aren't built for programmatic traversal, so the flow accounts for telco session timeouts and rate limits.
 
@@ -118,7 +84,7 @@ app/src/main/java/com/flowpay/app/
 │   ├── SmsIngestionPipeline.kt  # shared SMS → transaction pipeline
 │   └── PaymentResultNotifier.kt # guaranteed-reachable outcome notification
 ├── helpers/
-│   ├── TransactionDetector.kt   # SMS operation window + cross-pipeline dedup
+│   ├── TransactionDetector.kt   # SMS operation window + dedup
 │   ├── MainActivityHelper.kt    # transfer orchestration + permission gating
 │   └── SetupHelper.kt           # carrier capability + setup state
 ├── telephony/CallStateCoordinator.kt # single telephony listener for the app
@@ -126,8 +92,7 @@ app/src/main/java/com/flowpay/app/
 │   ├── CallManager.kt           # places the dial, monitors call state, restores audio
 │   └── PermissionManager.kt     # runtime-permission helper
 ├── services/
-│   ├── CallOverlayService.kt    # 40s on-call confirmation overlay
-│   └── FlowpayNotificationListener.kt  # supplemental SMS detection
+│   └── CallOverlayService.kt    # 40s on-call confirmation overlay
 ├── features/qr_scanner/         # CameraX + ZXing QR scanner
 ├── data/                        # Room entities + DAO, SQLCipher key management
 ├── repository/                  # local-only transaction persistence
@@ -175,7 +140,7 @@ If you want to skim the code without running it, the build also works without an
 
 **No APK is published here** — this repo ships source, and building it yourself is the supported path. The release signing certificate's SHA-256 fingerprint is nonetheless committed in [SECURITY.md](SECURITY.md), ahead of any release, so that if a signed build ever appears you can check it with `apksigner verify --print-certs <apk>` against a fingerprint that predates it. Any APK claiming to be Flowpay today did not come from this project.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the system fits together, [docs/FAQ.md](docs/FAQ.md) for the trust/permissions questions, [docs/TESTING.md](docs/TESTING.md) for how outcomes are verified, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the system fits together, [docs/FAQ.md](docs/FAQ.md) for the trust/permissions questions, [docs/TESTING.md](docs/TESTING.md) for how outcomes are verified, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards, and [LEGAL.md](LEGAL.md) for the full terms.
 
 ## License
 
@@ -185,56 +150,6 @@ You may use, modify, and redistribute this code under the terms of the Apache Li
 
 ---
 
-## Legal & disclaimer
+## Legal
 
-**Read this before using, forking, or building on the code. By doing any of those, you accept these terms.**
-
-
-### No warranty
-
-This software is provided under Apache License 2.0 **"AS IS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied,"** including but not limited to warranties of merchantability, fitness for a particular purpose, non-infringement, accuracy, or reliability. See Section 7 of [LICENSE](LICENSE) for the full text.
-
-### No affiliation
-
-Flowpay is an independent open-source project. It is **not affiliated with, endorsed by, sponsored by, certified by, or connected to** any bank, telecommunications operator, payment processor, payment scheme operator, regulator, standards body, or government entity. References to public payment shortcodes, IVR numbers, or transaction rails are made strictly for descriptive and identification purposes.
-
-### Your transactions are between you and your bank
-
-When the app dials `*99#` or initiates an IVR call, **you are interacting directly with your telecom operator and your bank.** Flowpay does not see, store, transmit, intermediate, or modify your transaction data or your UPI PIN. The app only:
-
-1. Triggers the dialer with a known public shortcode.
-2. Reads incoming bank-confirmation SMS **locally on your device** for the sole purpose of showing you a transaction-result screen.
-
-Any transaction outcome — success, failure, delay, double-debit, or loss — is **between you and your bank**, governed by your bank's terms of service and the applicable payment-scheme rules. The author of Flowpay accepts no liability whatsoever for any transaction outcome.
-
-### User responsibility & compliance
-
-You are solely responsible for ensuring your use of this software complies with all applicable laws and regulations, including but not limited to telecommunications regulations, financial-services regulations, KYC/AML rules, data-protection laws, and your bank's and operator's terms of service. If your jurisdiction restricts USSD-based payments, automated dialler use, or SMS reading, do not use this software there.
-
-### Telecom and bank charges
-
-Dialling `*99#` and initiating IVR calls may incur charges from your telecom operator. UPI transactions themselves may incur charges depending on your bank's policies. Flowpay does not subsidise, refund, or have visibility into any such charges. Check with your operator and bank before using the app for real transactions.
-
-### Permissions and data handling
-
-Flowpay reads SMS locally to detect transaction confirmations. **SMS contents never leave your device.** No data is uploaded anywhere — the app has no backend. Because the SMS-read permission usage falls outside Google Play's restricted-permission policies, the app is not available on Google Play and is distributed as source that you build yourself. If you publish a fork, you are responsible for your own Play Store compliance review.
-
-### Trademarks
-
-All product names, logos, trademarks, service marks, and trade names referenced in this repository or the application are the property of their respective owners. Their use here is **purely nominative and descriptive**; no endorsement, certification, partnership, sponsorship, or affiliation is implied or should be inferred. If you are a rights holder and want a specific reference clarified or removed, open an issue.
-
-### Independent open-source project
-
-Flowpay is an independent open-source project, provided as-is under the Apache License 2.0. It is not a regulated financial product or payment service, and the author operates no commercial service around it. Forks and derivative works are governed by the Apache 2.0 license.
-
-### Limitation of liability
-
-To the maximum extent permitted by applicable law, the author and contributors shall not be liable for any direct, indirect, incidental, special, consequential, or exemplary damages — including but not limited to loss of funds, transaction failures, data loss, telecom charges, regulatory penalties, or reputational harm — arising from or related to your use of, inability to use, or reliance on this software, even if advised of the possibility of such damages.
-
-### Severability
-
-If any portion of this disclaimer is held unenforceable by a court of competent jurisdiction, the remainder shall remain in full force and effect.
-
----
-
-*By using, building, modifying, redistributing, or otherwise interacting with this software, you acknowledge that you have read, understood, and agreed to the above.*
+Full terms — no warranty, no affiliation with any bank or telecom, liability, and compliance — are in [LEGAL.md](LEGAL.md). By using, building, modifying, redistributing, or otherwise interacting with this software, you acknowledge that you have read, understood, and agreed to those terms.
