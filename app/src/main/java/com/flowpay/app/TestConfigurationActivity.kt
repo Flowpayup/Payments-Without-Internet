@@ -58,6 +58,20 @@ import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import kotlinx.coroutines.delay
 
 class TestConfigurationActivity : ComponentActivity() {
+    companion object {
+        /**
+         * Set by callers that already have the home screen underneath them —
+         * the locked "Set up *99#" / "Set up UPI 123 IVR" buttons, which start
+         * this screen without finishing MainActivity. Those users never came
+         * through setup, so the in-screen back affordance must return them
+         * home rather than dropping them into SetupActivity.
+         *
+         * Absent (the default) means the onboarding chain — SetupActivity, or
+         * MainActivity's launch gate — where back does belong to setup.
+         */
+        const val EXTRA_RETURNS_TO_HOME = "returns_to_home"
+    }
+
     private lateinit var testHelper: TestConfigurationHelper
 
     // Phone-call permission group, requested before a test dial. No auto-retry:
@@ -154,7 +168,10 @@ class TestConfigurationActivity : ComponentActivity() {
         setContent {
             CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
                 FlowpayTheme {
-                    TestConfigurationScreen(testHelper = testHelper)
+                    TestConfigurationScreen(
+                        testHelper = testHelper,
+                        returnsToHome = intent.getBooleanExtra(EXTRA_RETURNS_TO_HOME, false)
+                    )
                 }
             }
         }
@@ -172,7 +189,10 @@ class TestConfigurationActivity : ComponentActivity() {
 }
 
 @Composable
-fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
+fun TestConfigurationScreen(
+    testHelper: TestConfigurationHelper,
+    returnsToHome: Boolean = false
+) {
     val context = LocalContext.current
     val accent = LocalFlowpayAccentTheme.current
 
@@ -250,12 +270,19 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Back to Setup
+            // Back — to home when the home screen is already underneath us
+            // (arrived via a locked payment button), otherwise to setup.
+            // Finishing is enough in the first case: the lock buttons start
+            // this screen without finishing MainActivity, so it is still
+            // there. Starting SetupActivity from there would strand the user
+            // in onboarding they had already completed.
             Row(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .clickable {
-                        context.startActivity(Intent(context, SetupActivity::class.java))
+                        if (!returnsToHome) {
+                            context.startActivity(Intent(context, SetupActivity::class.java))
+                        }
                         (context as? android.app.Activity)?.finish()
                     }
                     .padding(vertical = 4.dp),
@@ -269,7 +296,13 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = stringResource(R.string.testcfg_back_to_setup),
+                    text = stringResource(
+                        if (returnsToHome) {
+                            R.string.testcfg_back_to_home
+                        } else {
+                            R.string.testcfg_back_to_setup
+                        }
+                    ),
                     fontSize = 14.sp,
                     color = FlowpayTextLightGray,
                     fontWeight = FontWeight.Medium

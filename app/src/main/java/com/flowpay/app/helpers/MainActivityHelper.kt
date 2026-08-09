@@ -10,8 +10,6 @@ import android.provider.Settings
 import android.util.Log
 import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.R
-import com.flowpay.app.SetupActivity
-import com.flowpay.app.TestConfigurationActivity
 import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.managers.CallManager
 import com.flowpay.app.managers.PermissionManager
@@ -292,19 +290,25 @@ class MainActivityHelper(
     }
 
     /**
-     * Navigate to setup screen
+     * Navigate to setup screen.
+     *
+     * Delegates to the Activity rather than calling `context.startActivity`
+     * here: the launch gate calls this and then returns from `onCreate`
+     * before `setContent`, so whoever starts the next screen must also
+     * finish this one. A bare `startActivity` left MainActivity in the back
+     * stack with an empty `android:id/content`, and backing out of setup
+     * landed on that blank window instead of leaving the app.
      */
     fun navigateToSetup() {
-        val intent = Intent(context, SetupActivity::class.java)
-        context.startActivity(intent)
+        uiCallback.navigateToSetup()
     }
 
     /**
-     * Navigate to test configuration screen
+     * Navigate to test configuration screen. Delegates for the same reason
+     * as [navigateToSetup].
      */
     fun navigateToTestConfiguration() {
-        val intent = Intent(context, TestConfigurationActivity::class.java)
-        context.startActivity(intent)
+        uiCallback.navigateToTestConfiguration()
     }
 
     /**

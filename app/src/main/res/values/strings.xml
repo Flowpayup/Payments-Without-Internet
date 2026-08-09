@@ -230,6 +230,7 @@
     <string name="testcfg_consent_title">Start a real call?</string>
     <string name="testcfg_back">Back</string>
     <string name="testcfg_back_to_setup">Back to Setup</string>
+    <string name="testcfg_back_to_home">Back to Home</string>
     <string name="testcfg_set_up">Set up</string>
     <string name="testcfg_jio_no_ussd">Jio does not support *99# USSD payments</string>
     <string name="testcfg_ussd_reported_issue">You reported USSD didn\'t work — scan to pay is off. Tap to try setup again.</string>

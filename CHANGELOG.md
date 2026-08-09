@@ -42,6 +42,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Run detekt` failing on an unused test import no longer takes the whole
   Build workflow red; the pull-request secret scan no longer fails with
   HTTP 403 on every PR.
+- Backing out of setup no longer lands on a blank black screen. The launch
+  gate sent first-run users to setup without finishing the home activity, so
+  it stayed in the back stack having never drawn anything — one back press
+  showed an empty window, and a second was needed to leave the app.
+- The back link on the connectivity test screen now returns you where you
+  came from. Reaching it by tapping a locked "Set up *99#" / "Set up UPI 123
+  IVR" button offered "Back to Setup", which dropped you into onboarding you
+  had already finished; it now reads "Back to Home" and goes there. Arriving
+  from setup itself is unchanged.
 
 ### Changed
 - A transaction's detail view now shows one identifier — the bank

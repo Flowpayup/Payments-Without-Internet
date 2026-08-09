@@ -892,6 +892,10 @@ fun MainScreen(
                             !isUssdReady -> {
                                 context.startActivity(
                                     Intent(context, TestConfigurationActivity::class.java)
+                                        .putExtra(
+                                            TestConfigurationActivity.EXTRA_RETURNS_TO_HOME,
+                                            true
+                                        )
                                 )
                             }
                             !hasSms -> {
@@ -919,6 +923,10 @@ fun MainScreen(
                             !isUpi123Ready -> {
                                 context.startActivity(
                                     Intent(context, TestConfigurationActivity::class.java)
+                                        .putExtra(
+                                            TestConfigurationActivity.EXTRA_RETURNS_TO_HOME,
+                                            true
+                                        )
                                 )
                             }
                             // Overlay permission is required before the payment

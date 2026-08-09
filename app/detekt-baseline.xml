@@ -7,7 +7,7 @@
     <ID>CyclomaticComplexMethod:PaymentResultActivity.kt$PaymentResultActivity$private fun loadTransactionData()</ID>
     <ID>CyclomaticComplexMethod:SettingsActivity.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SettingsScreen( viewModel: SettingsViewModel = viewModel(), onBackPressed: () -&gt; Unit, settingsRepository: SettingsRepository? = null, onRequestPermissions: (Array&lt;String&gt;) -&gt; Unit = {}, refreshTrigger: MutableIntState = mutableIntStateOf(0) )</ID>
     <ID>CyclomaticComplexMethod:TestConfigurationActivity.kt$@Composable fun TestButton( title: String, code: String, description: String, isCompleted: Boolean, isTesting: Boolean, isUnsupported: Boolean = false, onClick: () -&gt; Unit )</ID>
-    <ID>CyclomaticComplexMethod:TestConfigurationActivity.kt$@Composable fun TestConfigurationScreen(testHelper: TestConfigurationHelper)</ID>
+    <ID>CyclomaticComplexMethod:TestConfigurationActivity.kt$@Composable fun TestConfigurationScreen( testHelper: TestConfigurationHelper, returnsToHome: Boolean = false )</ID>
     <ID>CyclomaticComplexMethod:TestConfigurationHelper.kt$TestConfigurationHelper$fun initiateCall(callType: CallType)</ID>
     <ID>CyclomaticComplexMethod:TransactionHistoryActivity.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TransactionHistoryScreen( onBackClick: () -&gt; Unit )</ID>
     <ID>LargeClass:QRScannerActivity.kt$QRScannerActivity : ComponentActivity</ID>
@@ -32,7 +32,7 @@
     <ID>LongMethod:SetupActivity.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SetupScreen(setupHelper: SetupHelper)</ID>
     <ID>LongMethod:SetupActivity.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SimCardSelectionSection( simCarriers: List&lt;Pair&lt;String, String&gt;&gt;, selectedPrimarySim: String, selectedSecondarySim: String, isDualSimEnabled: Boolean, onPrimarySimSelected: (String) -&gt; Unit, onSecondarySimSelected: (String) -&gt; Unit, onDualSimToggled: (Boolean) -&gt; Unit, secondarySimOptions: List&lt;Pair&lt;String, String&gt;&gt; )</ID>
     <ID>LongMethod:TestConfigurationActivity.kt$@Composable fun TestButton( title: String, code: String, description: String, isCompleted: Boolean, isTesting: Boolean, isUnsupported: Boolean = false, onClick: () -&gt; Unit )</ID>
-    <ID>LongMethod:TestConfigurationActivity.kt$@Composable fun TestConfigurationScreen(testHelper: TestConfigurationHelper)</ID>
+    <ID>LongMethod:TestConfigurationActivity.kt$@Composable fun TestConfigurationScreen( testHelper: TestConfigurationHelper, returnsToHome: Boolean = false )</ID>
     <ID>LongMethod:TestConfigurationActivity.kt$@Composable fun TestHeaderCard()</ID>
     <ID>LongMethod:TestConfigurationHelper.kt$TestConfigurationHelper$fun initiateCall(callType: CallType)</ID>
     <ID>LongMethod:TransactionDetailDialog.kt$@Composable fun TransactionDetailDialog( transaction: Transaction, onDismiss: () -&gt; Unit, onDelete: (() -&gt; Unit)? = null )</ID>
