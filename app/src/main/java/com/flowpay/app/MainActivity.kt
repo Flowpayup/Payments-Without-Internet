@@ -52,6 +52,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ArrowOutward
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PermContactCalendar
@@ -107,6 +108,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.constants.PermissionConstants
 import com.flowpay.app.data.PaymentDetails
+import com.flowpay.app.data.PaymentStatus
 import com.flowpay.app.data.TestResultsManager
 import com.flowpay.app.helpers.MainActivityHelper
 import com.flowpay.app.managers.PermissionManager
@@ -1223,13 +1225,21 @@ fun TransactionItem(payment: PaymentDetails, onClick: () -> Unit) {
                 )
             }
 
-            TransactionItemAmount(amount = payment.amount)
+            TransactionItemAmount(amount = payment.amount, status = payment.status)
         }
     }
 }
 
 @Composable
-private fun TransactionItemAmount(amount: Double) {
+private fun TransactionItemAmount(amount: Double, status: PaymentStatus) {
+    // FAILED and CANCELLED read as "this payment did not go through" — a
+    // cross, not the same outgoing arrow a successful payment gets. Every
+    // other outcome (COMPLETED, PENDING, NEEDS_REVIEW, UNVERIFIED) keeps the
+    // arrow: this row has no separate status chip (unlike transaction
+    // history), so the icon is the only signal here.
+    val failed = status == PaymentStatus.FAILED || status == PaymentStatus.CANCELLED
+    val tint = if (failed) FlowpayStatusError else LocalFlowpayAccentTheme.current.headerGradientStart
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.End,
@@ -1245,10 +1255,12 @@ private fun TransactionItemAmount(amount: Double) {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Icon(
-            imageVector = Icons.Default.ArrowOutward,
-            contentDescription = "Outgoing",
+            imageVector = if (failed) Icons.Default.Close else Icons.Default.ArrowOutward,
+            contentDescription = stringResource(
+                if (failed) R.string.cd_payment_failed else R.string.cd_payment_outgoing
+            ),
             modifier = Modifier.size(18.dp),
-            tint = LocalFlowpayAccentTheme.current.headerGradientStart
+            tint = tint
         )
     }
 }

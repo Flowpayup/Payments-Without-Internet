@@ -12,8 +12,8 @@
     <string name="secondary_sim">Secondary SIM</string>
     <string name="complete_setup">Complete Setup</string>
     <string name="disclaimer">Disclaimer</string>
-    <string name="disclaimer_summary">Flowpay never touches your money or your UPI PIN — it only dials your bank\'s *99# / UPI 123 flow for you. Tap to read the full disclaimer.</string>
-    <string name="disclaimer_text">Flowpay is a free, open-source app. It is not a bank, wallet, or payment processor, and it never holds, moves, or has access to your money.\n\nWhat it does: it automates dialling your bank\'s *99# / UPI 123 (UPI 123PAY) menu for you. Every payment is authorised and processed directly by you, your bank, and NPCI over your mobile network — exactly as if you had dialled it yourself.\n\nYour UPI PIN never touches Flowpay. The app does not use Android accessibility services, screen reading, or any form of input capture. Your PIN is entered only within your bank\'s own *99# / IVR flow — Flowpay cannot see it, intercept it, or store it.\n\nYour data stays on your device. Flowpay reads incoming bank SMS only while a payment is in progress, to detect the confirmation. It never uploads your messages, contacts, or transaction history anywhere.\n\nFlowpay is provided \"as is\", without warranty of any kind, and is not affiliated with or endorsed by NPCI or any bank. You use it at your own risk and remain solely responsible for every transaction you make.\n\nBy continuing, you confirm that you have read and understood this.</string>
+    <string name="disclaimer_summary">Flowpay never touches your money or your UPI PIN. It only dials your bank\'s *99# / UPI 123 flow for you. Tap to read the full disclaimer.</string>
+    <string name="disclaimer_text">Flowpay is a free, open-source app. It is not a bank, wallet, or payment processor, and it never holds, moves, or has access to your money.\n\nAll Flowpay does is dial for you. It automates your bank\'s *99# / UPI 123 (UPI 123PAY) menu. Every payment is authorised and processed directly by you, your bank, and NPCI over your mobile network, exactly as if you had dialled it yourself. Flowpay is not affiliated with or endorsed by NPCI or any bank.\n\nYour UPI PIN never touches Flowpay. The app does not use Android accessibility services, screen reading, or any form of input capture. You enter your PIN only inside your bank\'s own *99# / IVR flow, where Flowpay cannot see it, intercept it, or store it.\n\nYour data stays on your device. Flowpay reads incoming bank SMS only while a payment is in progress, and only to detect the confirmation. It never uploads your messages, contacts, or transaction history anywhere.\n\nBy continuing, you confirm that you have read and understood this.</string>
     
     <!-- Bank Names -->
     
@@ -76,6 +76,7 @@
     <string name="toast_payment_cancelled">Payment cancelled. No payment was processed.</string>
     <string name="toast_payment_failed">Your bank reported the payment as failed.</string>
     <string name="toast_awaiting_confirmation">Request sent — waiting for your bank\'s confirmation SMS.</string>
+    <string name="warn_voice_sim_mismatch">Note: this call will use your default calling SIM (%1$s), which doesn\'t look like the %2$s SIM from setup. If the payment fails, switch your default calling SIM.</string>
 
     <!-- Progress and outcome notices from setup and the connectivity test -->
     <string name="status_requesting_permissions">Requesting the permissions Flowpay needs…</string>
@@ -88,6 +89,12 @@
     <string name="status_upi123_setup_incomplete">UPI 123Pay setup was not completed — you can try again later.</string>
     <string name="status_scan_to_pay_disabled">Saved. Scan to pay stays off — tap Set up again if USSD starts working on this SIM.</string>
     <string name="qr_error_prefix">Error: %1$s</string>
+    <string name="qr_waiting_timeout">No confirmation yet. Returning to the main screen…</string>
+    <string name="qr_status_initiating_call">Calling your bank…</string>
+    <string name="qr_status_call_initiated">Call started</string>
+    <string name="qr_status_complete_in_dialer">Complete the payment in the dialer, then wait for your bank\'s confirmation SMS. This can take a minute or two.</string>
+    <string name="qr_status_ussd_completed">Waiting for your bank\'s confirmation SMS…</string>
+    <string name="qr_status_terminated">Cancelled. Returning to the main screen…</string>
 
     <!-- Success Messages -->
 
@@ -138,7 +145,6 @@
     <string name="payment_status_needs_review">Check This Payment</string>
     <string name="payment_status_unverified">No Confirmation Received</string>
     <string name="label_bank">Bank</string>
-    <string name="label_transaction_id">Transaction ID</string>
     <string name="label_bank_reference">Bank reference</string>
     <string name="label_date_time">Date &amp; Time</string>
     <string name="label_upi_id">UPI ID</string>
@@ -162,6 +168,8 @@
     <string name="overlay_request_sent">Request sent. Waiting for your bank\'s confirmation SMS…</string>
     <string name="amount_rupees">₹%1$s</string>
     <string name="percent_format">%1$d%%</string>
+    <string name="cd_payment_outgoing">Outgoing</string>
+    <string name="cd_payment_failed">Failed</string>
 
     <!-- Shown over the live camera when a scanned code is not a usable UPI QR.
          The %1$s is one of the qr_reason_* fragments below, mapped from
