@@ -28,6 +28,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -49,6 +50,7 @@ import com.flowpay.app.features.qr_scanner.domain.messageFor
 import com.flowpay.app.helpers.SetupHelper
 import com.flowpay.app.helpers.TransactionDetector
 import com.flowpay.app.managers.PermissionManager
+import com.flowpay.app.payment.PaymentSessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,6 +66,21 @@ class QRScannerActivity : ComponentActivity() {
 
         /** How long the invalid-QR banner stays up before fading out. */
         private const val SCAN_ERROR_VISIBLE_MS = 3500L
+
+        /**
+         * How long the waiting screen stays up before handing the user back
+         * to the main screen. Derived from the session's own verification
+         * deadline so the two can never drift: this used to be a hardcoded
+         * 150 s, a quarter of the deadline, which meant a user still working
+         * through the *99# menus (paste VPA, amount, UPI PIN) lost the screen
+         * — and, before the `finishedByWaitingScreenTimeout` guard, the
+         * payment with it.
+         */
+        private const val WAITING_SCREEN_TIMEOUT_MS =
+            PaymentSessionManager.DEFAULT_VERIFICATION_DEADLINE_MS
+
+        /** Grace between showing the timeout message and actually leaving. */
+        private const val WAITING_SCREEN_EXIT_DELAY_MS = 2000L
 
         /** Longest edge a gallery image is downsampled to before decoding. */
         private const val GALLERY_MAX_EDGE_PX = 2048
@@ -106,6 +123,22 @@ class QRScannerActivity : ComponentActivity() {
     // from the dialer re-triggers the dial and loops.
     @Volatile
     private var hasDialedUSSD = false
+
+    // Set when this screen closes itself on [WAITING_SCREEN_TIMEOUT_MS]
+    // rather than because the user abandoned the payment. The two must not be
+    // conflated: onDestroy cancels the session on `isFinishing`, and a cancel
+    // disarms the SMS window (PaymentWindowObserver), but the SMS window
+    // deliberately outlives the verification deadline by a grace margin so a
+    // slow bank confirmation is never dropped. When this timer was a hardcoded
+    // 150 s — a quarter of the deadline — reaching that cancel path capped the
+    // QR rail's real confirmation window at 150 s: a user still inside the
+    // *99# menus (paste VPA, amount, UPI PIN) when it fired had the window
+    // closed under them, so the payment went through and the confirming SMS
+    // arrived to a closed window — money moved, history said CANCELLED, and
+    // nothing surfaced. The timer may dismiss the screen; it may not end the
+    // payment.
+    @Volatile
+    private var finishedByWaitingScreenTimeout = false
 
     // Whether this flow put a payee VPA on the clipboard (wiped in onDestroy).
     private var didCopyVpa = false
@@ -188,7 +221,7 @@ class QRScannerActivity : ComponentActivity() {
                 Log.d("QRScanner", "USSD overlay dismissed - continuing to wait for SMS")
                 if (isUSSDProcessActive) {
                     // Don't close immediately, wait for SMS
-                    updateBlackScreenStatus("USSD completed! Waiting for transaction confirmation...")
+                    updateBlackScreenStatus(R.string.qr_status_ussd_completed)
                 }
             }
         }
@@ -496,7 +529,7 @@ class QRScannerActivity : ComponentActivity() {
                     }
                     hasDialedUSSD = true
                     Log.d("QRScanner", "Dialing USSD code: *99*1*3#")
-                    updateBlackScreenStatus("Initiating USSD call...")
+                    updateBlackScreenStatus(R.string.qr_status_initiating_call)
                     dialUSSD()
                 } catch (e: Exception) {
                     Log.e("QRScanner", "Failed to dial USSD: ${e.message}", e)
@@ -619,7 +652,7 @@ class QRScannerActivity : ComponentActivity() {
 
         try {
             Log.d("QRScanner", "Starting USSD call activity")
-            updateBlackScreenStatus("USSD call initiated")
+            updateBlackScreenStatus(R.string.qr_status_call_initiated)
             startActivity(intent)
             Log.d("QRScanner", "USSD call initiated successfully")
 
@@ -646,36 +679,40 @@ class QRScannerActivity : ComponentActivity() {
         // Honest, static status. Flowpay cannot see the USSD menu or the bank's
         // progress, so it does not fake step-by-step progress — it states what
         // the user should do and what it is genuinely waiting for.
-        updateBlackScreenStatus(
-            "Complete the payment in the dialer, then wait for your bank's " +
-                "confirmation SMS. This can take a minute or two."
-        )
+        updateBlackScreenStatus(R.string.qr_status_complete_in_dialer)
 
         // Wait for the confirmation SMS, giving up after the timeout below.
         startSMSTimeout()
     }
 
     /**
-     * Start SMS timeout timer
+     * Hand the user back to the main screen if no confirmation has arrived by
+     * the time the payment session's own verification deadline is up. This is
+     * a UI convenience only — see [WAITING_SCREEN_TIMEOUT_MS] and
+     * [finishedByWaitingScreenTimeout]; it must never end the payment.
      */
     private fun startSMSTimeout() {
-        Log.d("QRScanner", "Starting SMS timeout timer (150 seconds)")
+        Log.d("QRScanner", "Starting waiting-screen timer (${WAITING_SCREEN_TIMEOUT_MS}ms)")
 
         smsTimeoutHandler = Handler(Looper.getMainLooper())
         smsTimeoutRunnable = Runnable {
             if (!isActivityAlive()) return@Runnable
-            Log.d("QRScanner", "SMS timeout reached - returning to main screen")
+            Log.d("QRScanner", "Waiting-screen timeout reached - returning to main screen")
             if (isUSSDProcessActive) {
-                updateBlackScreenStatus("Transaction timeout. Returning to main screen...")
+                updateBlackScreenStatus(R.string.qr_waiting_timeout)
                 mainHandler.postDelayed({
                     if (!isActivityAlive()) return@postDelayed
+                    // Dismiss the waiting screen WITHOUT cancelling the
+                    // payment — the session and its SMS window keep running
+                    // to their own deadline. See the field's KDoc.
+                    finishedByWaitingScreenTimeout = true
                     setResult(RESULT_CANCELLED)
                     finish()
-                }, 2000)
+                }, WAITING_SCREEN_EXIT_DELAY_MS)
             }
         }
 
-        smsTimeoutHandler?.postDelayed(smsTimeoutRunnable!!, 150000) // 150 seconds
+        smsTimeoutHandler?.postDelayed(smsTimeoutRunnable!!, WAITING_SCREEN_TIMEOUT_MS)
     }
 
     /**
@@ -756,7 +793,7 @@ class QRScannerActivity : ComponentActivity() {
             // Show termination message briefly
             runOnUiThread {
                 if (!isActivityAlive()) return@runOnUiThread
-                updateBlackScreenStatus("Process terminated. Returning to main screen...")
+                updateBlackScreenStatus(R.string.qr_status_terminated)
                 btnTerminate.visibility = View.GONE
             }
 
@@ -847,11 +884,28 @@ class QRScannerActivity : ComponentActivity() {
     }
 
     /**
-     * Update status message on black screen
+     * Update the status message on the black waiting screen.
+     *
+     * Takes a string resource, never a [String], and that is the point: this
+     * is user-visible payment copy, and every literal that ever reached it
+     * was invisible to both copy gates. lint's `HardcodedText` never leaves
+     * XML, and `build.yml`'s grep is line-oriented — one call site here opens
+     * its paren on one line and puts the literal on the next, so a gate
+     * widened to match `updateBlackScreenStatus\(\s*"` reported green while a
+     * hardcoded string sat in the payment flow. Requiring a resource id makes
+     * `updateBlackScreenStatus("…")` a compile error instead of something a
+     * regex has to be taught to notice.
+     *
+     * [formatArg] is a single optional argument rather than a `vararg`
+     * deliberately: only one caller formats, and a spread would trip detekt's
+     * default `SpreadOperator` rule (the build sets `buildUponDefaultConfig`),
+     * whose baseline only ratchets down.
      */
-    private fun updateBlackScreenStatus(message: String) {
+    private fun updateBlackScreenStatus(@StringRes messageRes: Int, formatArg: Any? = null) {
         runOnUiThread {
             if (!isActivityAlive()) return@runOnUiThread
+            val message =
+                if (formatArg == null) getString(messageRes) else getString(messageRes, formatArg)
             Log.d("QRScanner", "Updating black screen status: $message")
             tvStatus.text = message
         }
@@ -937,7 +991,7 @@ class QRScannerActivity : ComponentActivity() {
             Log.e("QRScanner", "Showing error: $message")
 
             // Show error on black screen
-            updateBlackScreenStatus(getString(R.string.qr_error_prefix, message))
+            updateBlackScreenStatus(R.string.qr_error_prefix, message)
             tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light))
 
             // Show toast for additional feedback
@@ -1109,8 +1163,11 @@ class QRScannerActivity : ComponentActivity() {
             // closes with it and the next scan isn't refused as "already in
             // progress". A no-op once the session reached a terminal state,
             // and `isFinishing` keeps a config change from cancelling a live
-            // payment.
-            if (isFinishing) {
+            // payment. `finishedByWaitingScreenTimeout` excludes the one exit
+            // that is NOT the user abandoning anything: our own waiting-screen
+            // timer giving the screen back on its own timeout while the
+            // payment is still legitimately in flight.
+            if (isFinishing && !finishedByWaitingScreenTimeout) {
                 FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
             }
 
