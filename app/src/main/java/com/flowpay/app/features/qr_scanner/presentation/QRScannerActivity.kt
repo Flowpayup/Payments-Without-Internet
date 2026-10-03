@@ -82,6 +82,9 @@ class QRScannerActivity : ComponentActivity() {
         /** Grace between showing the timeout message and actually leaving. */
         private const val WAITING_SCREEN_EXIT_DELAY_MS = 2000L
 
+        /** Long enough to read that a dispatched payment may still complete. */
+        private const val MAY_COMPLETE_EXIT_DELAY_MS = 5000L
+
         /** Longest edge a gallery image is downsampled to before decoding. */
         private const val GALLERY_MAX_EDGE_PX = 2048
     }
@@ -655,6 +658,9 @@ class QRScannerActivity : ComponentActivity() {
             updateBlackScreenStatus(R.string.qr_status_call_initiated)
             startActivity(intent)
             Log.d("QRScanner", "USSD call initiated successfully")
+            // From here the user can pay in the dialer where we can't see it,
+            // so leaving this screen must no longer cancel the session.
+            FlowpayApplication.from(this)?.paymentSessionManager?.onRequestDispatched()
 
             // Start the extended message sequence for USSD process
             startUSSDProcessMessages()
@@ -776,24 +782,19 @@ class QRScannerActivity : ComponentActivity() {
                 smsTimeoutHandler?.removeCallbacks(it)
             }
 
-            // Hide USSD overlay
-
-            // Stop SMS monitoring
-            try {
-                TransactionDetector.getInstance(this).stopOperation()
-                Log.d("QRScanner", "SMS monitoring stopped")
-            } catch (e: Exception) {
-                Log.e("QRScanner", "Failed to stop SMS monitoring: ${e.message}")
-            }
-
-            // The user explicitly aborted: mark the session row CANCELLED so
-            // it doesn't linger PENDING waiting for a payment nobody made.
-            FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
+            // Before the dial this is a real cancel (the row is marked
+            // CANCELLED and PaymentWindowObserver closes the SMS window).
+            // After it the user may already have entered their PIN in the
+            // USSD dialog, so the session keeps waiting for the bank's SMS.
+            val mayStillComplete =
+                FlowpayApplication.from(this)?.paymentSessionManager?.onUserLeft() == true
 
             // Show termination message briefly
             runOnUiThread {
                 if (!isActivityAlive()) return@runOnUiThread
-                updateBlackScreenStatus(R.string.qr_status_terminated)
+                updateBlackScreenStatus(
+                    if (mayStillComplete) R.string.qr_status_may_complete else R.string.qr_status_terminated
+                )
                 btnTerminate.visibility = View.GONE
             }
 
@@ -803,7 +804,7 @@ class QRScannerActivity : ComponentActivity() {
                 Log.d("QRScanner", "Returning to main screen after termination")
                 setResult(RESULT_CANCELLED)
                 finish()
-            }, 1500)
+            }, if (mayStillComplete) MAY_COMPLETE_EXIT_DELAY_MS else 1500)
         } catch (e: Exception) {
             Log.e("QRScanner", "Error terminating USSD process: ${e.message}", e)
             // Fallback: just close the activity
@@ -1158,17 +1159,16 @@ class QRScannerActivity : ComponentActivity() {
             isProcessingQRCode = false
             hasDialedUSSD = false
 
-            // Leaving this screen with a payment still in flight (system back,
-            // recents swipe) abandons it — end the session so the SMS window
-            // closes with it and the next scan isn't refused as "already in
-            // progress". A no-op once the session reached a terminal state,
-            // and `isFinishing` keeps a config change from cancelling a live
-            // payment. `finishedByWaitingScreenTimeout` excludes the one exit
-            // that is NOT the user abandoning anything: our own waiting-screen
-            // timer giving the screen back on its own timeout while the
-            // payment is still legitimately in flight.
+            // Leaving this screen (system back, recents swipe) before the dial
+            // cancels the session so the SMS window closes with it. After the
+            // dial it only leaves: the payment may already be done in the
+            // dialer, so the session keeps waiting for the bank's SMS (see
+            // PaymentSessionManager.onUserLeft). A no-op once the session
+            // reached a terminal state, and `isFinishing` keeps a config
+            // change from touching a live payment. `finishedByWaitingScreenTimeout`
+            // excludes our own waiting-screen timer, which never ends a payment.
             if (isFinishing && !finishedByWaitingScreenTimeout) {
-                FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
+                FlowpayApplication.from(this)?.paymentSessionManager?.onUserLeft()
             }
 
             // Wipe the payee VPA from the clipboard now the flow is over.

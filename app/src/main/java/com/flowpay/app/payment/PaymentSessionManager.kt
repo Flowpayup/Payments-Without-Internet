@@ -102,6 +102,13 @@ class PaymentSessionManager(
     @Volatile private var pendingInsertJob: Job? = null
     private var coordinatorAcquired = false
 
+    // Whether the payment request may already have left the device: the IVR
+    // call went OFFHOOK, or the QR flow handed off to the USSD dialer. Past
+    // that point the app cannot see whether the user confirmed with their
+    // PIN, so leaving the flow must not be treated as a cancellation.
+    // Guarded by sessionLock.
+    private var requestDispatched = false
+
     /**
      * Starts a new payment session and records a PENDING row. Always succeeds.
      *
@@ -141,6 +148,7 @@ class PaymentSessionManager(
             }
             initiating = PaymentState.Initiating(phoneNumber, amount)
             _paymentState.value = initiating
+            requestDispatched = false
             if (!coordinatorAcquired) {
                 coordinator.acquire(COORDINATOR_TAG)
                 coordinatorAcquired = true
@@ -202,10 +210,57 @@ class PaymentSessionManager(
         }
     }
 
-    /** The user aborted from the in-call overlay. */
+    /**
+     * Ends the session as CANCELLED. Only correct when nothing can have been
+     * submitted yet; UI exits go through [onUserLeft], which decides that.
+     */
     fun onUserCancelled() {
         finishSession(TransactionStatus.CANCELLED) { phone, amount, txnId ->
             PaymentState.Cancelled(phone, amount, txnId, "Cancelled by user")
+        }
+    }
+
+    /**
+     * The QR flow handed the payment to the USSD dialer. From here the user
+     * may complete it (PIN included) where the app cannot see.
+     */
+    fun onRequestDispatched() {
+        synchronized(sessionLock) {
+            if (_paymentState.value.isInProgress()) requestDispatched = true
+        }
+    }
+
+    /**
+     * The user left the payment flow (overlay "Cancel payment", QR Terminate,
+     * back). Before the request was dispatched this is a real cancel. After
+     * it, hanging up or closing a screen cancels nothing at NPCI — the bank
+     * can still debit — so the session keeps waiting for the SMS (row stays
+     * PENDING, window stays open) and moves to WaitingForVerification.
+     *
+     * Returns true when the payment may still complete, so the caller can
+     * tell the user that instead of "cancelled".
+     */
+    fun onUserLeft(): Boolean = synchronized(sessionLock) {
+        val s = _paymentState.value
+        val txnId = s.getTransactionIdValue()
+        when {
+            !s.isInProgress() || txnId == null -> false
+            !requestDispatched -> {
+                onUserCancelled()
+                false
+            }
+            else -> {
+                if (s !is PaymentState.WaitingForVerification) {
+                    _paymentState.value = PaymentState.WaitingForVerification(
+                        timeout = verificationDeadlineMs,
+                        phoneNumber = s.getPhoneNumberValue() ?: "",
+                        amount = s.getAmountValue() ?: "",
+                        transactionId = txnId
+                    )
+                }
+                Log.d(TAG, "User left after dispatch - still waiting for the bank SMS")
+                true
+            }
         }
     }
 
@@ -325,6 +380,7 @@ class PaymentSessionManager(
                 synchronized(sessionLock) {
                     val state = _paymentState.value
                     if (state is PaymentState.Initiating) {
+                        requestDispatched = true
                         _paymentState.value = PaymentState.InProgress(
                             step = "On the line with the UPI service",
                             progress = 0.4f,

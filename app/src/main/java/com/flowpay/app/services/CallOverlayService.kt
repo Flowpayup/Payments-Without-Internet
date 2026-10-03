@@ -160,6 +160,11 @@ class CallOverlayService : Service() {
     private var sessionManager: PaymentSessionManager? = null
     private var coordinatorAcquired = false
     private var resultHandled = false
+
+    // The user tapped "Cancel payment"; a WaitingForVerification that follows
+    // means the request may already be with the IVR (see handleTerminateCall).
+    private var userLeft = false
+
     private var dialogManager: TransactionDialogManager? = null
 
     // Call management
@@ -289,10 +294,14 @@ class CallOverlayService : Service() {
                     step = getString(R.string.overlay_request_sent),
                     progressFraction = 1f
                 )
-                pacingHandler.postDelayed(
-                    { finishWithResult { dialogManager?.showAwaitingConfirmation() } },
-                    PROGRESS_COMPLETE_HOLD_MS
-                )
+                if (userLeft) {
+                    finishWithResult { dialogManager?.showMayStillComplete() }
+                } else {
+                    pacingHandler.postDelayed(
+                        { finishWithResult { dialogManager?.showAwaitingConfirmation() } },
+                        PROGRESS_COMPLETE_HOLD_MS
+                    )
+                }
             }
             is PaymentState.Success -> {
                 vibrate()
@@ -894,12 +903,16 @@ class CallOverlayService : Service() {
     private fun handleTerminateCall() {
         Log.d(TAG, "=== HANDLING TERMINATE CALL REQUEST ===")
 
-        // Mark the session cancelled first and unconditionally — the
-        // payment-state collector hides the overlay and shows the
-        // cancellation dialog exactly once. This must run outside the try
-        // below: audio/telecom cleanup is best-effort UI polish and must
-        // never be able to prevent the session from being marked cancelled.
-        sessionManager?.onUserCancelled()
+        // Settle the session first and unconditionally — the payment-state
+        // collector hides the overlay and shows the right dialog exactly
+        // once. This must run outside the try below: audio/telecom cleanup is
+        // best-effort UI polish and must never be able to skip it. Once the
+        // call connected the IVR may already hold the request, so hanging up
+        // doesn't cancel it: the session keeps waiting for the bank's SMS and
+        // the user is told the payment may still go through. The flag is set
+        // before the call because the collector can run inline on Main.
+        userLeft = true
+        sessionManager?.onUserLeft()
 
         try {
             callManager?.restoreCallVolume()

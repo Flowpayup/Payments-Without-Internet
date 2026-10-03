@@ -22,7 +22,10 @@ import kotlinx.coroutines.launch
  * through another app, say) was adopted onto the cancelled row and flipped
  * it to SUCCESS.
  *
- * Every cancel route — the overlay's terminate button, the never-connected
+ * Leaving a flow after the request was dispatched is deliberately NOT a
+ * cancel (see [PaymentSessionManager.onUserLeft]) and keeps the window open.
+ *
+ * Every cancel route — a user exit before dispatch, the never-connected
  * watchdog, a call that ended before the IVR flow could finish, a failed
  * dial — funnels into [PaymentSessionManager.finishSession] and emits
  * [PaymentState.Cancelled], so observing that one state closes them all;

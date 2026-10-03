@@ -27,6 +27,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -601,6 +602,67 @@ class PaymentSessionManagerTest {
         assertTrue(manager.paymentState.value is PaymentState.Cancelled)
         assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
         assertEquals("second call must not release the coordinator again", 1, source.releaseCount)
+    }
+
+    // ---- onUserLeft: cancel only what cannot have been submitted ----------
+
+    @Test
+    fun `leaving before the call connects cancels the session`() = runTest {
+        val (manager, store, _) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+
+        assertFalse(manager.onUserLeft())
+        runCurrent()
+
+        assertTrue(manager.paymentState.value is PaymentState.Cancelled)
+        assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
+    }
+
+    // #27: hanging up after the DTMF went out cancels nothing at NPCI; the
+    // bank's debit SMS must still land on the row.
+    @Test
+    fun `leaving after the call connected keeps waiting and the debit still confirms`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "500")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        assertTrue(manager.onUserLeft())
+        source.callEnded(durationMs = 1_000)
+        runCurrent()
+
+        assertTrue(manager.paymentState.value is PaymentState.WaitingForVerification)
+        assertEquals(TransactionStatus.PENDING, store.rows[txnId]!!.status)
+
+        assertEquals(txnId, manager.onSmsConfirmed(bankSms(amount = "500")))
+        runCurrent()
+        assertEquals(TransactionStatus.SUCCESS, store.rows[txnId]!!.status)
+    }
+
+    // #36: the QR flow never goes OFFHOOK; the dialer hand-off is the dispatch.
+    @Test
+    fun `leaving the QR flow after the USSD hand-off keeps waiting`() = runTest {
+        val (manager, store, _) = newManager()
+        val txnId = manager.begin("", "")!!
+        runCurrent()
+        manager.onRequestDispatched()
+
+        assertTrue(manager.onUserLeft())
+        assertTrue("a second exit (onDestroy) changes nothing", manager.onUserLeft())
+        runCurrent()
+
+        assertTrue(manager.paymentState.value is PaymentState.WaitingForVerification)
+        assertEquals(TransactionStatus.PENDING, store.rows[txnId]!!.status)
+    }
+
+    @Test
+    fun `onUserLeft is a no-op with no active session`() = runTest {
+        val (manager, _, _) = newManager()
+
+        assertFalse(manager.onUserLeft())
+        assertEquals(PaymentState.Idle, manager.paymentState.value)
     }
 
     @Test

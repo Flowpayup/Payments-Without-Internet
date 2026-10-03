@@ -140,4 +140,27 @@ class TransactionDialogManager(
             Toast.makeText(context, R.string.toast_awaiting_confirmation, Toast.LENGTH_LONG).show()
         }
     }
+
+    /**
+     * The user ended the call after the request may have reached the IVR.
+     * Hanging up cancels nothing at NPCI, so this must not say "cancelled".
+     */
+    fun showMayStillComplete() {
+        try {
+            AlertDialog.Builder(context)
+                .setTitle(context.getString(R.string.dialog_may_complete_title))
+                .setMessage(context.getString(R.string.dialog_may_complete_message))
+                .setPositiveButton(context.getString(R.string.action_got_it)) { dialog, _ ->
+                    dialog.dismiss()
+                    // Deliberately NOT acknowledging: the session is still waiting for the SMS.
+                }
+                .setCancelable(false)
+                .create()
+                .prepareForOverlayDisplay()
+                .show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to show may-still-complete dialog", e)
+            Toast.makeText(context, R.string.dialog_may_complete_title, Toast.LENGTH_LONG).show()
+        }
+    }
 }
