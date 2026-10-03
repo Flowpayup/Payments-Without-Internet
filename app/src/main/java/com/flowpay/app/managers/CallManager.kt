@@ -331,7 +331,7 @@ class CallManager(private val context: Context) {
                 Log.e(TAG, "CALL_PHONE permission not granted")
                 Toast.makeText(
                     context,
-                    "Phone call permission is required for manual payments. Please grant permission in Settings.",
+                    R.string.error_call_permission_required_manual,
                     Toast.LENGTH_LONG
                 ).show()
                 return false

@@ -100,6 +100,11 @@ jobs:
           ! grep -rnE 'Toast\.makeText\([^,]+,\s*"|\.text\s*=\s*"|setText\("' \
             app/src/main/java/com/flowpay/app --include='*.kt' \
             || (echo "::error::Hardcoded string in a Toast/TextView — move it to strings.xml and pass the resource id" && exit 1)
+          # The check above is line-based, so a Toast whose arguments start on
+          # the next line hid seven more literals. Look two lines past it.
+          ! grep -rn -A2 'Toast\.makeText($' app/src/main/java/com/flowpay/app --include='*.kt' \
+            | grep -E '^[^ ]+-[0-9]+-\s*"' \
+            || (echo "::error::Hardcoded string in a multi-line Toast — move it to strings.xml and pass the resource id" && exit 1)
           # And the app's own UI-callback helpers, which route to a Toast one
           # frame later and so hid another 23 literals from the check above.
           # This list is the project's user-facing message entry points; add

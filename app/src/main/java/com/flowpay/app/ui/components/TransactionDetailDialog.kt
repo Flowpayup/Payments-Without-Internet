@@ -166,11 +166,12 @@ fun TransactionDetailDialog(
                         // the one a user would actually quote back to their
                         // bank in a dispute. Shown first and only when the
                         // bank supplied one (a PENDING row has none yet).
-                        if (!transaction.bankRef.isNullOrEmpty()) {
+                        val bankRef = transaction.displayBankRef()
+                        if (bankRef != null) {
                             DetailRow(
                                 label = stringResource(R.string.label_bank_reference),
-                                value = transaction.bankRef,
-                                onCopy = { clipboardManager.setText(AnnotatedString(transaction.bankRef)) }
+                                value = bankRef,
+                                onCopy = { clipboardManager.setText(AnnotatedString(bankRef)) }
                             )
                             DetailDivider()
                         }

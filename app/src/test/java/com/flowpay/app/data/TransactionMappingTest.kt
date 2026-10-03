@@ -4,6 +4,7 @@
 package com.flowpay.app.data
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
@@ -45,5 +46,16 @@ class TransactionMappingTest {
     @Test
     fun `unknown status falls back to pending`() {
         assertEquals(PaymentStatus.PENDING, row("WHATEVER").toPaymentDetails().status)
+    }
+
+    @Test
+    fun `bank reference is shown without the legacy row-key suffix`() {
+        val legacy = row(TransactionStatus.SUCCESS).copy(bankRef = "512233440091_1785952502285")
+        assertEquals("512233440091", legacy.displayBankRef())
+
+        val raw = row(TransactionStatus.SUCCESS).copy(bankRef = "512233440091")
+        assertEquals("512233440091", raw.displayBankRef())
+
+        assertNull(row(TransactionStatus.PENDING).displayBankRef())
     }
 }

@@ -360,7 +360,7 @@ class QRScannerActivity : ComponentActivity() {
             Log.w("QRScanner", "Camera permission denied")
             Toast.makeText(
                 this,
-                "Camera permission is required for QR scanning",
+                R.string.error_camera_permission_qr,
                 Toast.LENGTH_LONG
             ).show()
             setResult(RESULT_ERROR)
@@ -553,7 +553,9 @@ class QRScannerActivity : ComponentActivity() {
         val sessionManager = FlowpayApplication.from(this)?.paymentSessionManager
         val sessionTxnId = sessionManager?.begin(
             phoneNumber = "",
-            amount = upiData.amount ?: "",
+            // The amount is typed into the USSD menu, not taken from the QR,
+            // so the row starts without one and is filled from the bank SMS.
+            amount = "",
             upiId = upiData.vpa,
             source = TransactionSource.QR
         )
@@ -564,7 +566,8 @@ class QRScannerActivity : ComponentActivity() {
             TransactionDetector.getInstance(this).startOperation(
                 operationType = "QR_SCAN",
                 expectedAmount = upiData.amount,
-                sessionTxnId = sessionTxnId
+                sessionTxnId = sessionTxnId,
+                expectedPayeeVpa = upiData.vpa
             )
             Log.d("QRScanner", "SMS monitoring started for QR payment")
             true

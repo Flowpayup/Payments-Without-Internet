@@ -398,6 +398,7 @@ class SmsTransactionParserTest {
 
         assertNotNull(first)
         assertEquals("TXN17000000000004321", first!!.transactionId)
+        assertNull("a generated id is not a bank reference", first.bankRef)
         assertEquals("deterministic inputs must produce the same id", first.transactionId, second!!.transactionId)
     }
 
@@ -415,6 +416,9 @@ class SmsTransactionParserTest {
         // ends in "_42" can still carry entirely the wrong prefix, which is
         // exactly how the defect below survived this file.
         assertEquals("512233440091_42", result!!.transactionId)
+        // The clock suffix is part of the row key only. The reference a user
+        // copies to their bank must be the bank's own value, unchanged.
+        assertEquals("512233440091", result.bankRef)
     }
 
     // "paid to SHARMA STORE" hides an "id" inside "pa|id|", and the reference
@@ -436,6 +440,92 @@ class SmsTransactionParserTest {
         assertNotNull(result)
         assertEquals("512233440091_42", result!!.transactionId)
         assertEquals(TransactionStatus.FAILED, result.status)
+    }
+
+    // Scan QR: the amount is typed into the USSD menu, so for a static QR the
+    // app has nothing to check a debit against. Any debit in the window (an
+    // EMI, a card swipe) used to be recorded as this payment's SUCCESS.
+    @Test
+    fun `static QR debit that does not name the payee needs review`() {
+        val result = SmsTransactionParser.parse(
+            sender = "VM-HDFCBK",
+            body = "Rs.2,350.00 debited from HDFC Bank A/c **1234 for EMI ref 998877665544",
+            expectedAmount = "",
+            expectedPayeeVpa = "shop@okaxis"
+        )
+
+        assertNotNull(result)
+        assertEquals(TransactionStatus.NEEDS_REVIEW, result!!.status)
+    }
+
+    @Test
+    fun `static QR debit that names the payee is a success`() {
+        val result = SmsTransactionParser.parse(
+            sender = "VM-HDFCBK",
+            body = "Rs.120.00 debited from HDFC Bank A/c **1234 to VPA shop@okaxis UPI Ref No 512233440091",
+            expectedAmount = "",
+            expectedPayeeVpa = "shop@okaxis"
+        )
+
+        assertEquals(TransactionStatus.SUCCESS, result!!.status)
+    }
+
+    // A QR's amount is only a suggestion to the USSD menu. A confirmation
+    // naming the scanned payee must not be dropped because the user paid a
+    // different amount.
+    @Test
+    fun `QR amount mismatch is accepted when the SMS names the payee`() {
+        val result = SmsTransactionParser.parse(
+            sender = "VM-HDFCBK",
+            body = "Rs.450.00 debited from HDFC Bank A/c **1234 to VPA shop@okaxis UPI Ref No 512233440091",
+            expectedAmount = "500",
+            expectedPayeeVpa = "shop@okaxis"
+        )
+
+        assertEquals("450.00", result!!.amount)
+        assertEquals(TransactionStatus.SUCCESS, result.status)
+    }
+
+    @Test
+    fun `QR amount mismatch without the payee is still dropped`() {
+        val result = SmsTransactionParser.parse(
+            sender = "VM-HDFCBK",
+            body = "Rs.2,350.00 debited from HDFC Bank A/c **1234 for EMI ref 998877665544",
+            expectedAmount = "500",
+            expectedPayeeVpa = "shop@okaxis"
+        )
+
+        assertNull(result)
+    }
+
+    // The old fallback took the first run of 10+ letters or digits, and the
+    // keyword pattern took whatever word followed "txn". Each body below
+    // produced a "Bank reference" that was a word, the bank's helpline, or
+    // part of the user's account number.
+    @Test
+    fun `no reference is invented from words, helplines or masked accounts`() {
+        listOf(
+            "Rs.500.00 debited successfully from your A/c XX1234 to shop@okaxis",
+            "Rs.500.00 debited from HDFC Bank A/c XX1234 to VPA shop@okaxis. Not you? Call 18002586161",
+            "Your txn of Rs.500 to SHOP via UPI is successful. A/c XXXXXX1234",
+            "Rs.500 debited from A/c XXXXXX1234 on 01-08-26",
+            "UPI ID: shop123@ybl Rs 500 debited"
+        ).forEach { body ->
+            assertNull(body, SmsTransactionParser.extractBankReference(body))
+        }
+    }
+
+    @Test
+    fun `references are read from the common keyword forms`() {
+        mapOf(
+            "Rs.500 debited. UPI Ref No 512233440091." to "512233440091",
+            "A/C X1234 debited by 500.0 trf to SHOP Refno 512233440091. -SBI" to "512233440091",
+            "Rs 500 debited. Ref.No.512233440091" to "512233440091",
+            "Txn ID: HDFC00123456 for Rs 500" to "HDFC00123456",
+            "Rs 500 sent to SHOP on 01-08-26 512233440091" to "512233440091"
+        ).forEach { (body, expected) ->
+            assertEquals(body, expected, SmsTransactionParser.extractBankReference(body))
+        }
     }
 
     // A failure template used to leave the payee as "Kirana Store Has Failed"

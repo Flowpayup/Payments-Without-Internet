@@ -209,8 +209,9 @@
 
                     </LinearLayout>
 
-                    <!-- Transaction ID Row -->
+                    <!-- Bank Reference Row -->
                     <LinearLayout
+                        android:id="@+id/layout_bank_ref"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"

@@ -24,20 +24,34 @@ internal object DatabaseEncryptionMigrator {
     private const val TAG = "DbEncryptionMigrator"
     private const val PREF_MIGRATED = "db_encrypted"
 
-    /** Must run before Room opens the database. Caller loads the sqlcipher lib. */
-    fun ensureEncrypted(context: Context, dbName: String, passphrase: String) {
+    /**
+     * Must run before Room opens the database. Caller loads the sqlcipher lib.
+     *
+     * Returns false when the database is still plaintext because this
+     * launch's migration failed; the caller then opens it without a key, and
+     * the next launch tries again.
+     */
+    fun ensureEncrypted(context: Context, dbName: String, passphrase: String): Boolean {
         val prefs = context.getSharedPreferences(DatabaseKeyManager.PREFS_NAME, Context.MODE_PRIVATE)
         val dbFile = context.getDatabasePath(dbName)
+        val encryptedFile = File(dbFile.parentFile, "${dbFile.name}.encrypting")
+
+        if (!dbFile.exists() && encryptedFile.exists() && encryptedFile.renameTo(dbFile)) {
+            // A previous run removed the plaintext file but failed to move the
+            // encrypted copy into place. The copy is complete; finish the swap.
+            Log.i(TAG, "Completed an interrupted encrypted-database swap")
+            prefs.edit().putBoolean(PREF_MIGRATED, true).apply()
+        }
 
         if (!dbFile.exists()) {
             // Fresh install — Room will create the encrypted DB directly.
             prefs.edit().putBoolean(PREF_MIGRATED, true).apply()
-            return
+            return true
         }
 
         if (prefs.getBoolean(PREF_MIGRATED, false)) {
             recoverIfUnreadable(dbFile, passphrase)
-            return
+            return true
         }
 
         try {
@@ -45,6 +59,14 @@ internal object DatabaseEncryptionMigrator {
             prefs.edit().putBoolean(PREF_MIGRATED, true).apply()
             Log.i(TAG, "Transaction database encrypted in place")
         } catch (e: Exception) {
+            if (isPlaintextSqlite(dbFile)) {
+                // The original is intact. Low storage, a locked file or a
+                // failed rename are all worth retrying; deleting the user's
+                // history over any of them is not.
+                Log.w(TAG, "Plaintext migration failed - keeping the plaintext database for a retry", e)
+                encryptedFile.delete()
+                return false
+            }
             // Most likely cause: the file is already encrypted but the
             // migrated flag was lost (cleared app data restored the DB, or a
             // partial previous run). If it opens with our key we're done;
@@ -53,6 +75,7 @@ internal object DatabaseEncryptionMigrator {
             prefs.edit().putBoolean(PREF_MIGRATED, true).apply()
             recoverIfUnreadable(dbFile, passphrase)
         }
+        return true
     }
 
     private fun migratePlaintext(dbFile: File, passphrase: String) {

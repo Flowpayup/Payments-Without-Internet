@@ -22,12 +22,12 @@ import kotlinx.coroutines.launch
  * through another app, say) was adopted onto the cancelled row and flipped
  * it to SUCCESS.
  *
- * Every cancel route — the overlay's terminate button, the never-connected
- * watchdog, a call that ended before the IVR flow could finish, a failed
- * dial — funnels into [PaymentSessionManager.finishSession] and emits
- * [PaymentState.Cancelled], so observing that one state closes them all;
- * [PaymentSessionManager] keeps its deliberate independence from
- * [TransactionDetector].
+ * Every cancel route — the overlay's button before the call connects, the
+ * QR terminate button, the never-connected watchdog, a call that ended
+ * before the IVR flow could finish, a failed dial — funnels into
+ * [PaymentSessionManager.finishSession] and emits [PaymentState.Cancelled],
+ * so observing that one state closes them all; [PaymentSessionManager]
+ * keeps its deliberate independence from [TransactionDetector].
  *
  * Deliberately *not* triggered by [PaymentState.Timeout]: the window
  * outlives the verification deadline by 30 seconds on purpose, so a
