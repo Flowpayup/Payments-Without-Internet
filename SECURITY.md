@@ -16,8 +16,8 @@ are not backported — update to the newest release.
 ## Verifying you have a genuine build
 
 Download installable APKs only from this repository's [GitHub Releases](https://github.com/Flowpayup/Payments-Without-Internet/releases).
-Version 1.0.1 is a prerelease pending checks on the exact signed build on a
-physical device. You can also build from source with [Running it](README.md#running-it).
+Version 1.0.1 passed the physical-device release checklist on the exact signed
+build. You can also build from source with [Running it](README.md#running-it).
 
 The signing certificate is the trust anchor. Fake UPI apps are common in
 India, and an APK claiming to be Flowpay can come from anywhere; the

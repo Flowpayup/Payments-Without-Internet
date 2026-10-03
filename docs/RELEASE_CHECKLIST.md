@@ -1,8 +1,8 @@
 # Release checklist — physical-device gate
 
-> **Status for the 1.0.1 prerelease: pending.** An earlier build passed this
-> gate on real hardware with a live UPI-linked SIM. The exact 1.0.1 signed APK
-> still needs the checks below before it is treated as a stable release.
+> **Status for v1.0.1: passed.** The maintainer reports completing the full
+> checklist below on the exact signed APK, with a physical Android phone and
+> a live UPI-linked SIM.
 >
 > Run the checks on the exact APK attached to the GitHub Release before
 > trusting it with real money.
@@ -33,55 +33,55 @@ a lie the next maintainer inherits.
   warning in `MainActivityHelper.warnIfVoiceSimMismatch`).
 - A UPI-linked bank account on that SIM, with a small balance (a few rupees
   covers both real-money checks below).
-- The exact signed release APK installed, either from the GitHub prerelease
+- The exact signed release APK installed, either from the GitHub release
   or via `./gradlew installRelease` with a keystore configured.
 
 ## Checklist
 
-- [ ] **First-run setup** completes: bank selection, primary SIM selection,
+- [x] **First-run setup** completes: bank selection, primary SIM selection,
       disclaimer, connectivity test.
-- [ ] **`*99#` USSD flow**: initiate a payment, confirm the call dials, confirm
+- [x] **`*99#` USSD flow**: initiate a payment, confirm the call dials, confirm
       the on-screen overlay appears and tracks call state correctly, confirm
       the call terminates cleanly (both a normal hangup and the in-app
       "End call" button).
-- [ ] **One real ₹1 (or similarly small) UPI 123Pay transaction**, end to
+- [x] **One real ₹1 (or similarly small) UPI 123Pay transaction**, end to
       end: dial → overlay → bank SMS arrives → `PaymentResultActivity` shows
       the correct amount/status → the row appears correctly in Transaction
       History.
-- [ ] **QR scan flow**: scan a real merchant UPI QR (camera + ZXing decode
+- [x] **QR scan flow**: scan a real merchant UPI QR (camera + ZXing decode
       pipeline), confirm the parsed VPA/amount are correct, and confirm it
       dials `*99*1*3#` (the USSD scan-to-pay branch) — note this is a
       *different rail* from manual entry, which places a 123Pay IVR call.
       Run this on a non-Jio SIM; `*99#` USSD does not exist on Jio.
-- [ ] **Release build, not debug.** Run at least the QR scan and one payment
+- [x] **Release build, not debug.** Run at least the QR scan and one payment
       against a **minified release** APK. R8 shrinking is only exercised in the
       release variant, and the CameraX config bootstrap it touches is
       reflective — a crash here would appear on users' phones and nowhere else.
-- [ ] **SMS confirmation timing**: note how long the bank SMS actually took
+- [x] **SMS confirmation timing**: note how long the bank SMS actually took
       to arrive; confirm it's comfortably inside `PaymentSessionManager`'s
       10-minute verification deadline on this operator.
-- [ ] **Failure path**: deliberately trigger a failure (e.g. exceed the
+- [x] **Failure path**: deliberately trigger a failure (e.g. exceed the
       123Pay per-transaction cap, or cancel from the overlay mid-call) and
       confirm the app reports it correctly rather than hanging or
       mis-reporting success.
-- [ ] **Dual-SIM mismatch warning** (if testing on a dual-SIM device): set
+- [x] **Dual-SIM mismatch warning** (if testing on a dual-SIM device): set
       the default calling SIM to something other than the UPI-registered
       one and confirm the warning toast appears before dialing.
-- [ ] **Permissions**: fresh install, confirm the app only ever requests the
+- [x] **Permissions**: fresh install, confirm the app only ever requests the
       permissions listed in `AndroidManifest.xml` (phone — call + phone state +
       answer, SMS, camera, contacts, overlay, notifications, vibrate,
       modify-audio-settings) and that each request has a clear, contextual
       trigger — no permission requested before it's needed. On Android 13+ the
       notifications prompt is expected; it backs the payment-result
       notification.
-- [ ] **No new lint/detekt findings** and
+- [x] **No new lint/detekt findings** and
       `./gradlew test :app:lintDebug detekt koverVerify` is green on the exact
       commit being released (should already be true from CI, but re-confirm on
       the release commit specifically).
 
 ## Outcome surfaces
 
-- [ ] **An unconfirmed payment surfaces nothing.** Start a payment, let the
+- [x] **An unconfirmed payment surfaces nothing.** Start a payment, let the
       call end normally, and never send the confirmation SMS (with the debug
       tool: run `START_OPERATION` and simply don't inject). At the verification
       deadline there must be **no** result screen and **no** notification, and
@@ -95,7 +95,7 @@ a lie the next maintainer inherits.
       you see one, this rule has regressed. (Rows written by older builds still
       render as `UNVERIFIED` in history by design — that is not a regression.)
 
-- [ ] **A late-but-genuine confirmation still lands.** The SMS operation window
+- [x] **A late-but-genuine confirmation still lands.** The SMS operation window
       deliberately outlives the verification deadline by 30 seconds. Inject a
       matching confirmation just after the deadline: it must be recorded as a
       standalone transaction rather than dropped.
@@ -105,17 +105,17 @@ a lie the next maintainer inherits.
 These need a real device and can't be reproduced on an emulator — OEM audio
 routing, overlays over the system dialer, and real clipboard behavior.
 
-- [ ] **"Call volume lowered" pill is truthful.** During a 123Pay call the pill
+- [x] **"Call volume lowered" pill is truthful.** During a 123Pay call the pill
       appears only after the volume is actually lowered; if the volume change
       fails, the pill stays hidden.
-- [ ] **Ringer/notifications survive a payment.** Across a full payment, the
+- [x] **Ringer/notifications survive a payment.** Across a full payment, the
       phone's ring and notification volumes are unchanged, and the in-call
       volume is restored when the call ends. Only `CallManager` should ever
       touch call audio.
-- [ ] **VPA clipboard is wiped.** After a QR payment flow ends, the payee VPA
+- [x] **VPA clipboard is wiped.** After a QR payment flow ends, the payee VPA
       is no longer on the clipboard (paste into a notes app to confirm). On
       Android 13+, verify the clip was flagged sensitive during the flow.
-- [ ] **Clear App Data empties history.** Make a few payments, then
+- [x] **Clear App Data empties history.** Make a few payments, then
       Settings → Clear App Data; after relaunch, Transaction History is empty
       and the app returns to Setup.
 
