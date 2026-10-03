@@ -33,8 +33,8 @@ a lie the next maintainer inherits.
   warning in `MainActivityHelper.warnIfVoiceSimMismatch`).
 - A UPI-linked bank account on that SIM, with a small balance (a few rupees
   covers both real-money checks below).
-- The exact signed release APK installed, either from the GitHub release
-  or via `./gradlew installRelease` with a keystore configured.
+- The exact signed release APK installed via `./gradlew installRelease`
+  with a keystore configured, or from GitHub Releases when available.
 
 ## Checklist
 

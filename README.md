@@ -138,7 +138,7 @@ If you want to skim the code without running it, the build also works without an
 
 **Signed release build:** copy `keystore.properties.example` to `keystore.properties`, fill in your signing-key details, then run `./gradlew assembleRelease`. The `keystore.properties` file and any `*.jks`/`*.keystore` files are gitignored, so signing material is never committed. Without a keystore, `assembleRelease` stops rather than handing you an unsigned, uninstallable APK — pass `-PallowUnsigned` if that's what you actually want.
 
-**Installable APK:** download the signed APK from this repository's [GitHub Releases](https://github.com/Flowpayup/Payments-Without-Internet/releases). Version 1.0.1 passed the [physical-device checklist](docs/RELEASE_CHECKLIST.md) on the exact signed build. Before installing, verify its SHA-256 against the attached `SHA256SUMS` and its signing certificate against the fingerprint committed in [SECURITY.md](SECURITY.md). Building from source remains supported.
+**Android app:** we'll be sharing an updated version of Flowpay on [GitHub Releases](https://github.com/Flowpayup/Payments-Without-Internet/releases). In the meantime, you can build from source using the steps above.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the system fits together, [docs/FAQ.md](docs/FAQ.md) for the trust/permissions questions, [docs/TESTING.md](docs/TESTING.md) for how outcomes are verified, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards, and [LEGAL.md](LEGAL.md) for the full terms.
 
