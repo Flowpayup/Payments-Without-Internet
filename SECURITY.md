@@ -15,14 +15,14 @@ are not backported — update to the newest release.
 
 ## Verifying you have a genuine build
 
-**No APK has been published.** This repository distributes source only —
-build it yourself with [Running it](README.md#running-it). Any APK you
-encounter claiming to be Flowpay did not come from here.
+Download installable APKs only from this repository's [GitHub Releases](https://github.com/Flowpayup/Payments-Without-Internet/releases).
+Version 1.0.1 is a prerelease pending checks on the exact signed build on a
+physical device. You can also build from source with [Running it](README.md#running-it).
 
-If a signed build is ever published, the signing certificate is the trust
-anchor. Fake UPI apps are common in India, and an APK claiming to be Flowpay
-can come from anywhere; the fingerprint below is how you would tell. It is
-committed now, ahead of any release, so it cannot be back-dated later.
+The signing certificate is the trust anchor. Fake UPI apps are common in
+India, and an APK claiming to be Flowpay can come from anywhere; the
+fingerprint below is how you would tell. It was committed ahead of the first
+APK release, so it cannot be back-dated later.
 
 ```
 Release signing certificate SHA-256:

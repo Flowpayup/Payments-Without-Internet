@@ -2,7 +2,7 @@
 
 *An Android app that brings UPI payments to users with no internet, using `*99#` USSD and UPI 123Pay (IVR) rails.*
 
-![Build](https://github.com/Flowpayup/Flowpay_v1/actions/workflows/build.yml/badge.svg)
+![Build](https://github.com/Flowpayup/Payments-Without-Internet/actions/workflows/build.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
@@ -124,8 +124,8 @@ The pieces worth reading if you're poking around:
 ## Running it
 
 ```bash
-git clone https://github.com/Flowpayup/Flowpay_v1.git
-cd Flowpay_v1
+git clone https://github.com/Flowpayup/Payments-Without-Internet.git
+cd Payments-Without-Internet
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 ./gradlew installDebug
 ```
@@ -138,7 +138,7 @@ If you want to skim the code without running it, the build also works without an
 
 **Signed release build:** copy `keystore.properties.example` to `keystore.properties`, fill in your signing-key details, then run `./gradlew assembleRelease`. The `keystore.properties` file and any `*.jks`/`*.keystore` files are gitignored, so signing material is never committed. Without a keystore, `assembleRelease` stops rather than handing you an unsigned, uninstallable APK — pass `-PallowUnsigned` if that's what you actually want.
 
-**No APK is published here** — this repo ships source, and building it yourself is the supported path. The release signing certificate's SHA-256 fingerprint is nonetheless committed in [SECURITY.md](SECURITY.md), ahead of any release, so that if a signed build ever appears you can check it with `apksigner verify --print-certs <apk>` against a fingerprint that predates it. Any APK claiming to be Flowpay today did not come from this project.
+**Installable APK:** download the signed APK from this repository's [GitHub Releases](https://github.com/Flowpayup/Payments-Without-Internet/releases). Version 1.0.1 is a prerelease until the exact signed build passes the [physical-device checklist](docs/RELEASE_CHECKLIST.md). Before installing, verify its SHA-256 against the attached `SHA256SUMS` and its signing certificate against the fingerprint committed in [SECURITY.md](SECURITY.md). Building from source remains supported.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code style and PR conventions, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the system fits together, [docs/FAQ.md](docs/FAQ.md) for the trust/permissions questions, [docs/TESTING.md](docs/TESTING.md) for how outcomes are verified, [SECURITY.md](SECURITY.md) for vulnerability disclosure, [CHANGELOG.md](CHANGELOG.md) for release history, [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards, and [LEGAL.md](LEGAL.md) for the full terms.
 

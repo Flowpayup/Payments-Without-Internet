@@ -43,8 +43,8 @@ android {
         // versionCode is monotonic and independent of versionName: builds with
         // code 4 exist on test hardware, and Android refuses downgrades, so
         // this only ever goes up even though the public name restarts at 1.0.0.
-        versionCode = 5
-        versionName = "1.0.0"
+        versionCode = 6
+        versionName = "1.0.1"
 
         vectorDrawables {
             useSupportLibrary = true

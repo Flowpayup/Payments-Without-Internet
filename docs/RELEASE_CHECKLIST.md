@@ -1,13 +1,11 @@
 # Release checklist — physical-device gate
 
-> **Status: passed.** This gate has been run end to end against real hardware
-> and a live UPI-linked SIM, including the items no CI can reach — the `*99#`
-> flow, a real IVR payment, and a live QR scan — and every flow works.
+> **Status for the 1.0.1 prerelease: pending.** An earlier build passed this
+> gate on real hardware with a live UPI-linked SIM. The exact 1.0.1 signed APK
+> still needs the checks below before it is treated as a stable release.
 >
-> No APK is distributed — this repository ships source — so the people this
-> gate protects are the ones who clone it and build it themselves. That makes
-> running it the gate, not a formality: build from source and run it yourself
-> before trusting a change with real money.
+> Run the checks on the exact APK attached to the GitHub Release before
+> trusting it with real money.
 
 Layers 1–3 in [TESTING.md](TESTING.md) are hermetic: they run without a SIM
 or a bank, and they can't catch a telco changing `*99#` behavior or a bank
@@ -35,9 +33,8 @@ a lie the next maintainer inherits.
   warning in `MainActivityHelper.warnIfVoiceSimMismatch`).
 - A UPI-linked bank account on that SIM, with a small balance (a few rupees
   covers both real-money checks below).
-- The release-candidate build installed (`./gradlew installRelease` with a
-  keystore configured — see README's "Signed release build"). No APK is
-  published anywhere, including as a GitHub Release; this is the only path.
+- The exact signed release APK installed, either from the GitHub prerelease
+  or via `./gradlew installRelease` with a keystore configured.
 
 ## Checklist
 
