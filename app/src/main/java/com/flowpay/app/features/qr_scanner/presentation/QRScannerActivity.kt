@@ -4,6 +4,7 @@
 package com.flowpay.app.features.qr_scanner.presentation
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipDescription
@@ -19,9 +20,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PersistableBundle
+import android.provider.Settings
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -42,6 +46,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.flowpay.app.FlowpayApplication
 import com.flowpay.app.R
+import com.flowpay.app.constants.AppConstants
 import com.flowpay.app.data.TransactionSource
 import com.flowpay.app.data.UPIData
 import com.flowpay.app.features.qr_scanner.domain.QRCodeAnalyzer
@@ -49,8 +54,11 @@ import com.flowpay.app.features.qr_scanner.domain.QRCodeParser
 import com.flowpay.app.features.qr_scanner.domain.messageFor
 import com.flowpay.app.helpers.SetupHelper
 import com.flowpay.app.helpers.TransactionDetector
+import com.flowpay.app.managers.CallManager
 import com.flowpay.app.managers.PermissionManager
+import com.flowpay.app.payment.PaymentInputValidator
 import com.flowpay.app.payment.PaymentSessionManager
+import com.flowpay.app.services.CallOverlayService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -477,7 +485,11 @@ class QRScannerActivity : ComponentActivity() {
             when (val result = QRCodeParser.parse(qrCode)) {
                 is QRCodeParser.ParseResult.Valid -> {
                     Log.d("QRScanner", "Successfully parsed UPI data")
-                    initiateUSSDPayment(result.data)
+                    if (SetupHelper.isPrimarySimUssdCapable(this)) {
+                        initiateUSSDPayment(result.data)
+                    } else {
+                        initiateJio123Payment(result.data)
+                    }
                 }
                 is QRCodeParser.ParseResult.Invalid -> {
                     Log.w("QRScanner", "QR rejected: ${result.reason.name}")
@@ -496,6 +508,147 @@ class QRScannerActivity : ComponentActivity() {
         // Always proceed with payment - skip amount dialog
         // VPA will be copied to clipboard and USSD will be dialed instantly
         proceedWithPayment(upiData)
+    }
+
+    private fun initiateJio123Payment(upiData: UPIData) {
+        runOnUiThread {
+            if (!isActivityAlive()) return@runOnUiThread
+            val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_jio_qr_payment, null)
+            val tvPayeeName = dialogView.findViewById<TextView>(R.id.tvJioPayeeName)
+            val tvUpiId = dialogView.findViewById<TextView>(R.id.tvJioUpiId)
+            val etPhone = dialogView.findViewById<EditText>(R.id.etJioPhoneNumber)
+            val etAmount = dialogView.findViewById<EditText>(R.id.etJioAmount)
+
+            if (upiData.payeeName.isNotBlank()) {
+                tvPayeeName.text = getString(R.string.qr_jio_payee_prefix, upiData.payeeName)
+                tvPayeeName.visibility = View.VISIBLE
+            } else {
+                tvPayeeName.visibility = View.GONE
+            }
+            tvUpiId.text = getString(R.string.qr_jio_vpa_prefix, upiData.vpa)
+
+            if (upiData.amount.isNotBlank()) {
+                val wholeRupees = upiData.amount.substringBefore('.').trim()
+                etAmount.setText(wholeRupees)
+            }
+
+            var isProceeding = false
+
+            val dialog = AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setPositiveButton(R.string.qr_jio_action_pay, null)
+                .setNegativeButton(R.string.action_cancel) { d, _ ->
+                    d.dismiss()
+                }
+                .setOnDismissListener {
+                    if (!isProceeding) {
+                        resumeScanning()
+                    }
+                }
+                .create()
+
+            dialog.show()
+
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val enteredPhone = etPhone.text.toString().trim()
+                val enteredAmount = etAmount.text.toString().trim()
+
+                if (!PaymentInputValidator.isValidPhoneNumber(enteredPhone)) {
+                    Toast.makeText(this, R.string.qr_jio_error_phone, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                val amountNum = enteredAmount.toLongOrNull()
+                if (amountNum == null ||
+                    amountNum < AppConstants.MIN_AMOUNT_VALUE.toLong() ||
+                    amountNum > AppConstants.UPI123PAY_MAX_AMOUNT.toLong()
+                ) {
+                    Toast.makeText(this, R.string.qr_jio_error_amount, Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                isProceeding = true
+                dialog.dismiss()
+                proceedWithJio123Payment(enteredPhone, enteredAmount, upiData)
+            }
+        }
+    }
+
+    private fun proceedWithJio123Payment(phoneNumber: String, amount: String, upiData: UPIData) {
+        try {
+            Log.d("QRScanner", "=== STARTING JIO 123PAY QR PAYMENT ===")
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.e("QRScanner", "CALL_PHONE permission not granted")
+                callPhonePermissionLauncher.launch(Manifest.permission.CALL_PHONE)
+                return
+            }
+
+            val sessionManager = FlowpayApplication.from(this)?.paymentSessionManager
+            val sessionTxnId = sessionManager?.begin(
+                phoneNumber = phoneNumber,
+                amount = amount,
+                upiId = upiData.vpa,
+                source = TransactionSource.QR
+            )
+
+            try {
+                TransactionDetector.getInstance(this).startOperation(
+                    operationType = "UPI_123",
+                    expectedAmount = amount,
+                    phoneNumber = phoneNumber,
+                    sessionTxnId = sessionTxnId
+                )
+                Log.d("QRScanner", "SMS monitoring started for Jio 123Pay QR payment")
+            } catch (e: IllegalStateException) {
+                Log.e("QRScanner", "Failed to start SMS monitoring: ${e.message}")
+                sessionManager?.onDialFailed("Could not start SMS monitoring")
+                showError(getString(R.string.error_payment_init_failed))
+                return
+            }
+
+            val callManager = CallManager(this)
+            val callSuccess = callManager.initiateUPI123Call(phoneNumber, amount)
+            if (callSuccess) {
+                if (Settings.canDrawOverlays(this)) {
+                    CallOverlayService.showOverlay(this, phoneNumber, amount)
+                }
+                setResult(RESULT_SUCCESS)
+                finish()
+            } else {
+                Log.e("QRScanner", "Failed to initiate UPI123 call")
+                sessionManager?.onDialFailed("Could not start the payment call")
+                TransactionDetector.getInstance(this).stopOperation()
+                showError(getString(R.string.error_call_failed))
+            }
+        } catch (e: Exception) {
+            Log.e("QRScanner", "Unexpected error in proceedWithJio123Payment: ${e.message}", e)
+            showError(getString(R.string.error_unexpected))
+        }
+    }
+
+    private fun resumeScanning() {
+        runOnUiThread {
+            if (!isActivityAlive()) return@runOnUiThread
+            scannerOverlay.visibility = View.VISIBLE
+            bottomActionBar.visibility = View.VISIBLE
+            progressBar.visibility = View.GONE
+            tvStatus.visibility = View.GONE
+            startScanLineAnimation()
+            isProcessingQRCode = false
+            hasDialedUSSD = false
+            if (::cameraExecutor.isInitialized && !cameraExecutor.isShutdown) {
+                imageAnalyzer?.clearAnalyzer()
+                imageAnalyzer?.setAnalyzer(
+                    cameraExecutor,
+                    QRCodeAnalyzer { qrCode ->
+                        processQRCode(qrCode)
+                    }
+                )
+            }
+        }
     }
 
     private fun proceedWithPayment(upiData: UPIData) {

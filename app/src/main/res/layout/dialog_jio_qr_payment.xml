@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@color/surface_card_dark">
+
+    <TextView
+        android:id="@+id/tvJioDialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/qr_jio_confirm_title"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium" />
+
+    <TextView
+        android:id="@+id/tvJioDialogMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/qr_jio_confirm_message"
+        android:textColor="@color/text_secondary_dark"
+        android:textSize="14sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="12dp"
+        android:background="@color/divider_dark" />
+
+    <TextView
+        android:id="@+id/tvJioPayeeName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvJioUpiId"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/text_secondary_dark"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/etJioPhoneNumber"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/instructions_card_bg"
+        android:hint="@string/qr_jio_phone_hint"
+        android:textColorHint="@color/text_secondary_dark"
+        android:textColor="@color/white"
+        android:inputType="phone"
+        android:maxLength="10"
+        android:paddingHorizontal="14dp"
+        android:textSize="15sp"
+        android:importantForAutofill="no" />
+
+    <EditText
+        android:id="@+id/etJioAmount"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/instructions_card_bg"
+        android:hint="@string/qr_jio_amount_hint"
+        android:textColorHint="@color/text_secondary_dark"
+        android:textColor="@color/white"
+        android:inputType="number"
+        android:maxLength="4"
+        android:paddingHorizontal="14dp"
+        android:textSize="15sp"
+        android:importantForAutofill="no" />
+
+</LinearLayout>

@@ -194,6 +194,15 @@
     <string name="qr_step_enter_pin">4. Enter your pin</string>
     <string name="qr_step_press_cancel">5. Press cancel to end session</string>
     <string name="qr_processing">Processing QR code…</string>
+    <string name="qr_jio_confirm_title">Pay via UPI 123Pay</string>
+    <string name="qr_jio_confirm_message">Jio uses UPI 123Pay for offline payments. Enter the recipient\'s 10-digit UPI-linked mobile number:</string>
+    <string name="qr_jio_payee_prefix">Payee: %1$s</string>
+    <string name="qr_jio_vpa_prefix">UPI ID: %1$s</string>
+    <string name="qr_jio_phone_hint">10-digit mobile number</string>
+    <string name="qr_jio_amount_hint">Amount in ₹</string>
+    <string name="qr_jio_action_pay">Pay via 123Pay</string>
+    <string name="qr_jio_error_phone">Enter a valid 10-digit mobile number.</string>
+    <string name="qr_jio_error_amount">Enter a valid amount (up to ₹4,999, whole rupees only).</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>

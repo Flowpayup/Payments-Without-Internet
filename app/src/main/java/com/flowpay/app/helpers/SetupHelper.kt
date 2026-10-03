@@ -50,14 +50,13 @@ class SetupHelper(
 
         /**
          * If scan-to-pay should be blocked, returns a user-facing reason; otherwise null.
-         * Jio is checked before the user-reported flag so the correct message is shown.
+         * On Jio, UPI 123Pay fallback is available so scanning is never blocked.
          */
         fun getScanToPayBlockedMessage(context: Context): String? {
-            if (isScanToPayUssdAvailable(context)) return null
-            if (!isPrimarySimUssdCapable(context)) {
-                return "Scan to pay is not available — Jio does not support *99# USSD payments"
+            if (isPrimarySimUssdCapable(context) && hasUserReportedUssdNotWorking(context)) {
+                return context.getString(R.string.testcfg_ussd_reported_issue)
             }
-            return "Scan to pay is not available — USSD does not work for you on this device, so this feature can't be used."
+            return null
         }
     }
 
