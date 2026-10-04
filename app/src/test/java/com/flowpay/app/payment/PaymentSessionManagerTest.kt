@@ -216,6 +216,23 @@ class PaymentSessionManagerTest {
     }
 
     @Test
+    fun `onSmsConfirmed synchronously completes store confirmation before returning`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "500")
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        // When a broadcast receiver processes an SMS, it needs store.confirmTransaction
+        // to complete before the function returns so that the process is not killed by Android LMK.
+        val confirmedTxnId = manager.onSmsConfirmed(bankSms(amount = "500"))
+
+        assertEquals(txnId, confirmedTxnId)
+        // Store row MUST already be SUCCESS without needing runCurrent() or background scheduler advance
+        assertEquals(TransactionStatus.SUCCESS, store.rows[txnId]?.status)
+    }
+
+    @Test
     fun `call start moves session to InProgress`() = runTest {
         val (manager, _, source) = newManager()
         manager.begin("9876543210", "100")
@@ -446,7 +463,7 @@ class PaymentSessionManagerTest {
         fun race(sms: SimpleTransaction) = Thread {
             try {
                 startGate.await()
-                results.add(manager.onSmsConfirmed(sms))
+                results.add(runBlocking { manager.onSmsConfirmed(sms) })
             } catch (t: Throwable) {
                 failures.add(t)
             } finally {
@@ -789,7 +806,7 @@ class PaymentSessionManagerTest {
                 val barrier = java.util.concurrent.CyclicBarrier(2)
                 val smsThread = Thread {
                     barrier.await()
-                    manager.onSmsConfirmed(bankSms(amount = "500"))
+                    runBlocking { manager.onSmsConfirmed(bankSms(amount = "500")) }
                 }
                 val cancelThread = Thread {
                     barrier.await()
