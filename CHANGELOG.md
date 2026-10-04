@@ -34,6 +34,23 @@ stable release. Its signing certificate matches the fingerprint in
   SMS ingestion path now; the payment-outcome notification is unaffected.
 
 ### Fixed
+- **A failed database encryption upgrade no longer deletes history.** The
+  plaintext database is kept and the upgrade retried on the next launch.
+- **Ending the 123Pay call from the overlay no longer cancels the payment.**
+  The request may already be with the IVR, so the app now waits for the
+  bank's SMS instead of discarding it. The button reads "End call".
+- **A static-QR payment no longer adopts any debit in the window.** An EMI or
+  card debit was recorded as the payment's success. A debit that does not name
+  the scanned payee is now marked Needs review, and one that does is accepted
+  whatever amount was typed into `*99#`.
+- **A bank reference is no longer invented from the SMS text.** Words like
+  "successfully", the bank helpline and masked account numbers were read as
+  the reference.
+- **The result screen no longer shows an internal id as the bank reference.**
+  Pay Contact and Scan QR payments showed a UUID there. It now also names the
+  dialled number when the SMS names no payee.
+- **The history "Bank reference" is the bank's number again.** It carried a
+  `_<timestamp>` suffix from the row key, and the copy button copied it.
 - A failed payment's result screen no longer says "Paid to" — that heading
   now only appears on a genuine success; other outcomes read "To"/"From".
 - The Scan QR waiting screen no longer ends the payment session when it

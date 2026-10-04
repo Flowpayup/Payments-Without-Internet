@@ -17,7 +17,7 @@ Thanks for your interest in contributing. This guide covers everything you need 
 
 ```bash
 git clone <repo-url>
-cd Flowpay_v1
+cd Payments-Without-Internet
 ```
 
 Create `local.properties` at the repo root (it is gitignored):

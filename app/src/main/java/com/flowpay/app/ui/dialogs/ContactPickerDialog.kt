@@ -7,21 +7,16 @@ import android.content.ContentResolver
 import android.database.Cursor
 import android.provider.ContactsContract
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,13 +24,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flowpay.app.R
+import com.flowpay.app.ui.components.LedgerDragHandle
 import com.flowpay.app.ui.theme.FlowpayDarkGray
-import com.flowpay.app.ui.theme.FlowpayLightGray
-import com.flowpay.app.ui.theme.FlowpayMediumGray
-import com.flowpay.app.ui.theme.FlowpayOutlineGray
+import com.flowpay.app.ui.theme.FlowpayInkWarm
+import com.flowpay.app.ui.theme.FlowpayLedgerRule
+import com.flowpay.app.ui.theme.FlowpayMonoStyle
 import com.flowpay.app.ui.theme.FlowpayTextGray
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
-import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -49,8 +44,9 @@ data class Contact(
 )
 
 /**
- * Contact picker dialog that displays a searchable list of contacts
- * Uses Flowpay's dark theme styling
+ * Contact picker — a bottom sheet with a searchable, ledger-styled list of
+ * contacts, matching the same sheet pattern as Pay Contact and Transaction
+ * Detail rather than a centered dialog.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +59,7 @@ fun ContactPickerDialog(
     var filteredContacts by remember { mutableStateOf<List<Contact>>(emptyList()) }
     var searchQuery by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Load contacts when dialog opens
     LaunchedEffect(Unit) {
@@ -92,166 +89,134 @@ fun ContactPickerDialog(
         }
     }
 
-    AlertDialog(
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        modifier = Modifier.fillMaxHeight(0.8f),
+        sheetState = sheetState,
         containerColor = FlowpayDarkGray,
-        title = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Select Contact",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                IconButton(onClick = onDismiss) {
+        dragHandle = { LedgerDragHandle() }
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f)) {
+            Text(
+                stringResource(R.string.contacts_select_title),
+                color = FlowpayInkWarm,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Search bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 16.dp),
+                placeholder = {
+                    Text(stringResource(R.string.contacts_search_hint), color = FlowpayTextGray)
+                },
+                leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
                         tint = FlowpayTextLightGray
                     )
-                }
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Search bar
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
+                },
+                shape = com.flowpay.app.ui.theme.FlowpayRecordShape,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = FlowpayInkWarm,
+                    unfocusedTextColor = FlowpayInkWarm,
+                    focusedBorderColor = FlowpayInkWarm,
+                    unfocusedBorderColor = FlowpayLedgerRule,
+                    cursorColor = FlowpayInkWarm,
+                    focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
+                ),
+                singleLine = true
+            )
+
+            // Contacts list
+            if (isLoading) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    placeholder = {
-                        Text(stringResource(R.string.contacts_search_hint), color = FlowpayTextGray)
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = FlowpayTextLightGray
-                        )
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = FlowpayOutlineGray,
-                        unfocusedBorderColor = FlowpayLightGray,
-                        cursorColor = LocalFlowpayAccentTheme.current.accent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
-                    ),
-                    singleLine = true
-                )
-
-                // Contacts list
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = LocalFlowpayAccentTheme.current.accent)
-                    }
-                } else if (filteredContacts.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = if (searchQuery.isEmpty()) {
-                                "No contacts found"
-                            } else {
-                                "No matches for \"$searchQuery\""
+                        .height(300.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = FlowpayLedgerRule)
+                }
+            } else if (filteredContacts.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (searchQuery.isEmpty()) {
+                            "No contacts found"
+                        } else {
+                            "No matches for \"$searchQuery\""
+                        },
+                        color = FlowpayTextGray,
+                        fontSize = 16.sp
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    contentPadding = PaddingValues(bottom = 32.dp)
+                ) {
+                    itemsIndexed(filteredContacts) { index, contact ->
+                        ContactItem(
+                            contact = contact,
+                            onClick = {
+                                onContactSelected(contact)
+                                onDismiss()
                             },
-                            color = FlowpayTextGray,
-                            fontSize = 16.sp
+                            showDivider = index < filteredContacts.lastIndex
                         )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(400.dp)
-                    ) {
-                        items(filteredContacts) { contact ->
-                            ContactItem(
-                                contact = contact,
-                                onClick = {
-                                    onContactSelected(contact)
-                                    onDismiss()
-                                }
-                            )
-                        }
                     }
                 }
             }
-        },
-        confirmButton = {}
-    )
+        }
+    }
 }
 
 /**
- * Individual contact item in the list
+ * Individual contact item — a ledger row (plain ink initial, hairline
+ * divider) rather than a rounded card with a colored circular avatar.
  */
 @Composable
 fun ContactItem(
     contact: Contact,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    showDivider: Boolean = true
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = FlowpayMediumGray
-        )
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .clickable { onClick() }
+                .padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Contact icon
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = LocalFlowpayAccentTheme.current.accent.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(20.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = LocalFlowpayAccentTheme.current.accent,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            Text(
+                text = contact.name.first().uppercase(),
+                color = FlowpayLedgerRule,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.width(28.dp)
+            )
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Contact details
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = contact.name,
-                    color = Color.White,
-                    fontSize = 16.sp,
+                    color = FlowpayInkWarm,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -259,12 +224,12 @@ fun ContactItem(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = contact.phoneNumber,
-                    color = FlowpayTextLightGray,
-                    fontSize = 14.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    style = FlowpayMonoStyle.copy(fontSize = 12.sp, color = FlowpayTextLightGray)
                 )
             }
+        }
+        if (showDivider) {
+            HorizontalDivider(thickness = 1.dp, color = FlowpayLedgerRule.copy(alpha = 0.4f))
         }
     }
 }

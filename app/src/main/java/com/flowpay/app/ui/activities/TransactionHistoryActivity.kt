@@ -12,12 +12,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -29,7 +29,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,13 +39,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowpay.app.R
 import com.flowpay.app.data.Transaction
 import com.flowpay.app.ui.components.TransactionDetailDialog
-import com.flowpay.app.ui.theme.BlueAccentTheme
-import com.flowpay.app.ui.theme.FlowpayDarkGray
-import com.flowpay.app.ui.theme.FlowpayMediumGray
 import com.flowpay.app.ui.theme.FlowpayStatusError
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.FlowpayTheme
-import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import com.flowpay.app.ui.theme.statusColor
 import com.flowpay.app.utils.CurrencyFormat
 import com.flowpay.app.viewmodel.TransactionViewModel
@@ -85,12 +80,10 @@ class TransactionHistoryActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_Flowpay)
         setContent {
-            CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
-                FlowpayTheme {
-                    TransactionHistoryScreen(
-                        onBackClick = { finish() }
-                    )
-                }
+            FlowpayTheme {
+                TransactionHistoryScreen(
+                    onBackClick = { finish() }
+                )
             }
         }
     }
@@ -153,8 +146,6 @@ fun TransactionHistoryScreen(
         grouped
     }
 
-    val accent = LocalFlowpayAccentTheme.current
-
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.Black
@@ -175,32 +166,24 @@ fun TransactionHistoryScreen(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ═══ COMPACT HEADER ═══
-                Box(
+                // ═══ HEADER — flat, hairline-ruled, not a gradient card ═══
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    accent.headerGradientStart,
-                                    accent.headerGradientEnd
-                                )
-                            )
-                        )
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Back button
+                        // Back button — squared, bordered
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.22f))
+                                .clip(RoundedCornerShape(6.dp))
+                                .border(1.dp, com.flowpay.app.ui.theme.FlowpayLedgerRule, RoundedCornerShape(6.dp))
                                 .clickable(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
@@ -210,7 +193,7 @@ fun TransactionHistoryScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = stringResource(R.string.history_back),
-                                tint = Color.White,
+                                tint = com.flowpay.app.ui.theme.FlowpayInkWarm,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -219,25 +202,18 @@ fun TransactionHistoryScreen(
 
                         Text(
                             text = stringResource(R.string.history_title),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            letterSpacing = 0.3.sp,
+                            style = com.flowpay.app.ui.theme.FlowpayDisplayStyle,
+                            fontSize = 19.sp,
+                            color = com.flowpay.app.ui.theme.FlowpayInkWarm,
                             modifier = Modifier.weight(1f)
                         )
 
-                        // Search button
+                        // Search button — squared, bordered
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (showSearchBar) {
-                                        Color.White.copy(alpha = 0.35f)
-                                    } else {
-                                        Color.White.copy(alpha = 0.22f)
-                                    }
-                                )
+                                .clip(RoundedCornerShape(6.dp))
+                                .border(1.dp, com.flowpay.app.ui.theme.FlowpayLedgerRule, RoundedCornerShape(6.dp))
                                 .clickable(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
@@ -247,11 +223,15 @@ fun TransactionHistoryScreen(
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = stringResource(R.string.history_search),
-                                tint = Color.White,
+                                tint = com.flowpay.app.ui.theme.FlowpayInkWarm,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
                     }
+                    HorizontalDivider(
+                        thickness = 1.dp,
+                        color = com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -297,14 +277,14 @@ fun TransactionHistoryScreen(
                             }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = accent.primary,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedContainerColor = FlowpayDarkGray,
-                            unfocusedContainerColor = FlowpayDarkGray
+                            focusedTextColor = com.flowpay.app.ui.theme.FlowpayInkWarm,
+                            unfocusedTextColor = com.flowpay.app.ui.theme.FlowpayInkWarm,
+                            focusedBorderColor = com.flowpay.app.ui.theme.FlowpayInkWarm,
+                            unfocusedBorderColor = com.flowpay.app.ui.theme.FlowpayLedgerRule,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
                         ),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = com.flowpay.app.ui.theme.FlowpayRecordShape,
                         singleLine = true
                     )
                 }
@@ -319,9 +299,9 @@ fun TransactionHistoryScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(32.dp),
-                                color = accent.headerGradientStart,
-                                strokeWidth = 3.dp
+                                modifier = Modifier.size(28.dp),
+                                color = com.flowpay.app.ui.theme.FlowpayLedgerRule,
+                                strokeWidth = 2.dp
                             )
                         }
                     }
@@ -333,32 +313,24 @@ fun TransactionHistoryScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(64.dp)
-                                        .clip(CircleShape)
-                                        .background(FlowpayMediumGray),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.History,
-                                        contentDescription = null,
-                                        tint = FlowpayStatusError,
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = null,
+                                    tint = FlowpayStatusError,
+                                    modifier = Modifier.size(32.dp)
+                                )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Something went wrong",
+                                    text = stringResource(R.string.history_error_title),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color.White
+                                    color = com.flowpay.app.ui.theme.FlowpayInkWarm
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 TextButton(onClick = { transactionViewModel.refresh() }) {
                                     Text(
-                                        "Retry",
-                                        color = accent.primary,
+                                        stringResource(R.string.action_retry),
+                                        color = com.flowpay.app.ui.theme.FlowpayInkWarm,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium
                                     )
@@ -374,37 +346,29 @@ fun TransactionHistoryScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(64.dp)
-                                        .clip(CircleShape)
-                                        .background(FlowpayMediumGray),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.History,
-                                        contentDescription = null,
-                                        tint = FlowpayTextLightGray,
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = null,
+                                    tint = FlowpayTextLightGray,
+                                    modifier = Modifier.size(32.dp)
+                                )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
                                     text = if (searchQuery.isNotEmpty()) {
-                                        "No matching transactions"
+                                        stringResource(R.string.history_no_matching)
                                     } else {
-                                        "No transactions yet"
+                                        stringResource(R.string.history_no_transactions)
                                     },
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color.White
+                                    color = com.flowpay.app.ui.theme.FlowpayInkWarm
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = if (searchQuery.isNotEmpty()) {
-                                        "Try a different search"
+                                        stringResource(R.string.history_try_different_search)
                                     } else {
-                                        "Transactions will appear here"
+                                        stringResource(R.string.history_transactions_placeholder)
                                     },
                                     fontSize = 13.sp,
                                     color = FlowpayTextLightGray
@@ -441,9 +405,8 @@ fun TransactionHistoryScreen(
                                     )
                                     if (index < transactions.lastIndex) {
                                         HorizontalDivider(
-                                            modifier = Modifier.padding(start = 52.dp),
-                                            thickness = 0.5.dp,
-                                            color = FlowpayDarkGray
+                                            thickness = 1.dp,
+                                            color = com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f)
                                         )
                                     }
                                 }
@@ -475,7 +438,6 @@ private fun TransactionHistoryItem(
     transaction: Transaction,
     onClick: () -> Unit
 ) {
-    val accent = LocalFlowpayAccentTheme.current
     val displayName = transaction.recipientName?.takeIf { it.isNotEmpty() }
         ?: transaction.phoneNumber?.takeIf { it.isNotEmpty() }
         ?: "Unknown"
@@ -491,9 +453,14 @@ private fun TransactionHistoryItem(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TransactionAvatar(initial)
-
-        Spacer(modifier = Modifier.width(12.dp))
+        // Plain ink initial — no colored circular avatar.
+        Text(
+            text = initial.toString(),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = com.flowpay.app.ui.theme.FlowpayLedgerRule,
+            modifier = Modifier.width(28.dp)
+        )
 
         // Name + time
         Column(modifier = Modifier.weight(1f)) {
@@ -501,29 +468,31 @@ private fun TransactionHistoryItem(
                 text = displayName,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.White,
+                color = com.flowpay.app.ui.theme.FlowpayInkWarm,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = formatTime(transaction.timestamp),
-                fontSize = 13.sp,
-                color = FlowpayTextLightGray,
+                style = com.flowpay.app.ui.theme.FlowpayMonoStyle.copy(
+                    fontSize = 12.sp,
+                    color = FlowpayTextLightGray
+                ),
                 maxLines = 1
             )
         }
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Amount + status pill: the outcome must be readable at a glance, so
+        // Amount + status word: the outcome must be readable at a glance, so
         // SUCCESS and UNVERIFIED never look identical in the list.
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 text = stringResource(R.string.amount_rupees, CurrencyFormat.inr(transaction.amount)),
                 fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                color = com.flowpay.app.ui.theme.FlowpayInkWarm,
                 maxLines = 1
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -533,35 +502,13 @@ private fun TransactionHistoryItem(
 }
 
 @Composable
-private fun TransactionAvatar(initial: Char) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(FlowpayDarkGray),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = initial.toString(),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.White
-        )
-    }
-}
-
-@Composable
 private fun StatusPill(status: String) {
     val statusColor = statusColor(status)
     Text(
         text = stringResource(statusLabelRes(status)),
         fontSize = 11.sp,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,
         color = statusColor,
-        maxLines = 1,
-        modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(statusColor.copy(alpha = 0.15f))
-            .padding(horizontal = 8.dp, vertical = 2.dp)
+        maxLines = 1
     )
 }

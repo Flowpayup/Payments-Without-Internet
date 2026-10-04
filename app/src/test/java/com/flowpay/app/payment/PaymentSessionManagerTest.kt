@@ -97,7 +97,7 @@ class PaymentSessionManagerTest {
                 ?: return 0
             rows[transactionId] = row.copy(
                 status = status,
-                bankRef = parsed.transactionId,
+                bankRef = parsed.bankRef,
                 bankName = parsed.bankName,
                 smsExcerpt = parsed.smsExcerpt,
                 // Mirrors the DAO: sparser SMS data never erases known values;
@@ -145,13 +145,14 @@ class PaymentSessionManagerTest {
         amount: String = "100",
         transactionType: String = "DEBIT"
     ) = SimpleTransaction(
-        transactionId = "HDFC123456",
+        transactionId = "HDFC123456_0",
         amount = amount,
         status = status,
         bankName = "HDFC Bank",
         smsExcerpt = "₹$amount debited — HDFC Bank · Ref HDFC123456",
         timestamp = 0L,
-        transactionType = transactionType
+        transactionType = transactionType,
+        bankRef = "HDFC123456"
     )
 
     @Test
@@ -569,6 +570,42 @@ class PaymentSessionManagerTest {
         assertTrue(manager.paymentState.value is PaymentState.Cancelled)
         assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
         assertEquals("coordinator must be released on terminal state", 1, source.releaseCount)
+    }
+
+    // The overlay only shows once the call is connected, by which point the
+    // DTMF request may already be with the IVR. Ending the call there must
+    // leave the session waiting for the bank's SMS, or a PIN entered on the
+    // bank's callback moves money that the app has already called cancelled.
+    @Test
+    fun `ending a connected call waits for the bank instead of cancelling`() = runTest {
+        val (manager, store, source) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+        source.callStarted(at = testScheduler.currentTime)
+        runCurrent()
+
+        manager.onUserEndedCall()
+        runCurrent()
+
+        assertTrue(manager.paymentState.value is PaymentState.WaitingForVerification)
+        assertEquals(TransactionStatus.PENDING, store.rows[txnId]!!.status)
+
+        assertEquals(txnId, manager.onSmsConfirmed(bankSms()))
+        runCurrent()
+        assertEquals(TransactionStatus.SUCCESS, store.rows[txnId]!!.status)
+    }
+
+    @Test
+    fun `ending the call before it connects still cancels`() = runTest {
+        val (manager, store, _) = newManager()
+        val txnId = manager.begin("9876543210", "100")!!
+        runCurrent()
+
+        manager.onUserEndedCall()
+        runCurrent()
+
+        assertTrue(manager.paymentState.value is PaymentState.Cancelled)
+        assertEquals(TransactionStatus.CANCELLED, store.rows[txnId]!!.status)
     }
 
     @Test

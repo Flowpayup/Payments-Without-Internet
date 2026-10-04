@@ -91,3 +91,35 @@ fun statusColor(status: String): Color = when (status.uppercase()) {
     "PENDING", "NEEDS_REVIEW" -> FlowpayStatusWarning
     else -> FlowpayStatusNeutral // UNVERIFIED, CANCELLED, unknown
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// "Bank-Stamped" ledger tokens.
+//
+// Flowpay's trust comes from reading like an official bank record, not a
+// consumer fintech dashboard — so this palette is deliberately NOT another
+// bright-blue-gradient-on-black scheme. The brand blue is demoted to a
+// desaturated structural rule color (dividers, ledger lines); a single
+// reserved seal red carries verification stamps and reference numbers only,
+// never ordinary buttons. Additive to the tokens above — nothing existing
+// is removed or repointed.
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Warm, slightly-off-white ink — replaces flat pure white as primary text
+ *  on the ledger surfaces so long reading sessions feel like paper, not a
+ *  screen. */
+val FlowpayInkWarm = Color(0xFFF5F3EE)
+
+/** Desaturated structural blue: ledger-line dividers, hairline rules,
+ *  reference-row separators. Never used as a fill or a button color. */
+val FlowpayLedgerRule = Color(0xFF3A4A5E)
+
+/** Same rule color at low alpha, for use as a `Color` directly (e.g. border
+ *  strokes) where a copy(alpha=) call on a Compose color is inconvenient. */
+val FlowpayLedgerRuleFaint = Color(0xFF2A333F)
+
+/** The one reserved accent: verification seals and bank/reference serials.
+ *  Deliberately never used for a primary action button. */
+val FlowpaySeal = Color(0xFFB3453D)
+
+/** Dimmer seal tone for borders/backgrounds at rest. */
+val FlowpaySealDim = Color(0xFF7A3530)

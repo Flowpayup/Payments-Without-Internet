@@ -360,7 +360,7 @@ class QRScannerActivity : ComponentActivity() {
             Log.w("QRScanner", "Camera permission denied")
             Toast.makeText(
                 this,
-                "Camera permission is required for QR scanning",
+                R.string.error_camera_permission_qr,
                 Toast.LENGTH_LONG
             ).show()
             setResult(RESULT_ERROR)
@@ -553,7 +553,9 @@ class QRScannerActivity : ComponentActivity() {
         val sessionManager = FlowpayApplication.from(this)?.paymentSessionManager
         val sessionTxnId = sessionManager?.begin(
             phoneNumber = "",
-            amount = upiData.amount ?: "",
+            // The amount is typed into the USSD menu, not taken from the QR,
+            // so the row starts without one and is filled from the bank SMS.
+            amount = "",
             upiId = upiData.vpa,
             source = TransactionSource.QR
         )
@@ -564,7 +566,8 @@ class QRScannerActivity : ComponentActivity() {
             TransactionDetector.getInstance(this).startOperation(
                 operationType = "QR_SCAN",
                 expectedAmount = upiData.amount,
-                sessionTxnId = sessionTxnId
+                sessionTxnId = sessionTxnId,
+                expectedPayeeVpa = upiData.vpa
             )
             Log.d("QRScanner", "SMS monitoring started for QR payment")
             true
@@ -778,17 +781,20 @@ class QRScannerActivity : ComponentActivity() {
 
             // Hide USSD overlay
 
-            // Stop SMS monitoring
-            try {
-                TransactionDetector.getInstance(this).stopOperation()
-                Log.d("QRScanner", "SMS monitoring stopped")
-            } catch (e: Exception) {
-                Log.e("QRScanner", "Failed to stop SMS monitoring: ${e.message}")
-            }
-
-            // The user explicitly aborted: mark the session row CANCELLED so
-            // it doesn't linger PENDING waiting for a payment nobody made.
-            FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
+            // Settle the session first and unconditionally, exactly like the
+            // 123Pay overlay's own terminate button: once the *99# call has
+            // connected, the USSD menu selections (and this scan's payee)
+            // may already be with the bank, so tapping Terminate cannot
+            // withdraw them. A connected call moves to WaitingForVerification
+            // instead of CANCELLED, which — via PaymentWindowObserver — keeps
+            // the SMS window open for the bank's real confirmation rather
+            // than closing it out from under it. Only a call that never
+            // connected is actually cancelled. Do NOT also call
+            // TransactionDetector.stopOperation() here: the window's closure
+            // is a reactive side effect of PaymentState.Cancelled
+            // (PaymentWindowObserver), not something this call site should
+            // force unconditionally.
+            FlowpayApplication.from(this)?.paymentSessionManager?.onUserEndedCall()
 
             // Show termination message briefly
             runOnUiThread {
@@ -1159,16 +1165,20 @@ class QRScannerActivity : ComponentActivity() {
             hasDialedUSSD = false
 
             // Leaving this screen with a payment still in flight (system back,
-            // recents swipe) abandons it — end the session so the SMS window
-            // closes with it and the next scan isn't refused as "already in
-            // progress". A no-op once the session reached a terminal state,
-            // and `isFinishing` keeps a config change from cancelling a live
-            // payment. `finishedByWaitingScreenTimeout` excludes the one exit
-            // that is NOT the user abandoning anything: our own waiting-screen
-            // timer giving the screen back on its own timeout while the
-            // payment is still legitimately in flight.
+            // recents swipe) abandons it — settle the session so the next
+            // scan isn't refused as "already in progress". A no-op once the
+            // session reached a terminal state, and `isFinishing` keeps a
+            // config change from cancelling a live payment.
+            // `finishedByWaitingScreenTimeout` excludes the one exit that is
+            // NOT the user abandoning anything: our own waiting-screen timer
+            // giving the screen back on its own timeout while the payment is
+            // still legitimately in flight. onUserEndedCall(), not
+            // onUserCancelled(): if the *99# call already connected, the USSD
+            // menu selections may already be with the bank, so abandoning the
+            // screen must wait for its SMS (WaitingForVerification) rather
+            // than mark it CANCELLED and drop a real confirmation.
             if (isFinishing && !finishedByWaitingScreenTimeout) {
-                FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
+                FlowpayApplication.from(this)?.paymentSessionManager?.onUserEndedCall()
             }
 
             // Wipe the payee VPA from the clipboard now the flow is over.

@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- "Bank-Stamped" success mark: a ring (annulus), not a filled gradient
+     disc — the checkmark sits inside an open seal, like a rubber stamp
+     impression, rather than a solid colored badge. useLevel="false" is
+     required for a ring shape used as a plain background; Android's ring
+     drawable defaults to a level-based reveal (from its LevelListDrawable
+     heritage) and renders invisible without it. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="oval">
-    <gradient
-        android:startColor="#5E97D1"
-        android:endColor="#4A7BB5"
-        android:angle="45" />
+    android:shape="ring"
+    android:innerRadiusRatio="1.36"
+    android:thicknessRatio="4.3"
+    android:useLevel="false">
+    <solid android:color="@color/flowpay_green" />
 </shape>

@@ -1,43 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- The whole screen — status, amount, card AND the action button — is one
+     column, with the leftover height shared out between its seams rather
+     than pooled anywhere.
+
+     The content is short and the screen is tall, so there is always slack
+     to put somewhere, and every fixed arrangement dumps it in one place:
+     pinning the button to the bottom left 175dp of dead black between card
+     and button; centring the column instead left a tight cluster with
+     ~119dp voids above and below it.
+
+     So the seams are weighted instead. The margins below are minimums —
+     what the spacing collapses to when there is nothing to share — and the
+     four <Space> views split whatever the screen has left over equally, so
+     the page breathes at every seam at once. It self-balances across both
+     the SUCCESS and FAILED heights (the explainer is worth ~52dp) and
+     across screen sizes, with no per-device numbers to maintain.
+
+     Being a ScrollView also removes a real failure mode: on a short screen
+     the tallest state (FAILED, with explainer, recipient and UPI rows all
+     visible) overran a bottom-pinned button, and a RelativeLayout has no
+     way to recover from that — the rows simply disappeared underneath it.
+     Here the spacers collapse to nothing, the minimums hold, and it
+     scrolls.
+
+     No RelativeLayout wrapper: this ScrollView is the sole top-level view,
+     so its former RelativeLayout parent's background/fitsSystemWindows live
+     here directly instead. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
-    android:fitsSystemWindows="true">
-
-    <!-- The whole screen — status, amount, card AND the action button — is one
-         column, with the leftover height shared out between its seams rather
-         than pooled anywhere.
-
-         The content is short and the screen is tall, so there is always slack
-         to put somewhere, and every fixed arrangement dumps it in one place:
-         pinning the button to the bottom left 175dp of dead black between card
-         and button; centring the column instead left a tight cluster with
-         ~119dp voids above and below it.
-
-         So the seams are weighted instead. The margins below are minimums —
-         what the spacing collapses to when there is nothing to share — and the
-         four <Space> views split whatever the screen has left over equally, so
-         the page breathes at every seam at once. It self-balances across both
-         the SUCCESS and FAILED heights (the explainer is worth ~52dp) and
-         across screen sizes, with no per-device numbers to maintain.
-
-         Being a ScrollView also removes a real failure mode: on a short screen
-         the tallest state (FAILED, with explainer, recipient and UPI rows all
-         visible) overran a bottom-pinned button, and a RelativeLayout has no
-         way to recover from that — the rows simply disappeared underneath it.
-         Here the spacers collapse to nothing, the minimums hold, and it
-         scrolls. -->
-    <ScrollView
-        android:id="@+id/content_scroll"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
-        android:fillViewport="true"
-        android:scrollbars="none"
-        android:overScrollMode="never">
+    android:fitsSystemWindows="true"
+    android:fillViewport="true"
+    android:scrollbars="none"
+    android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -131,7 +130,7 @@
                 android:layout_weight="1" />
 
             <!-- Transaction Details Card -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_details"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -139,7 +138,9 @@
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="24dp"
                 app:cardBackgroundColor="@color/surface_deep_dark"
-                app:cardCornerRadius="16dp"
+                app:cardCornerRadius="8dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/flowpay_ledger_rule"
                 app:cardElevation="0dp">
 
                 <LinearLayout
@@ -209,8 +210,9 @@
 
                     </LinearLayout>
 
-                    <!-- Transaction ID Row -->
+                    <!-- Bank Reference Row -->
                     <LinearLayout
+                        android:id="@+id/layout_bank_ref"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
@@ -231,9 +233,9 @@
                             android:gravity="end"
                             android:layout_marginStart="12dp"
                             tools:text="TXN123456"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/flowpay_seal"
                             android:textSize="14sp"
-                            android:fontFamily="sans-serif-medium"
+                            android:fontFamily="monospace"
                             android:ellipsize="middle"
                             android:maxLines="1" />
 
@@ -298,7 +300,7 @@
 
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <Space
                 android:layout_width="match_parent"
@@ -330,6 +332,4 @@
 
         </LinearLayout>
 
-    </ScrollView>
-
-</RelativeLayout>
+</ScrollView>

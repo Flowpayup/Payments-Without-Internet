@@ -53,6 +53,13 @@
     <string name="error_payment_not_started">The payment could not be started. Please try again.</string>
     <string name="error_call_permission_required_ussd">Phone call permission is required to test USSD.</string>
     <string name="error_call_permission_required_payments">Phone call permission is required for USSD payments.</string>
+    <string name="error_camera_permission_qr">Camera permission is required for QR scanning</string>
+    <string name="error_sms_permission_required">SMS permission is required to detect payment confirmations</string>
+    <string name="error_contacts_unavailable">Unable to open contacts from this screen.</string>
+    <string name="error_call_permission_required_manual">Phone call permission is required for manual payments. Please grant permission in Settings.</string>
+    <string name="error_overlay_permission_required">Overlay permission required for call protection. Please grant permission in Settings.</string>
+    <string name="error_overlay_failed">Failed to show call protection overlay. Please try again.</string>
+    <string name="error_end_call_failed">Unable to end the call automatically. Please hang up manually.</string>
     <string name="error_qr_processing">Could not read that QR code. Please try again.</string>
     <string name="error_qr_invalid_vpa">That is not a valid UPI QR code.</string>
     <string name="error_ussd_call_failed">Could not start the USSD call.</string>
@@ -161,7 +168,7 @@
     <string name="overlay_amount">Amount</string>
     <string name="overlay_to">To</string>
     <string name="overlay_audio_muted">Call volume lowered</string>
-    <string name="overlay_terminate">Cancel payment</string>
+    <string name="overlay_terminate">End call</string>
     <string name="overlay_connecting">Connecting to the UPI service…</string>
     <string name="overlay_sending_request">Sending your payment request…</string>
     <string name="overlay_pin_notice">Flowpay never asks for your UPI PIN. Your bank will call you — enter your PIN on that call.</string>
@@ -200,9 +207,15 @@
     <string name="settings_back">Back</string>
     <string name="settings_not_set">Not set</string>
     <string name="settings_clear_data_title">Clear App Data</string>
+    <string name="settings_clear_data_confirm_body">This permanently deletes your entire transaction history and resets all settings, then returns you to the setup screen. This cannot be undone.</string>
+    <string name="settings_permission_granted">Granted</string>
+    <string name="settings_permission_grant">Grant</string>
+    <string name="settings_select_bank">Select Bank</string>
+    <string name="settings_select_primary_sim">Select Primary SIM</string>
 
     <!-- Contact picker -->
     <string name="contacts_search_hint">Search contacts…</string>
+    <string name="contacts_select_title">Select Contact</string>
 
     <!-- Home screen -->
     <string name="home_field_mobile_label">Mobile Number</string>
@@ -214,6 +227,20 @@
     <!-- Shown on the Scan QR button while the *99# test has not passed, the
          same way Pay Contact reads "Set up UPI 123 IVR" before its test. -->
     <string name="home_setup_ussd">Set up *99#</string>
+    <string name="home_pay_contact">Pay Contact</string>
+    <string name="home_setup_upi123">Set up UPI 123 IVR</string>
+    <string name="home_wordmark">Flowpay</string>
+    <string name="home_tagline">Payments Without Internet</string>
+    <string name="home_recent_payments_title">Recent Payments</string>
+    <string name="home_recent_payments_subtitle">Your latest transactions</string>
+    <string name="home_view_all">View all</string>
+    <string name="home_loading_transactions">Loading transactions…</string>
+    <string name="home_failed_to_load">Failed to load transactions</string>
+    <string name="home_no_transactions_yet">No transactions yet</string>
+    <string name="home_payment_history_placeholder">Your payment history will appear here</string>
+    <string name="home_unknown_error">Unknown error</string>
+    <string name="home_sending_to">Sending to: %1$s</string>
+    <string name="action_retry">Retry</string>
 
     <!-- Setup screen -->
     <string name="setup_step_1_of_2">Step 1 of 2</string>
@@ -228,6 +255,7 @@
 
     <!-- Connectivity test screen -->
     <string name="testcfg_consent_title">Start a real call?</string>
+    <string name="testcfg_consent_message">This places a real call to your carrier\'s *99# / UPI 123 service to check setup on your SIM. Standard call or USSD charges from your operator may apply.</string>
     <string name="testcfg_back">Back</string>
     <string name="testcfg_back_to_setup">Back to Setup</string>
     <string name="testcfg_set_up">Set up</string>
@@ -235,12 +263,27 @@
     <string name="testcfg_ussd_reported_issue">You reported USSD didn\'t work — scan to pay is off. Tap to try setup again.</string>
     <string name="testcfg_enable_scan_payments">Enable pay via scanning payments</string>
     <string name="testcfg_enable_manual_payments">Enable manual payment entries</string>
+    <string name="testcfg_header_title">Test Configuration</string>
+    <string name="testcfg_step_2_of_2">Step 2 of 2</string>
+    <string name="testcfg_header_subtitle">Complete these tests to verify your payment methods work correctly</string>
+    <string name="testcfg_instructions_title">Configure Payment Methods</string>
+    <string name="testcfg_instructions_body">We\'ll test both scanning and manual payment methods to ensure everything works smoothly</string>
+    <string name="testcfg_continue_all_passed">All Tests Passed! Continue</string>
+    <string name="testcfg_continue_partial">Continue with partial setup</string>
+    <string name="testcfg_continue_incomplete">Complete tests to continue</string>
+    <string name="testcfg_skip_for_now">Skip for now — payments may not work until tests pass</string>
+    <string name="testcfg_unsupported_glyph">!</string>
 
     <!-- Transaction history screen -->
     <string name="history_title">Transactions</string>
     <string name="history_back">Back</string>
     <string name="history_search">Search</string>
     <string name="history_search_placeholder">Search by name or number…</string>
+    <string name="history_error_title">Something went wrong</string>
+    <string name="history_no_matching">No matching transactions</string>
+    <string name="history_no_transactions">No transactions yet</string>
+    <string name="history_try_different_search">Try a different search</string>
+    <string name="history_transactions_placeholder">Transactions will appear here</string>
     <string name="history_group_today">Today</string>
     <string name="history_group_yesterday">Yesterday</string>
     <string name="history_group_this_week">This Week</string>
@@ -248,7 +291,8 @@
     <!-- Transaction detail dialog -->
     <string name="detail_title">Transaction Details</string>
     <string name="detail_delete_confirm_title">Delete this transaction?</string>
-    <string name="detail_close">Close</string>
+    <string name="detail_delete_confirm_body">This removes the record from your history on this device. It cannot be undone and does not affect the actual payment.</string>
+    <string name="detail_register_label">Official transaction register</string>
     <string name="detail_label_recipient">Recipient</string>
     <string name="detail_label_phone_number">Phone Number</string>
     <string name="detail_bank_confirmation">Bank Confirmation</string>
@@ -257,7 +301,6 @@
     <!-- USSD setup progress dialog -->
     <string name="ussd_dlg_initializing">Initializing…</string>
     <string name="ussd_dlg_cd_ussd_setup">USSD Setup</string>
-    <string name="ussd_dlg_cd_close">Close</string>
     <string name="ussd_dlg_setup_complete_title">Setup Complete?</string>
     <string name="ussd_dlg_setting_up_title">Setting Up Your Payment System</string>
     <string name="ussd_dlg_setup_complete_body">Did you complete the *99# setup?\n\nThis enables seamless payment scanning.</string>
@@ -269,7 +312,6 @@
 
     <!-- UPI 123 setup progress dialog -->
     <string name="upi123_dlg_setup_icon_desc">UPI123 Setup</string>
-    <string name="upi123_dlg_close">Close</string>
     <string name="upi123_dlg_setup_complete_title">Setup Complete?</string>
     <string name="upi123_dlg_setting_up_title">Setting Up UPI123</string>
     <string name="upi123_dlg_setup_complete_message">Did you complete the UPI123 setup?\n\nThis enables manual payment entries.</string>

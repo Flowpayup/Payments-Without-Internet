@@ -5,17 +5,11 @@ package com.flowpay.app.ui.dialogs
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.res.stringResource
@@ -23,16 +17,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.flowpay.app.R
-import com.flowpay.app.ui.theme.FlowpayAccentGreen
+import com.flowpay.app.ui.components.LedgerDragHandle
 import com.flowpay.app.ui.theme.FlowpayDarkGray
-import com.flowpay.app.ui.theme.FlowpayLightGray
+import com.flowpay.app.ui.theme.FlowpayInkWarm
+import com.flowpay.app.ui.theme.FlowpayLedgerRule
+import com.flowpay.app.ui.theme.FlowpaySurfaceDim
 import com.flowpay.app.ui.theme.FlowpayTextGray
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import kotlinx.coroutines.delay
 
+/**
+ * UPI 123Pay setup/test progress — a bottom sheet matching the rest of the
+ * app's modal pattern, instead of a centered dialog.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Upi123ProgressDialog(
     isVisible: Boolean,
@@ -42,30 +41,29 @@ fun Upi123ProgressDialog(
     onDismiss: () -> Unit = {}
 ) {
     if (isVisible) {
-        Dialog(
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
             onDismissRequest = onDismiss,
-            properties = DialogProperties(
-                dismissOnBackPress = true,
-                dismissOnClickOutside = false,
-                usePlatformDefaultWidth = false
-            )
+            sheetState = sheetState,
+            containerColor = FlowpayDarkGray,
+            dragHandle = { LedgerDragHandle() }
         ) {
             Upi123ProgressDialogContent(
                 showConfigurationOptions = showConfigurationOptions,
                 onConfigured = onConfigured,
-                onNotConfigured = onNotConfigured,
-                onDismiss = onDismiss
+                onNotConfigured = onNotConfigured
             )
         }
     }
 }
 
+// one self-contained bottom-sheet body covering both the in-progress and confirmation states
+@Suppress("LongMethod")
 @Composable
 private fun Upi123ProgressDialogContent(
     showConfigurationOptions: Boolean = false,
     onConfigured: () -> Unit = {},
-    onNotConfigured: () -> Unit = {},
-    onDismiss: () -> Unit = {}
+    onNotConfigured: () -> Unit = {}
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val alpha by infiniteTransition.animateFloat(
@@ -78,178 +76,139 @@ private fun Upi123ProgressDialogContent(
         label = "alpha"
     )
 
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = FlowpayDarkGray),
-        border = BorderStroke(1.dp, FlowpayLightGray)
+            .padding(horizontal = 28.dp)
+            .padding(bottom = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp)
-                    .padding(top = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+        Icon(
+            imageVector = UpiIcon,
+            contentDescription = stringResource(R.string.upi123_dlg_setup_icon_desc),
+            tint = FlowpayInkWarm,
+            modifier = Modifier.size(40.dp)
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text = if (showConfigurationOptions) {
+                stringResource(R.string.upi123_dlg_setup_complete_title)
+            } else {
+                stringResource(R.string.upi123_dlg_setting_up_title)
+            },
+            style = com.flowpay.app.ui.theme.FlowpayDisplayStyle,
+            fontSize = 21.sp,
+            color = FlowpayInkWarm,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = if (showConfigurationOptions) {
+                stringResource(R.string.upi123_dlg_setup_complete_message)
+            } else {
+                stringResource(R.string.upi123_dlg_ivr_triggered_message)
+            },
+            fontSize = 15.sp,
+            color = FlowpayTextLightGray,
+            textAlign = TextAlign.Center,
+            lineHeight = 22.sp
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        if (showConfigurationOptions) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Box(
+                OutlinedButton(
+                    onClick = onNotConfigured,
                     modifier = Modifier
-                        .size(80.dp)
-                        .background(
-                            color = FlowpayAccentGreen.copy(alpha = alpha * 0.2f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                        .weight(1f)
+                        .height(50.dp),
+                    shape = com.flowpay.app.ui.theme.FlowpayRecordShapeLarge,
+                    border = BorderStroke(1.5.dp, FlowpayLedgerRule)
                 ) {
-                    Icon(
-                        imageVector = UpiIcon,
-                        contentDescription = stringResource(R.string.upi123_dlg_setup_icon_desc),
-                        tint = FlowpayAccentGreen,
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = if (showConfigurationOptions) {
-                        stringResource(R.string.upi123_dlg_setup_complete_title)
-                    } else {
-                        stringResource(R.string.upi123_dlg_setting_up_title)
-                    },
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = if (showConfigurationOptions) {
-                        stringResource(R.string.upi123_dlg_setup_complete_message)
-                    } else {
-                        stringResource(R.string.upi123_dlg_ivr_triggered_message)
-                    },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = FlowpayTextLightGray,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 24.sp
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                if (showConfigurationOptions) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Button(
-                            onClick = onNotConfigured,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(15.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = FlowpayLightGray
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.upi123_dlg_not_yet),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
-                        Button(
-                            onClick = onConfigured,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(15.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = FlowpayAccentGreen
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.upi123_dlg_yes),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                } else {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp),
-                        color = FlowpayAccentGreen,
-                        trackColor = FlowpayLightGray
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     Text(
-                        text = stringResource(R.string.upi123_dlg_configuring),
+                        text = stringResource(R.string.upi123_dlg_not_yet),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Light,
-                        color = FlowpayTextGray.copy(alpha = alpha),
+                        fontWeight = FontWeight.SemiBold,
+                        color = FlowpayTextLightGray,
                         textAlign = TextAlign.Center
                     )
+                }
 
-                    // Shortcut for users who already have UPI 123 set up: after a
-                    // short delay, offer a way to confirm without waiting for the
-                    // whole call flow. This only records the test result — it never
-                    // touches the ongoing IVR call.
-                    var showAlreadySetUp by remember { mutableStateOf(false) }
-                    LaunchedEffect(Unit) {
-                        delay(3000)
-                        showAlreadySetUp = true
-                    }
-                    if (showAlreadySetUp) {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        OutlinedButton(
-                            onClick = onConfigured,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            shape = RoundedCornerShape(15.dp),
-                            border = BorderStroke(1.dp, FlowpayAccentGreen),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = FlowpayAccentGreen
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.upi123_dlg_already_set_up),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
+                Button(
+                    onClick = onConfigured,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp),
+                    shape = com.flowpay.app.ui.theme.FlowpayRecordShapeLarge,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = FlowpayInkWarm,
+                        contentColor = FlowpaySurfaceDim
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.upi123_dlg_yes),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
-
-            IconButton(
-                onClick = onDismiss,
+        } else {
+            LinearProgressIndicator(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(R.string.upi123_dlg_close),
-                    tint = FlowpayTextLightGray,
-                    modifier = Modifier.size(22.dp)
-                )
+                    .fillMaxWidth()
+                    .height(4.dp),
+                color = FlowpayInkWarm,
+                trackColor = FlowpayLedgerRule
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.upi123_dlg_configuring),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Light,
+                color = FlowpayTextGray.copy(alpha = alpha),
+                textAlign = TextAlign.Center
+            )
+
+            // Shortcut for users who already have UPI 123 set up: after a
+            // short delay, offer a way to confirm without waiting for the
+            // whole call flow. This only records the test result — it never
+            // touches the ongoing IVR call.
+            var showAlreadySetUp by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                delay(3000)
+                showAlreadySetUp = true
+            }
+            if (showAlreadySetUp) {
+                Spacer(modifier = Modifier.height(20.dp))
+                OutlinedButton(
+                    onClick = onConfigured,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = com.flowpay.app.ui.theme.FlowpayRecordShapeLarge,
+                    border = BorderStroke(1.5.dp, FlowpayInkWarm),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = FlowpayInkWarm
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.upi123_dlg_already_set_up),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
@@ -266,7 +225,7 @@ val UpiIcon: ImageVector
             viewportHeight = 24f
         ).apply {
             path(
-                fill = androidx.compose.ui.graphics.SolidColor(FlowpayAccentGreen),
+                fill = androidx.compose.ui.graphics.SolidColor(FlowpayInkWarm),
                 fillAlpha = 1f,
                 stroke = null,
                 strokeAlpha = 1f,

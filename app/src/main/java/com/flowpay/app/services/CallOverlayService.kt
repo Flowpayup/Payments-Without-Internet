@@ -454,7 +454,7 @@ class CallOverlayService : Service() {
         Handler(Looper.getMainLooper()).post {
             Toast.makeText(
                 this,
-                "Overlay permission required for call protection. Please grant permission in Settings.",
+                R.string.error_overlay_permission_required,
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -489,7 +489,7 @@ class CallOverlayService : Service() {
         Handler(Looper.getMainLooper()).post {
             Toast.makeText(
                 this,
-                "Failed to show call protection overlay. Please try again.",
+                R.string.error_overlay_failed,
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -894,12 +894,13 @@ class CallOverlayService : Service() {
     private fun handleTerminateCall() {
         Log.d(TAG, "=== HANDLING TERMINATE CALL REQUEST ===")
 
-        // Mark the session cancelled first and unconditionally — the
-        // payment-state collector hides the overlay and shows the
-        // cancellation dialog exactly once. This must run outside the try
-        // below: audio/telecom cleanup is best-effort UI polish and must
-        // never be able to prevent the session from being marked cancelled.
-        sessionManager?.onUserCancelled()
+        // Settle the session first and unconditionally: a connected call
+        // moves to waiting for the bank's SMS, an unconnected one is
+        // cancelled, and the payment-state collector hides the overlay and
+        // shows the matching dialog exactly once. This must run outside the
+        // try below: audio/telecom cleanup is best-effort UI polish and must
+        // never be able to prevent the session from being settled.
+        sessionManager?.onUserEndedCall()
 
         try {
             callManager?.restoreCallVolume()
@@ -909,7 +910,7 @@ class CallOverlayService : Service() {
                 Log.w(TAG, "Failed to terminate call programmatically")
                 Toast.makeText(
                     this,
-                    "Unable to end the call automatically. Please hang up manually.",
+                    R.string.error_end_call_failed,
                     Toast.LENGTH_LONG
                 ).show()
             }

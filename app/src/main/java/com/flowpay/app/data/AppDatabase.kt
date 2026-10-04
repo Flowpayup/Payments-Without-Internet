@@ -46,14 +46,17 @@ abstract class AppDatabase : RoomDatabase() {
                     val appContext = context.applicationContext
                     System.loadLibrary("sqlcipher")
                     val passphrase = DatabaseKeyManager.getOrCreatePassphrase(appContext)
-                    DatabaseEncryptionMigrator.ensureEncrypted(appContext, DB_NAME, passphrase)
+                    val encrypted = DatabaseEncryptionMigrator.ensureEncrypted(appContext, DB_NAME, passphrase)
+                    // An empty key opens the plaintext database left by a
+                    // migration that failed this launch; the next launch retries.
+                    val key = if (encrypted) passphrase.toByteArray(Charsets.UTF_8) else ByteArray(0)
                     val instance = Room.databaseBuilder(
                         appContext,
                         AppDatabase::class.java,
                         DB_NAME
                     )
                         .openHelperFactory(
-                            SupportOpenHelperFactory(passphrase.toByteArray(Charsets.UTF_8))
+                            SupportOpenHelperFactory(key)
                         )
                         .build()
                     INSTANCE = instance

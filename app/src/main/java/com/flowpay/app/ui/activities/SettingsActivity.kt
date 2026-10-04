@@ -18,8 +18,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -27,7 +25,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -36,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowpay.app.BuildConfig
@@ -49,10 +45,8 @@ import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.FlowpayAccentGreenBright
 import com.flowpay.app.ui.theme.FlowpayDarkGray
 import com.flowpay.app.ui.theme.FlowpayDisabledGray
-import com.flowpay.app.ui.theme.FlowpayMediumGray
 import com.flowpay.app.ui.theme.FlowpayStatusError
 import com.flowpay.app.ui.theme.FlowpaySurfaceDim
-import com.flowpay.app.ui.theme.FlowpayTextGray
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.FlowpayTextPale
 import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
@@ -202,7 +196,6 @@ fun SettingsScreen(
     refreshTrigger: MutableIntState = mutableIntStateOf(0)
 ) {
     val context = LocalContext.current
-    val accent = LocalFlowpayAccentTheme.current
     val state = viewModel.state
 
     // Load settings from repository on first composition
@@ -434,9 +427,7 @@ fun SettingsScreen(
             },
             text = {
                 Text(
-                    "This permanently deletes your entire transaction history and " +
-                        "resets all settings, then returns you to the setup screen. " +
-                        "This cannot be undone.",
+                    stringResource(R.string.settings_clear_data_confirm_body),
                     fontSize = 14.sp,
                     lineHeight = 20.sp
                 )
@@ -492,32 +483,36 @@ fun SettingsScreen(
 @Composable
 private fun SectionHeader(title: String) {
     Text(
-        text = title,
+        text = title.lowercase().replaceFirstChar { it.uppercase() },
         fontSize = 12.sp,
-        fontWeight = FontWeight.Medium,
-        color = FlowpayTextGray,
-        letterSpacing = 1.sp,
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp)
+        fontWeight = FontWeight.SemiBold,
+        color = com.flowpay.app.ui.theme.FlowpayTextLightGray,
+        modifier = Modifier.padding(start = 4.dp, top = 12.dp, bottom = 4.dp)
     )
 }
 
 @Composable
 private fun GroupCard(content: @Composable ColumnScope.() -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = FlowpayDarkGray
-    ) {
-        Column(content = content)
-    }
+    // A ledger group: bordered rectangular record, not a rounded elevated
+    // card — rows inside separate with hairlines via [GroupDivider].
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                1.dp,
+                com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f),
+                com.flowpay.app.ui.theme.FlowpayRecordShapeLarge
+            ),
+        content = content
+    )
 }
 
 @Composable
 private fun GroupDivider() {
     HorizontalDivider(
-        color = FlowpayMediumGray,
-        thickness = 0.5.dp,
-        modifier = Modifier.padding(start = 56.dp)
+        color = com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f),
+        thickness = 1.dp,
+        modifier = Modifier.padding(start = 16.dp)
     )
 }
 
@@ -529,10 +524,7 @@ private fun SettingsRow(
     destructive: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
-    val accent = LocalFlowpayAccentTheme.current
-    val iconColor = if (destructive) FlowpayStatusError else accent.primary
-    val iconBg = if (destructive) FlowpayStatusError.copy(alpha = 0.12f) else accent.primary.copy(alpha = 0.12f)
-    val titleColor = if (destructive) FlowpayStatusError else Color.White
+    val titleColor = if (destructive) FlowpayStatusError else com.flowpay.app.ui.theme.FlowpayInkWarm
 
     Row(
         modifier = Modifier
@@ -541,23 +533,14 @@ private fun SettingsRow(
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(iconBg),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(18.dp)
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (destructive) FlowpayStatusError else FlowpayTextLightGray,
+            modifier = Modifier.size(20.dp)
+        )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(14.dp))
 
         // Title
         Text(
@@ -572,8 +555,10 @@ private fun SettingsRow(
         if (onClick != null) {
             Text(
                 text = value,
-                fontSize = 14.sp,
-                color = FlowpayTextLightGray,
+                style = com.flowpay.app.ui.theme.FlowpayMonoStyle.copy(
+                    fontSize = 13.sp,
+                    color = FlowpayTextLightGray
+                ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.widthIn(max = 160.dp)
@@ -588,8 +573,10 @@ private fun SettingsRow(
         } else {
             Text(
                 text = value,
-                fontSize = 14.sp,
-                color = FlowpayTextLightGray,
+                style = com.flowpay.app.ui.theme.FlowpayMonoStyle.copy(
+                    fontSize = 13.sp,
+                    color = FlowpayTextLightGray
+                ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -605,31 +592,20 @@ private fun PermissionRow(
     granted: Boolean,
     onRequest: () -> Unit
 ) {
-    val accent = LocalFlowpayAccentTheme.current
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(accent.primary.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = accent.primary,
-                modifier = Modifier.size(18.dp)
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = FlowpayTextLightGray,
+            modifier = Modifier.size(20.dp)
+        )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(14.dp))
 
         // Title + subtitle
         Column(modifier = Modifier.weight(1f)) {
@@ -637,7 +613,7 @@ private fun PermissionRow(
                 text = title,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.White
+                color = com.flowpay.app.ui.theme.FlowpayInkWarm
             )
             Text(
                 text = subtitle,
@@ -646,122 +622,106 @@ private fun PermissionRow(
             )
         }
 
-        // Status pill
+        // Status word — plain colored text, not a pill, echoing the
+        // ledger row's "meaning through roundness only for true badges" rule.
         if (granted) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = FlowpayAccentGreenBright.copy(alpha = 0.12f)
-            ) {
-                Text(
-                    text = "Granted",
-                    color = FlowpayAccentGreenBright,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                )
-            }
+            Text(
+                text = stringResource(R.string.settings_permission_granted),
+                color = FlowpayAccentGreenBright,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
+            )
         } else {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = accent.primary.copy(alpha = 0.12f),
+            Text(
+                text = stringResource(R.string.settings_permission_grant),
+                color = com.flowpay.app.ui.theme.FlowpaySeal,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable(onClick = onRequest)
-            ) {
-                Text(
-                    text = "Grant",
-                    color = accent.primary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                )
-            }
+            )
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BankPickerDialog(
     selectedBank: Bank,
     onBankSelected: (Bank) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val accent = LocalFlowpayAccentTheme.current
+    val ink = com.flowpay.app.ui.theme.FlowpayInkWarm
+    val seal = com.flowpay.app.ui.theme.FlowpaySeal
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = FlowpayDarkGray
-        ) {
-            Column(
-                modifier = Modifier.padding(vertical = 20.dp)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = FlowpayDarkGray,
+        dragHandle = { com.flowpay.app.ui.components.LedgerDragHandle() }
+    ) {
+        Column(modifier = Modifier.padding(bottom = 20.dp)) {
+            Text(
+                text = stringResource(R.string.settings_select_bank),
+                style = com.flowpay.app.ui.theme.FlowpayDisplayStyle,
+                fontSize = 18.sp,
+                color = ink,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            )
+
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 400.dp)
             ) {
-                Text(
-                    text = "Select Bank",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                )
-
-                LazyColumn(
-                    modifier = Modifier.heightIn(max = 400.dp)
-                ) {
-                    items(banks) { bank ->
-                        val isSelected = bank.id == selectedBank.id
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onBankSelected(bank) }
-                                .padding(horizontal = 20.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = bank.name,
-                                fontSize = 15.sp,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                color = if (isSelected) accent.primary else Color.White,
-                                modifier = Modifier.weight(1f)
-                            )
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Selected",
-                                    tint = accent.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                        if (bank != banks.last()) {
-                            HorizontalDivider(
-                                color = FlowpayMediumGray,
-                                thickness = 0.5.dp,
-                                modifier = Modifier.padding(horizontal = 20.dp)
+                items(banks) { bank ->
+                    val isSelected = bank.id == selectedBank.id
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onBankSelected(bank) }
+                            .padding(horizontal = 20.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = bank.name,
+                            fontSize = 15.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (isSelected) seal else ink,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Selected",
+                                tint = seal,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(horizontal = 12.dp)
-                ) {
-                    Text(stringResource(R.string.action_cancel), color = FlowpayTextLightGray)
+                    if (bank != banks.last()) {
+                        HorizontalDivider(
+                            color = com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f),
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(horizontal = 20.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+// a self-contained bottom-sheet composable; splitting further would fragment one visual unit
+@Suppress("LongMethod")
 @Composable
 private fun SimPickerDialog(
     selectedSimId: String,
     onSimSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val accent = LocalFlowpayAccentTheme.current
+    val ink = com.flowpay.app.ui.theme.FlowpayInkWarm
+    val seal = com.flowpay.app.ui.theme.FlowpaySeal
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val sims = listOf(
         "jio" to "Jio",
         "airtel" to "Airtel",
@@ -769,63 +729,52 @@ private fun SimPickerDialog(
         "bsnl" to "BSNL"
     )
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = FlowpayDarkGray
-        ) {
-            Column(modifier = Modifier.padding(vertical = 20.dp)) {
-                Text(
-                    text = "Select Primary SIM",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                )
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = FlowpayDarkGray,
+        dragHandle = { com.flowpay.app.ui.components.LedgerDragHandle() }
+    ) {
+        Column(modifier = Modifier.padding(bottom = 20.dp)) {
+            Text(
+                text = stringResource(R.string.settings_select_primary_sim),
+                style = com.flowpay.app.ui.theme.FlowpayDisplayStyle,
+                fontSize = 18.sp,
+                color = ink,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            )
 
-                sims.forEachIndexed { index, (id, name) ->
-                    val isSelected = id == selectedSimId
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSimSelected(id) }
-                            .padding(horizontal = 20.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = name,
-                            fontSize = 15.sp,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isSelected) accent.primary else Color.White,
-                            modifier = Modifier.weight(1f)
-                        )
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Selected",
-                                tint = accent.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    if (index < sims.lastIndex) {
-                        HorizontalDivider(
-                            color = FlowpayMediumGray,
-                            thickness = 0.5.dp,
-                            modifier = Modifier.padding(horizontal = 20.dp)
+            sims.forEachIndexed { index, (id, name) ->
+                val isSelected = id == selectedSimId
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSimSelected(id) }
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = name,
+                        fontSize = 15.sp,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (isSelected) seal else ink,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Selected",
+                            tint = seal,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(horizontal = 12.dp)
-                ) {
-                    Text(stringResource(R.string.action_cancel), color = FlowpayTextLightGray)
+                if (index < sims.lastIndex) {
+                    HorizontalDivider(
+                        color = com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f),
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(horizontal = 20.dp)
+                    )
                 }
             }
         }

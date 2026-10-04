@@ -30,6 +30,7 @@ class TransactionDetector private constructor(context: Context) {
         private const val KEY_EXPECTED_AMOUNT = "expected_amount"
         private const val KEY_PHONE_NUMBER = "phone_number"
         private const val KEY_SESSION_TXN_ID = "session_txn_id"
+        private const val KEY_EXPECTED_PAYEE_VPA = "expected_payee_vpa"
 
         /**
          * How long after a payment starts an incoming SMS is still eligible.
@@ -91,17 +92,23 @@ class TransactionDetector private constructor(context: Context) {
         operationType: String,
         expectedAmount: String? = null,
         phoneNumber: String? = null,
-        sessionTxnId: String? = null
+        sessionTxnId: String? = null,
+        expectedPayeeVpa: String? = null
     ) {
         Log.d(TAG, "Starting operation: $operationType")
 
         prefs.edit().apply {
+            // A window that expired without anyone calling shouldProcessSMS()
+            // is never cleared, so start from empty: a QR payment must not
+            // inherit the previous payment's phone number or session id.
+            clear()
             putBoolean(KEY_ACTIVE, true)
             putLong(KEY_START_TIME, System.currentTimeMillis())
             putString(KEY_OPERATION_TYPE, operationType)
             expectedAmount?.let { putString(KEY_EXPECTED_AMOUNT, it) }
             phoneNumber?.let { putString(KEY_PHONE_NUMBER, it) }
             sessionTxnId?.let { putString(KEY_SESSION_TXN_ID, it) }
+            expectedPayeeVpa?.let { putString(KEY_EXPECTED_PAYEE_VPA, it) }
             apply()
         }
     }
@@ -168,7 +175,12 @@ class TransactionDetector private constructor(context: Context) {
         }
 
         val expectedAmount = prefs.getString(KEY_EXPECTED_AMOUNT, null)
-        val transaction = SmsTransactionParser.parse(sender, body, expectedAmount)
+        val transaction = SmsTransactionParser.parse(
+            sender = sender,
+            body = body,
+            expectedAmount = expectedAmount,
+            expectedPayeeVpa = prefs.getString(KEY_EXPECTED_PAYEE_VPA, null)
+        )
         if (transaction == null) {
             Log.d(TAG, "SMS did not match a bank transaction")
             return null

@@ -15,7 +15,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
@@ -26,31 +25,23 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.*
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flowpay.app.helpers.SetupHelper
-import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.FlowpayDarkGray
 import com.flowpay.app.ui.theme.FlowpayDisabledGray
-import com.flowpay.app.ui.theme.FlowpayLightGray
-import com.flowpay.app.ui.theme.FlowpayMediumGray
 import com.flowpay.app.ui.theme.FlowpaySurfaceDim
+import com.flowpay.app.ui.theme.FlowpayTextGray
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.FlowpayTheme
-import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 
 class SetupActivity : ComponentActivity() {
     private lateinit var setupHelper: SetupHelper
@@ -78,10 +69,8 @@ class SetupActivity : ComponentActivity() {
         // Edge-to-edge: Compose insets are the single source of padding (see MainActivity).
         androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
-                FlowpayTheme {
-                    SetupScreen(setupHelper = setupHelper)
-                }
+            FlowpayTheme {
+                SetupScreen(setupHelper = setupHelper)
             }
         }
     }
@@ -185,106 +174,66 @@ fun SetupScreen(setupHelper: SetupHelper) {
 
 @Composable
 fun HeaderCard() {
-    val accent = LocalFlowpayAccentTheme.current
-    val headerShape = RoundedCornerShape(20.dp)
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(
-                elevation = 8.dp,
-                shape = headerShape,
-                ambientColor = Color.Black.copy(alpha = 0.15f),
-                spotColor = Color.Black.copy(alpha = 0.15f)
-            ),
-        shape = headerShape,
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        listOf(accent.headerGradientStart, accent.headerGradientEnd)
-                    ),
-                    shape = headerShape
-                )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Icon in frosted circle
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .background(
-                                color = Color.White.copy(alpha = 0.22f),
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AccountBalanceWallet,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column {
-                        Text(
-                            text = stringResource(R.string.setup_flowpay),
-                            style = TextStyle(
-                                color = Color.White,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.3.sp,
-                                shadow = Shadow(
-                                    color = Color.Black.copy(alpha = 0.15f),
-                                    offset = Offset(0f, 2f),
-                                    blurRadius = 6f
-                                )
-                            )
-                        )
-                        Text(
-                            text = stringResource(R.string.setup_step_1_of_2),
-                            fontSize = 14.sp,
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = stringResource(R.string.configure_upi_payments),
-                    fontSize = 15.sp,
-                    color = Color.White.copy(alpha = 0.85f),
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 22.sp
+        Column(modifier = Modifier.padding(vertical = 16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.AccountBalanceWallet,
+                    contentDescription = null,
+                    tint = com.flowpay.app.ui.theme.FlowpayInkWarm,
+                    modifier = Modifier.size(22.dp)
                 )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.width(14.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ProgressDot(isActive = true)
-                    ProgressDot(isActive = false)
+                Column {
+                    Text(
+                        text = stringResource(R.string.setup_flowpay),
+                        style = com.flowpay.app.ui.theme.FlowpayDisplayStyle,
+                        fontSize = 24.sp,
+                        color = com.flowpay.app.ui.theme.FlowpayInkWarm
+                    )
+                    Text(
+                        text = stringResource(R.string.setup_step_1_of_2),
+                        style = com.flowpay.app.ui.theme.FlowpayMonoStyle.copy(
+                            fontSize = 12.sp,
+                            color = FlowpayTextLightGray
+                        )
+                    )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.configure_upi_payments),
+                fontSize = 15.sp,
+                color = FlowpayTextLightGray,
+                fontWeight = FontWeight.Normal,
+                lineHeight = 22.sp
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ProgressDot(isActive = true)
+                ProgressDot(isActive = false)
+            }
         }
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f)
+        )
     }
 }
 
 /**
- * Shared section-header pattern from MainScreen/Settings: small accent-tinted
- * circle icon, 16sp title, 12sp gray subtitle.
+ * Shared section-header pattern: plain icon (no colored badge circle) plus
+ * a 16sp title and 12sp gray subtitle — matches the ledger system's rule
+ * that roundness/color-badges are reserved for status/seal indicators, not
+ * decoration.
  */
 @Composable
 private fun SetupSectionHeader(
@@ -292,28 +241,20 @@ private fun SetupSectionHeader(
     title: String,
     subtitle: String
 ) {
-    val accent = LocalFlowpayAccentTheme.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(accent.primary.copy(alpha = 0.12f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = accent.primary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = FlowpayTextLightGray,
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(modifier = Modifier.width(14.dp))
         Column {
             Text(
                 text = title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = com.flowpay.app.ui.theme.FlowpayInkWarm
             )
             Text(
                 text = subtitle,
@@ -345,7 +286,11 @@ fun BankSelectionSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(FlowpaySurfaceDim, RoundedCornerShape(20.dp))
+            .border(
+                1.dp,
+                com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f),
+                com.flowpay.app.ui.theme.FlowpayRecordShapeLarge
+            )
             .padding(18.dp)
     ) {
         SetupSectionHeader(
@@ -376,30 +321,30 @@ fun BankSelectionSection(
                     .fillMaxWidth()
                     .menuAnchor(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = FlowpayDisabledGray,
-                    unfocusedBorderColor = FlowpayLightGray,
-                    focusedContainerColor = FlowpayMediumGray,
-                    unfocusedContainerColor = FlowpayDarkGray,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedTrailingIconColor = Color.White,
-                    unfocusedTrailingIconColor = Color.White
+                    focusedBorderColor = com.flowpay.app.ui.theme.FlowpayInkWarm,
+                    unfocusedBorderColor = com.flowpay.app.ui.theme.FlowpayLedgerRule,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedTextColor = com.flowpay.app.ui.theme.FlowpayInkWarm,
+                    unfocusedTextColor = com.flowpay.app.ui.theme.FlowpayInkWarm,
+                    focusedTrailingIconColor = com.flowpay.app.ui.theme.FlowpayInkWarm,
+                    unfocusedTrailingIconColor = com.flowpay.app.ui.theme.FlowpayInkWarm
                 ),
-                shape = RoundedCornerShape(12.dp),
-                textStyle = TextStyle(fontSize = 15.sp),
+                shape = com.flowpay.app.ui.theme.FlowpayRecordShape,
+                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
             )
 
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.background(FlowpayMediumGray)
+                modifier = Modifier.background(FlowpayDarkGray)
             ) {
                 banks.forEach { (value, label) ->
                     DropdownMenuItem(
                         text = {
                             Text(
                                 label,
-                                color = Color.White,
+                                color = com.flowpay.app.ui.theme.FlowpayInkWarm,
                                 fontSize = 15.sp
                             )
                         },
@@ -407,7 +352,7 @@ fun BankSelectionSection(
                             onBankSelected(value)
                             expanded = false
                         },
-                        modifier = Modifier.background(FlowpayMediumGray)
+                        modifier = Modifier.background(FlowpayDarkGray)
                     )
                 }
             }
@@ -427,12 +372,13 @@ fun SimCardSelectionSection(
     onDualSimToggled: (Boolean) -> Unit,
     secondarySimOptions: List<Pair<String, String>>
 ) {
-    val accent = LocalFlowpayAccentTheme.current
+    val ink = com.flowpay.app.ui.theme.FlowpayInkWarm
+    val ledgerRule = com.flowpay.app.ui.theme.FlowpayLedgerRule
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(FlowpaySurfaceDim, RoundedCornerShape(20.dp))
+            .border(1.dp, ledgerRule.copy(alpha = 0.4f), com.flowpay.app.ui.theme.FlowpayRecordShapeLarge)
             .padding(18.dp)
     ) {
         SetupSectionHeader(
@@ -464,30 +410,30 @@ fun SimCardSelectionSection(
                     .fillMaxWidth()
                     .menuAnchor(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = FlowpayDisabledGray,
-                    unfocusedBorderColor = FlowpayLightGray,
-                    focusedContainerColor = FlowpayMediumGray,
-                    unfocusedContainerColor = FlowpayDarkGray,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedTrailingIconColor = Color.White,
-                    unfocusedTrailingIconColor = Color.White
+                    focusedBorderColor = ink,
+                    unfocusedBorderColor = ledgerRule,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedTextColor = ink,
+                    unfocusedTextColor = ink,
+                    focusedTrailingIconColor = ink,
+                    unfocusedTrailingIconColor = ink
                 ),
-                shape = RoundedCornerShape(12.dp),
-                textStyle = TextStyle(fontSize = 15.sp),
+                shape = com.flowpay.app.ui.theme.FlowpayRecordShape,
+                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
             )
 
             ExposedDropdownMenu(
                 expanded = primaryExpanded,
                 onDismissRequest = { primaryExpanded = false },
-                modifier = Modifier.background(FlowpayMediumGray)
+                modifier = Modifier.background(FlowpayDarkGray)
             ) {
                 simCarriers.forEach { (value, label) ->
                     DropdownMenuItem(
                         text = {
                             Text(
                                 label,
-                                color = Color.White,
+                                color = ink,
                                 fontSize = 15.sp
                             )
                         },
@@ -495,7 +441,7 @@ fun SimCardSelectionSection(
                             onPrimarySimSelected(value)
                             primaryExpanded = false
                         },
-                        modifier = Modifier.background(FlowpayMediumGray)
+                        modifier = Modifier.background(FlowpayDarkGray)
                     )
                 }
             }
@@ -518,11 +464,11 @@ fun SimCardSelectionSection(
                     .size(22.dp)
                     .border(
                         width = 2.dp,
-                        color = if (isDualSimEnabled) accent.accent else FlowpayDisabledGray,
+                        color = if (isDualSimEnabled) ink else FlowpayDisabledGray,
                         shape = CircleShape
                     )
                     .background(
-                        color = if (isDualSimEnabled) accent.accent else Color.Transparent,
+                        color = if (isDualSimEnabled) ink else Color.Transparent,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -531,7 +477,7 @@ fun SimCardSelectionSection(
                     Box(
                         modifier = Modifier
                             .size(10.dp)
-                            .background(Color.White, CircleShape)
+                            .background(FlowpaySurfaceDim, CircleShape)
                     )
                 }
             }
@@ -542,7 +488,7 @@ fun SimCardSelectionSection(
                 text = stringResource(R.string.enable_dual_sim),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.White
+                color = ink
             )
         }
 
@@ -551,8 +497,8 @@ fun SimCardSelectionSection(
             Spacer(modifier = Modifier.height(16.dp))
 
             HorizontalDivider(
-                color = FlowpayMediumGray,
-                thickness = 0.5.dp
+                color = ledgerRule.copy(alpha = 0.4f),
+                thickness = 1.dp
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -578,30 +524,30 @@ fun SimCardSelectionSection(
                         .fillMaxWidth()
                         .menuAnchor(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = FlowpayDisabledGray,
-                        unfocusedBorderColor = FlowpayLightGray,
-                        focusedContainerColor = FlowpayMediumGray,
-                        unfocusedContainerColor = FlowpayDarkGray,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedTrailingIconColor = Color.White,
-                        unfocusedTrailingIconColor = Color.White
+                        focusedBorderColor = ink,
+                        unfocusedBorderColor = ledgerRule,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = ink,
+                        unfocusedTextColor = ink,
+                        focusedTrailingIconColor = ink,
+                        unfocusedTrailingIconColor = ink
                     ),
-                    shape = RoundedCornerShape(12.dp),
-                    textStyle = TextStyle(fontSize = 15.sp),
+                    shape = com.flowpay.app.ui.theme.FlowpayRecordShape,
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                 )
 
                 ExposedDropdownMenu(
                     expanded = secondaryExpanded,
                     onDismissRequest = { secondaryExpanded = false },
-                    modifier = Modifier.background(FlowpayMediumGray)
+                    modifier = Modifier.background(FlowpayDarkGray)
                 ) {
                     secondarySimOptions.forEach { (value, label) ->
                         DropdownMenuItem(
                             text = {
                                 Text(
                                     label,
-                                    color = Color.White,
+                                    color = ink,
                                     fontSize = 15.sp
                                 )
                             },
@@ -609,7 +555,7 @@ fun SimCardSelectionSection(
                                 onSecondarySimSelected(value)
                                 secondaryExpanded = false
                             },
-                            modifier = Modifier.background(FlowpayMediumGray)
+                            modifier = Modifier.background(FlowpayDarkGray)
                         )
                     }
                 }
@@ -623,13 +569,17 @@ fun DisclaimerSection(
     isAccepted: Boolean,
     onAcceptedChange: (Boolean) -> Unit
 ) {
-    val accent = LocalFlowpayAccentTheme.current
+    val ink = com.flowpay.app.ui.theme.FlowpayInkWarm
     var isExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(FlowpaySurfaceDim, RoundedCornerShape(20.dp))
+            .border(
+                1.dp,
+                com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f),
+                com.flowpay.app.ui.theme.FlowpayRecordShapeLarge
+            )
             .padding(18.dp)
     ) {
         SetupSectionHeader(
@@ -656,11 +606,11 @@ fun DisclaimerSection(
                         ) { onAcceptedChange(!isAccepted) }
                         .border(
                             width = 2.dp,
-                            color = if (isAccepted) accent.accent else FlowpayDisabledGray,
+                            color = if (isAccepted) ink else FlowpayDisabledGray,
                             shape = CircleShape
                         )
                         .background(
-                            color = if (isAccepted) accent.accent else Color.Transparent,
+                            color = if (isAccepted) ink else Color.Transparent,
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -669,7 +619,7 @@ fun DisclaimerSection(
                         Box(
                             modifier = Modifier
                                 .size(10.dp)
-                                .background(Color.White, CircleShape)
+                                .background(FlowpaySurfaceDim, CircleShape)
                         )
                     }
                 }
@@ -694,7 +644,7 @@ fun DisclaimerSection(
                             }
                         ),
                         fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.85f),
+                        color = FlowpayTextLightGray,
                         lineHeight = 20.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -708,7 +658,8 @@ fun DisclaimerSection(
                         ),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = accent.accent
+                        color = ink,
+                        textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
                     )
                 }
             }
@@ -721,31 +672,20 @@ fun CompleteSetupButton(
     enabled: Boolean,
     onCompleteSetup: () -> Unit
 ) {
-    val accent = LocalFlowpayAccentTheme.current
-    val buttonShape = RoundedCornerShape(16.dp)
-
-    val gradientColors = if (enabled) {
-        listOf(accent.headerGradientStart, accent.headerGradientEnd)
-    } else {
-        listOf(FlowpayLightGray, FlowpayMediumGray)
-    }
+    val ink = com.flowpay.app.ui.theme.FlowpayInkWarm
+    val ledgerRule = com.flowpay.app.ui.theme.FlowpayLedgerRule
+    val buttonShape = com.flowpay.app.ui.theme.FlowpayRecordShapeLarge
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
             .background(
-                brush = Brush.linearGradient(gradientColors),
-                shape = buttonShape
-            )
-            .border(
-                width = 1.dp,
-                color = Color.White.copy(alpha = if (enabled) 0.15f else 0.05f),
+                color = if (enabled) ink else ledgerRule.copy(alpha = 0.3f),
                 shape = buttonShape
             )
             .clip(buttonShape)
-            .clickable(enabled = enabled) { onCompleteSetup() }
-            .alpha(if (enabled) 1f else 0.4f),
+            .clickable(enabled = enabled) { onCompleteSetup() },
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -754,7 +694,7 @@ fun CompleteSetupButton(
         ) {
             Text(
                 text = stringResource(R.string.complete_setup),
-                color = Color.White,
+                color = if (enabled) FlowpaySurfaceDim else FlowpayTextGray,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = (-0.3).sp
@@ -763,7 +703,7 @@ fun CompleteSetupButton(
             Icon(
                 imageVector = Icons.Default.ArrowForward,
                 contentDescription = null,
-                tint = Color.White,
+                tint = if (enabled) FlowpaySurfaceDim else FlowpayTextGray,
                 modifier = Modifier.size(20.dp)
             )
         }

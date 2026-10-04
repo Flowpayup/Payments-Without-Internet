@@ -5,17 +5,11 @@ package com.flowpay.app.ui.dialogs
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.res.stringResource
@@ -23,18 +17,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.flowpay.app.R
+import com.flowpay.app.ui.components.LedgerDragHandle
 import com.flowpay.app.ui.theme.FlowpayDarkGray
-import com.flowpay.app.ui.theme.FlowpayLightGray
-import com.flowpay.app.ui.theme.FlowpayOutlineGray
+import com.flowpay.app.ui.theme.FlowpayInkWarm
+import com.flowpay.app.ui.theme.FlowpayLedgerRule
+import com.flowpay.app.ui.theme.FlowpaySurfaceDim
 import com.flowpay.app.ui.theme.FlowpayTextGray
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
-import com.flowpay.app.ui.theme.FlowpayTextPale
-import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import kotlinx.coroutines.delay
 
+/**
+ * USSD (*99#) setup/test progress — a bottom sheet matching the rest of the
+ * app's modal pattern (Pay Contact, pickers, transaction detail), instead of
+ * a centered dialog.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UssdProgressDialog(
     isVisible: Boolean,
@@ -46,33 +44,32 @@ fun UssdProgressDialog(
     onDoesNotWork: () -> Unit = {}
 ) {
     if (isVisible) {
-        Dialog(
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
             onDismissRequest = onDismiss,
-            properties = DialogProperties(
-                dismissOnBackPress = true,
-                dismissOnClickOutside = false,
-                usePlatformDefaultWidth = false
-            )
+            sheetState = sheetState,
+            containerColor = FlowpayDarkGray,
+            dragHandle = { LedgerDragHandle() }
         ) {
             UssdProgressDialogContent(
                 progressMessage = progressMessage,
                 showConfigurationOptions = showConfigurationOptions,
                 onConfigured = onConfigured,
                 onNotConfigured = onNotConfigured,
-                onDismiss = onDismiss,
                 onDoesNotWork = onDoesNotWork
             )
         }
     }
 }
 
+// one self-contained bottom-sheet body covering both the in-progress and confirmation states
+@Suppress("LongMethod")
 @Composable
 private fun UssdProgressDialogContent(
     progressMessage: String,
     showConfigurationOptions: Boolean = false,
     onConfigured: () -> Unit = {},
     onNotConfigured: () -> Unit = {},
-    onDismiss: () -> Unit = {},
     onDoesNotWork: () -> Unit = {}
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -86,199 +83,158 @@ private fun UssdProgressDialogContent(
         label = "alpha"
     )
 
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = FlowpayDarkGray),
-        border = BorderStroke(1.dp, FlowpayLightGray)
+            .padding(horizontal = 28.dp)
+            .padding(bottom = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp)
-                    .padding(top = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+        Icon(
+            imageVector = PhoneIcon,
+            contentDescription = stringResource(R.string.ussd_dlg_cd_ussd_setup),
+            tint = FlowpayInkWarm,
+            modifier = Modifier.size(40.dp)
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text = if (showConfigurationOptions) {
+                stringResource(R.string.ussd_dlg_setup_complete_title)
+            } else {
+                stringResource(R.string.ussd_dlg_setting_up_title)
+            },
+            style = com.flowpay.app.ui.theme.FlowpayDisplayStyle,
+            fontSize = 21.sp,
+            color = FlowpayInkWarm,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = if (showConfigurationOptions) {
+                stringResource(R.string.ussd_dlg_setup_complete_body)
+            } else {
+                stringResource(R.string.ussd_dlg_setting_up_body)
+            },
+            fontSize = 15.sp,
+            color = FlowpayTextLightGray,
+            textAlign = TextAlign.Center,
+            lineHeight = 22.sp
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        if (showConfigurationOptions) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Box(
+                OutlinedButton(
+                    onClick = onNotConfigured,
                     modifier = Modifier
-                        .size(80.dp)
-                        .background(
-                            color = LocalFlowpayAccentTheme.current.accent.copy(alpha = alpha * 0.2f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                        .weight(1f)
+                        .height(50.dp),
+                    shape = com.flowpay.app.ui.theme.FlowpayRecordShapeLarge,
+                    border = BorderStroke(1.5.dp, FlowpayLedgerRule)
                 ) {
-                    Icon(
-                        imageVector = PhoneIcon,
-                        contentDescription = stringResource(R.string.ussd_dlg_cd_ussd_setup),
-                        tint = LocalFlowpayAccentTheme.current.accent,
-                        modifier = Modifier.size(48.dp)
+                    Text(
+                        text = stringResource(R.string.ussd_dlg_not_yet),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = FlowpayTextLightGray
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = if (showConfigurationOptions) {
-                        stringResource(R.string.ussd_dlg_setup_complete_title)
-                    } else {
-                        stringResource(R.string.ussd_dlg_setting_up_title)
-                    },
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = if (showConfigurationOptions) {
-                        stringResource(R.string.ussd_dlg_setup_complete_body)
-                    } else {
-                        stringResource(R.string.ussd_dlg_setting_up_body)
-                    },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = FlowpayTextLightGray,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 24.sp
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                if (showConfigurationOptions) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Button(
-                            onClick = onNotConfigured,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(15.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = FlowpayLightGray
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.ussd_dlg_not_yet),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
-                        Button(
-                            onClick = onConfigured,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(50.dp),
-                            shape = RoundedCornerShape(15.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = LocalFlowpayAccentTheme.current.accent
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.ussd_dlg_yes),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                } else {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp),
-                        color = LocalFlowpayAccentTheme.current.accent,
-                        trackColor = FlowpayLightGray
+                Button(
+                    onClick = onConfigured,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp),
+                    shape = com.flowpay.app.ui.theme.FlowpayRecordShapeLarge,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = FlowpayInkWarm,
+                        contentColor = FlowpaySurfaceDim
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
+                ) {
                     Text(
-                        text = progressMessage,
+                        text = stringResource(R.string.ussd_dlg_yes),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Light,
-                        color = FlowpayTextGray.copy(alpha = alpha),
-                        textAlign = TextAlign.Center
+                        fontWeight = FontWeight.SemiBold
                     )
-
-                    // After a short delay, offer two shortcuts: confirm it's
-                    // already set up, or report it isn't working. Delayed so
-                    // neither tempts an action before USSD has had time to
-                    // respond (mirrors the UPI 123 dialog's delayed shortcut).
-                    // Neither touches the ongoing call.
-                    var showShortcuts by remember { mutableStateOf(false) }
-                    LaunchedEffect(Unit) {
-                        delay(3000)
-                        showShortcuts = true
-                    }
-                    if (showShortcuts) {
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        OutlinedButton(
-                            onClick = onConfigured,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(15.dp),
-                            border = BorderStroke(1.dp, LocalFlowpayAccentTheme.current.accent),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = LocalFlowpayAccentTheme.current.accent
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.ussd_dlg_already_set_up),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        OutlinedButton(
-                            onClick = onDoesNotWork,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(15.dp),
-                            border = BorderStroke(1.dp, FlowpayOutlineGray),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = FlowpayTextPale
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.ussd_dlg_does_not_work),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
                 }
             }
-
-            IconButton(
-                onClick = onDismiss,
+        } else {
+            LinearProgressIndicator(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(R.string.ussd_dlg_cd_close),
-                    tint = FlowpayTextLightGray,
-                    modifier = Modifier.size(22.dp)
-                )
+                    .fillMaxWidth()
+                    .height(4.dp),
+                color = FlowpayInkWarm,
+                trackColor = FlowpayLedgerRule
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = progressMessage,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Light,
+                color = FlowpayTextGray.copy(alpha = alpha),
+                textAlign = TextAlign.Center
+            )
+
+            // After a short delay, offer two shortcuts: confirm it's
+            // already set up, or report it isn't working. Delayed so
+            // neither tempts an action before USSD has had time to
+            // respond (mirrors the UPI 123 dialog's delayed shortcut).
+            // Neither touches the ongoing call.
+            var showShortcuts by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                delay(3000)
+                showShortcuts = true
+            }
+            if (showShortcuts) {
+                Spacer(modifier = Modifier.height(20.dp))
+
+                OutlinedButton(
+                    onClick = onConfigured,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = com.flowpay.app.ui.theme.FlowpayRecordShapeLarge,
+                    border = BorderStroke(1.5.dp, FlowpayInkWarm),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = FlowpayInkWarm
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.ussd_dlg_already_set_up),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = onDoesNotWork,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = com.flowpay.app.ui.theme.FlowpayRecordShapeLarge,
+                    border = BorderStroke(1.5.dp, FlowpayLedgerRule),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = FlowpayTextLightGray
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.ussd_dlg_does_not_work),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -296,7 +252,7 @@ val PhoneIcon: ImageVector
         ).apply {
             path(
                 fill = null,
-                stroke = androidx.compose.ui.graphics.SolidColor(Color.White),
+                stroke = androidx.compose.ui.graphics.SolidColor(FlowpayInkWarm),
                 strokeLineWidth = 2f,
                 strokeLineCap = androidx.compose.ui.graphics.StrokeCap.Round,
                 strokeLineJoin = androidx.compose.ui.graphics.StrokeJoin.Round

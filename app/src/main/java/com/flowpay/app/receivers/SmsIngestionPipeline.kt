@@ -29,8 +29,9 @@ object SmsIngestionPipeline {
 
     suspend fun ingest(context: Context, detector: TransactionDetector, sender: String, body: String) {
         // Captured BEFORE processSMS: a consuming match clears the operation
-        // window (including this id).
+        // window (including these values).
         val windowTxnId = detector.getSessionTxnId()
+        val windowPhone = detector.getPhoneNumber()
 
         val transaction = detector.processSMS(sender, body)
         if (transaction == null) {
@@ -80,7 +81,9 @@ object SmsIngestionPipeline {
 
             val successIntent = Intent(context, PaymentResultActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                // Row key: used only to keep notifications distinct.
                 putExtra("transaction_id", recordTxnId ?: transaction.transactionId)
+                putExtra("bank_ref", transaction.bankRef)
                 putExtra("amount", transaction.amount)
                 putExtra("status", transaction.status)
                 putExtra("bank_name", transaction.bankName)
@@ -89,7 +92,9 @@ object SmsIngestionPipeline {
                 putExtra("upi_id", transaction.upiId)
                 putExtra("transaction_type", transaction.transactionType)
                 putExtra("recipient_name", transaction.recipientName)
-                putExtra("phone_number", transaction.phoneNumber)
+                // Bank SMS rarely name the payee's number; the one the user
+                // dialled is the next best thing to show.
+                putExtra("phone_number", transaction.phoneNumber ?: windowPhone)
             }
             // Notification first (also serves as a receipt), then the direct
             // launch — which can be silently blocked without the overlay

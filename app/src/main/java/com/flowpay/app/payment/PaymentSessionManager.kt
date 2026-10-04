@@ -202,7 +202,35 @@ class PaymentSessionManager(
         }
     }
 
-    /** The user aborted from the in-call overlay. */
+    /**
+     * The user tapped the in-call overlay's button.
+     *
+     * Once the call is connected this cannot cancel anything: the dial string
+     * carries the payee, the amount and the confirming "1" as DTMF, and hanging
+     * up does not withdraw a request the IVR may already have. If the bank then
+     * calls back and the user enters their PIN, money moves. Recording that as
+     * CANCELLED closed the SMS window and discarded the debit confirmation, so
+     * the user was told "no payment was processed" and could pay twice.
+     *
+     * So a connected call is treated like any other call end: the session
+     * waits for the bank's SMS, and the deadline discards it if none comes.
+     * Only a call that never connected is cancelled.
+     */
+    fun onUserEndedCall() {
+        synchronized(sessionLock) {
+            when (val s = _paymentState.value) {
+                is PaymentState.InProgress -> {
+                    moveToWaitingLocked(s)
+                    return
+                }
+                is PaymentState.Initiating -> Unit
+                else -> return
+            }
+        }
+        onUserCancelled()
+    }
+
+    /** The user aborted before anything could have been submitted. */
     fun onUserCancelled() {
         finishSession(TransactionStatus.CANCELLED) { phone, amount, txnId ->
             PaymentState.Cancelled(phone, amount, txnId, "Cancelled by user")
@@ -260,7 +288,7 @@ class PaymentSessionManager(
             if (!current.isInProgress()) return null
             txnId = current.getTransactionIdValue() ?: return null
             val phone = current.getPhoneNumberValue() ?: parsed.phoneNumber ?: ""
-            val amount = current.getAmountValue() ?: parsed.amount
+            val amount = current.getAmountValue()?.ifEmpty { null } ?: parsed.amount
 
             _paymentState.value = when (newStatus) {
                 TransactionStatus.FAILED -> PaymentState.Failed(
@@ -279,7 +307,7 @@ class PaymentSessionManager(
                     transactionId = txnId,
                     phoneNumber = phone,
                     amount = amount,
-                    bankReference = parsed.transactionId,
+                    bankReference = parsed.bankRef,
                     timestamp = verifiedAt
                 )
             }
@@ -352,14 +380,7 @@ class PaymentSessionManager(
                         synchronized(sessionLock) {
                             // Re-check: an SMS may have confirmed while we were deciding.
                             val s = _paymentState.value
-                            if (s is PaymentState.InProgress) {
-                                _paymentState.value = PaymentState.WaitingForVerification(
-                                    timeout = verificationDeadlineMs,
-                                    phoneNumber = s.phoneNumber,
-                                    amount = s.amount,
-                                    transactionId = s.transactionId
-                                )
-                            }
+                            if (s is PaymentState.InProgress) moveToWaitingLocked(s)
                         }
                     }
                     else -> { /* Initiating without OFFHOOK, or already terminal - nothing to do */ }
@@ -429,6 +450,15 @@ class PaymentSessionManager(
             pendingInsertJob?.join()
             store.transitionStatus(txnId, TransactionStatus.PENDING, rowStatus)
         }
+    }
+
+    private fun moveToWaitingLocked(s: PaymentState.InProgress) {
+        _paymentState.value = PaymentState.WaitingForVerification(
+            timeout = verificationDeadlineMs,
+            phoneNumber = s.phoneNumber,
+            amount = s.amount,
+            transactionId = s.transactionId
+        )
     }
 
     private fun cleanupLocked() {

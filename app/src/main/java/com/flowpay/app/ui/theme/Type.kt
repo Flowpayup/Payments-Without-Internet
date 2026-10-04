@@ -35,3 +35,28 @@ val Typography = Typography(
     )
      */
 )
+
+// ─────────────────────────────────────────────────────────────────────────
+// "Bank-Stamped" type roles.
+//
+// Two deliberate departures from the single default sans everywhere:
+// a serif display face for headlines/amounts (reads like a printed
+// ledger heading, not an app splash) and monospace for anything that is
+// a literal record — bank reference numbers, UPI ref serials, account
+// suffixes — the way a real receipt sets its transaction ID. Both use
+// platform-bundled font families (Serif / Monospace): no font files to
+// ship, no license to track, no download risk.
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Screen titles, status headlines, the big payment amount. */
+val FlowpayDisplayStyle = TextStyle(
+    fontFamily = FontFamily.Serif,
+    fontWeight = FontWeight.Bold
+)
+
+/** Bank references, UPI ref numbers, masked account suffixes, timestamps
+ *  inside a receipt-style card. */
+val FlowpayMonoStyle = TextStyle(
+    fontFamily = FontFamily.Monospace,
+    fontWeight = FontWeight.Normal
+)

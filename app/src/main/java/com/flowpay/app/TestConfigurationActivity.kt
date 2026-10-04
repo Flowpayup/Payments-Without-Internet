@@ -22,17 +22,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,18 +40,15 @@ import com.flowpay.app.helpers.TestConfigurationHelper
 import com.flowpay.app.managers.CallType
 import com.flowpay.app.ui.dialogs.Upi123ProgressDialog
 import com.flowpay.app.ui.dialogs.UssdProgressDialog
-import com.flowpay.app.ui.theme.BlueAccentTheme
 import com.flowpay.app.ui.theme.FlowpayAccentGreen
 import com.flowpay.app.ui.theme.FlowpayDarkGray
 import com.flowpay.app.ui.theme.FlowpayLightGray
-import com.flowpay.app.ui.theme.FlowpayMediumGray
 import com.flowpay.app.ui.theme.FlowpayStatusWarning
 import com.flowpay.app.ui.theme.FlowpaySurfaceDim
 import com.flowpay.app.ui.theme.FlowpayTextGray
 import com.flowpay.app.ui.theme.FlowpayTextLightGray
 import com.flowpay.app.ui.theme.FlowpayTextPale
 import com.flowpay.app.ui.theme.FlowpayTheme
-import com.flowpay.app.ui.theme.LocalFlowpayAccentTheme
 import kotlinx.coroutines.delay
 
 class TestConfigurationActivity : ComponentActivity() {
@@ -152,10 +146,8 @@ class TestConfigurationActivity : ComponentActivity() {
         // Edge-to-edge: Compose insets are the single source of padding (see MainActivity).
         androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            CompositionLocalProvider(LocalFlowpayAccentTheme provides BlueAccentTheme) {
-                FlowpayTheme {
-                    TestConfigurationScreen(testHelper = testHelper)
-                }
+            FlowpayTheme {
+                TestConfigurationScreen(testHelper = testHelper)
             }
         }
     }
@@ -174,7 +166,6 @@ class TestConfigurationActivity : ComponentActivity() {
 @Composable
 fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
     val context = LocalContext.current
-    val accent = LocalFlowpayAccentTheme.current
 
     // Get test states from helper
     val testStates = testHelper.getTestStates()
@@ -278,7 +269,7 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Gradient Header Card
+            // Header
             TestHeaderCard()
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -348,26 +339,20 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Continue Button — Gradient
+            // Continue Button
             val canContinue = testHelper.canContinue()
             val allTestsCompleted = testHelper.allTestsCompleted()
+            val ink = com.flowpay.app.ui.theme.FlowpayInkWarm
+            val ledgerRule = com.flowpay.app.ui.theme.FlowpayLedgerRule
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .height(58.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .height(56.dp)
+                    .clip(com.flowpay.app.ui.theme.FlowpayRecordShapeLarge)
                     .background(
-                        brush = if (canContinue) {
-                            Brush.horizontalGradient(
-                                colors = listOf(accent.headerGradientStart, accent.headerGradientEnd)
-                            )
-                        } else {
-                            Brush.horizontalGradient(
-                                colors = listOf(FlowpayLightGray, FlowpayMediumGray)
-                            )
-                        }
+                        color = if (canContinue) ink else ledgerRule.copy(alpha = 0.3f)
                     )
                     .then(
                         if (canContinue) {
@@ -380,13 +365,13 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
             ) {
                 Text(
                     text = when {
-                        allTestsCompleted -> "All Tests Passed! Continue"
-                        canContinue -> "Continue with partial setup"
-                        else -> "Complete tests to continue"
+                        allTestsCompleted -> stringResource(R.string.testcfg_continue_all_passed)
+                        canContinue -> stringResource(R.string.testcfg_continue_partial)
+                        else -> stringResource(R.string.testcfg_continue_incomplete)
                     },
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (canContinue) Color.White else FlowpayTextGray
+                    color = if (canContinue) FlowpaySurfaceDim else FlowpayTextGray
                 )
             }
 
@@ -395,7 +380,7 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
             // tests can be re-run later from Settings > Reconfigure.
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Skip for now — payments may not work until tests pass",
+                text = stringResource(R.string.testcfg_skip_for_now),
                 fontSize = 13.sp,
                 color = FlowpayTextLightGray,
                 textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
@@ -433,7 +418,7 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
             AlertDialog(
                 onDismissRequest = { pendingDial = null },
                 containerColor = FlowpayDarkGray,
-                titleContentColor = Color.White,
+                titleContentColor = com.flowpay.app.ui.theme.FlowpayInkWarm,
                 textContentColor = FlowpayTextPale,
                 title = {
                     Text(
@@ -444,9 +429,7 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
                 },
                 text = {
                     Text(
-                        "This places a real call to your carrier's *99# / UPI 123 " +
-                            "service to check setup on your SIM. Standard call or USSD " +
-                            "charges from your operator may apply.",
+                        stringResource(R.string.testcfg_consent_message),
                         fontSize = 14.sp,
                         lineHeight = 20.sp
                     )
@@ -471,63 +454,37 @@ fun TestConfigurationScreen(testHelper: TestConfigurationHelper) {
 
 @Composable
 fun TestHeaderCard() {
-    val accent = LocalFlowpayAccentTheme.current
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        accent.headerGradientStart,
-                        accent.headerGradientEnd
-                    )
-                )
-            )
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Icon in frosted circle
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(
-                            color = Color.White.copy(alpha = 0.22f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = CheckCircleIcon,
-                        contentDescription = "Test",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                Icon(
+                    imageVector = CheckCircleIcon,
+                    contentDescription = "Test",
+                    tint = com.flowpay.app.ui.theme.FlowpayInkWarm,
+                    modifier = Modifier.size(22.dp)
+                )
 
                 Spacer(modifier = Modifier.width(14.dp))
 
                 Column {
                     Text(
-                        text = "Test Configuration",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        letterSpacing = 0.3.sp
+                        text = stringResource(R.string.testcfg_header_title),
+                        style = com.flowpay.app.ui.theme.FlowpayDisplayStyle,
+                        fontSize = 22.sp,
+                        color = com.flowpay.app.ui.theme.FlowpayInkWarm
                     )
                     Text(
-                        text = "Step 2 of 2",
-                        fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Medium
+                        text = stringResource(R.string.testcfg_step_2_of_2),
+                        style = com.flowpay.app.ui.theme.FlowpayMonoStyle.copy(
+                            fontSize = 12.sp,
+                            color = FlowpayTextLightGray
+                        )
                     )
                 }
             }
@@ -535,9 +492,9 @@ fun TestHeaderCard() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Complete these tests to verify your payment methods work correctly",
+                text = stringResource(R.string.testcfg_header_subtitle),
                 fontSize = 15.sp,
-                color = Color.White.copy(alpha = 0.85f),
+                color = FlowpayTextLightGray,
                 fontWeight = FontWeight.Normal,
                 lineHeight = 22.sp
             )
@@ -551,6 +508,10 @@ fun TestHeaderCard() {
                 ProgressDot(isActive = true)
             }
         }
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f)
+        )
     }
 }
 
@@ -561,7 +522,11 @@ fun ProgressDot(isActive: Boolean) {
             .width(if (isActive) 24.dp else 8.dp)
             .height(8.dp)
             .background(
-                color = if (isActive) Color.White else Color.White.copy(alpha = 0.4f),
+                color = if (isActive) {
+                    com.flowpay.app.ui.theme.FlowpayInkWarm
+                } else {
+                    com.flowpay.app.ui.theme.FlowpayLedgerRule
+                },
                 shape = if (isActive) RoundedCornerShape(4.dp) else CircleShape
             )
     )
@@ -569,35 +534,35 @@ fun ProgressDot(isActive: Boolean) {
 
 @Composable
 fun TestInstructions() {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .background(FlowpaySurfaceDim, RoundedCornerShape(20.dp))
-            .padding(16.dp)
+            .border(
+                1.dp,
+                com.flowpay.app.ui.theme.FlowpayLedgerRule.copy(alpha = 0.4f),
+                com.flowpay.app.ui.theme.FlowpayRecordShapeLarge
+            )
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Configure Payment Methods",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                letterSpacing = 0.3.sp
-            )
+        Text(
+            text = stringResource(R.string.testcfg_instructions_title),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = com.flowpay.app.ui.theme.FlowpayInkWarm,
+            letterSpacing = 0.3.sp
+        )
 
-            Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-            Text(
-                text = "We'll test both scanning and manual payment methods to ensure everything works smoothly",
-                fontSize = 13.sp,
-                color = FlowpayTextLightGray,
-                lineHeight = 19.sp,
-                textAlign = TextAlign.Center
-            )
-        }
+        Text(
+            text = stringResource(R.string.testcfg_instructions_body),
+            fontSize = 13.sp,
+            color = FlowpayTextLightGray,
+            lineHeight = 19.sp,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -611,51 +576,30 @@ fun TestButton(
     isUnsupported: Boolean = false,
     onClick: () -> Unit
 ) {
-    val accent = LocalFlowpayAccentTheme.current
+    val ink = com.flowpay.app.ui.theme.FlowpayInkWarm
+    val seal = com.flowpay.app.ui.theme.FlowpaySeal
+    val ledgerRule = com.flowpay.app.ui.theme.FlowpayLedgerRule
 
-    val iconBgColor = when {
-        isUnsupported -> FlowpayStatusWarning.copy(alpha = 0.15f)
-        isCompleted -> FlowpayAccentGreen.copy(alpha = 0.15f)
-        else -> accent.primary.copy(alpha = 0.15f)
-    }
-    val iconTint = when {
-        isUnsupported -> FlowpayStatusWarning
-        isCompleted -> FlowpayAccentGreen
-        else -> accent.primary
-    }
-
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = FlowpaySurfaceDim),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .border(1.dp, ledgerRule.copy(alpha = 0.4f), com.flowpay.app.ui.theme.FlowpayRecordShapeLarge)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 18.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Icon circle
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(
-                        color = iconBgColor,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (code == "*99#") UssdIcon else UpiIcon,
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
+            // Plain icon identifying the rail (USSD vs UPI123) — status is
+            // carried entirely by the trailing indicator, not by this icon's
+            // color, so the two never send conflicting signals.
+            Icon(
+                imageVector = if (code == "*99#") UssdIcon else UpiIcon,
+                contentDescription = null,
+                tint = if (isUnsupported) FlowpayStatusWarning else FlowpayTextLightGray,
+                modifier = Modifier.size(24.dp)
+            )
 
             // Text content
             Column(
@@ -669,14 +613,15 @@ fun TestButton(
                         text = title,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (isUnsupported) FlowpayStatusWarning else Color.White
+                        color = if (isUnsupported) FlowpayStatusWarning else ink
                     )
                     Text(
                         text = code,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isUnsupported) FlowpayStatusWarning else accent.accent,
-                        fontFamily = FontFamily.Monospace
+                        style = com.flowpay.app.ui.theme.FlowpayMonoStyle.copy(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isUnsupported) FlowpayStatusWarning else seal
+                        )
                     )
                 }
 
@@ -699,9 +644,9 @@ fun TestButton(
                     isTesting -> {
                         CircularProgressIndicator(
                             modifier = Modifier.size(22.dp),
-                            color = accent.primary,
+                            color = ink,
                             strokeWidth = 2.5.dp,
-                            trackColor = FlowpayLightGray
+                            trackColor = ledgerRule
                         )
                     }
                     isUnsupported -> {
@@ -712,10 +657,10 @@ fun TestButton(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "!",
+                                text = stringResource(R.string.testcfg_unsupported_glyph),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = FlowpaySurfaceDim
                             )
                         }
                     }

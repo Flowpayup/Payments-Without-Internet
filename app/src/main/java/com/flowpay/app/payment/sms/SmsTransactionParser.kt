@@ -20,7 +20,13 @@ data class SimpleTransaction(
     val upiId: String? = null,
     val transactionType: String = "DEBIT",
     val recipientName: String? = null, // who money was sent to
-    val phoneNumber: String? = null // phone number if available
+    val phoneNumber: String? = null, // phone number if available
+    /**
+     * The bank's own reference exactly as it appears in the SMS, or null when
+     * the SMS carries none. [transactionId] is a row key derived from it and
+     * must never be shown to a user as the reference.
+     */
+    val bankRef: String? = null
 ) : Parcelable
 
 /**
@@ -225,19 +231,31 @@ object SmsTransactionParser {
      *
      * [clock] and [randomSuffix] are injected so ID generation is
      * deterministic under test; callers in production use the defaults.
+     *
+     * [expectedPayeeVpa] is set by the Scan QR flow, where the amount is typed
+     * into the USSD menu and the app never sees it. A debit naming that VPA is
+     * this payment whatever its amount. See [checkQrPayee].
      */
+    // expectedPayeeVpa and its QR-payee branches are genuinely necessary
+    // (issue #26): a static QR has no amount to check, so the VPA is the
+    // only signal that ties a debit to this payment.
+    @Suppress("LongParameterList", "CyclomaticComplexMethod", "ReturnCount")
     fun parse(
         sender: String,
         body: String,
         expectedAmount: String?,
         clock: () -> Long = System::currentTimeMillis,
-        randomSuffix: () -> Int = { (1000..9999).random() }
+        randomSuffix: () -> Int = { (1000..9999).random() },
+        expectedPayeeVpa: String? = null
     ): SimpleTransaction? {
         val bankName = detectBank(sender, body) ?: return null
         if (!isTransactionMessage(body)) return null
         val amount = extractAmount(body) ?: return null
 
-        val transactionId = extractTransactionId(body, clock) ?: generateTransactionId(clock, randomSuffix)
+        val bankRef = extractBankReference(body)
+        // The clock suffix keeps standalone rows unique when a bank reuses a
+        // reference. It belongs to the row key only, never to bankRef.
+        val transactionId = bankRef?.let { "${it}_${clock()}" } ?: generateTransactionId(clock, randomSuffix)
         val upiId = extractUPIId(body)
         val transactionType = detectTransactionType(body)
         val (recipientName, phoneNumber) = extractRecipientInfo(body, transactionType)
@@ -245,21 +263,34 @@ object SmsTransactionParser {
         // Everything below applies only to an outgoing payment we are waiting
         // on. Credits are never a debit's confirmation and are left to the
         // downstream path, which ignores them.
+        var qrPayee = QrPayeeCheck.NOT_QR
         if (transactionType != "CREDIT") {
             // An amount alone is not a payment — see describesTransaction.
             if (!describesTransaction(body)) return null
 
+            qrPayee = checkQrPayee(body, expectedPayeeVpa)
             // A mismatched debit isn't our confirmation — return null so the
             // window stays open for the real one, instead of misattributing an
-            // unrelated bank alert (an auto-debit, a card decline).
-            if (!expectedAmount.isNullOrEmpty() && !isAmountMatching(amount, expectedAmount)) {
+            // unrelated bank alert (an auto-debit, a card decline). A debit
+            // that names the scanned payee is ours even if the user typed a
+            // different amount than the QR suggested.
+            if (!expectedAmount.isNullOrEmpty() &&
+                qrPayee != QrPayeeCheck.NAMED &&
+                !isAmountMatching(amount, expectedAmount)
+            ) {
                 return null
             }
         }
 
         // Derive the outcome from the SMS itself: a failure keyword records
-        // FAILED (banks send "Payment of Rs 500 failed"), otherwise SUCCESS.
-        val status = if (detectsFailure(body)) TransactionStatus.FAILED else TransactionStatus.SUCCESS
+        // FAILED (banks send "Payment of Rs 500 failed"). A QR payment with no
+        // amount to check and no payee in the SMS could be any debit that
+        // landed in the window, so it is never reported as a plain SUCCESS.
+        val status = when {
+            detectsFailure(body) -> TransactionStatus.FAILED
+            qrPayee == QrPayeeCheck.NOT_NAMED && expectedAmount.isNullOrEmpty() -> TransactionStatus.NEEDS_REVIEW
+            else -> TransactionStatus.SUCCESS
+        }
 
         return SimpleTransaction(
             transactionId = transactionId,
@@ -271,8 +302,18 @@ object SmsTransactionParser {
             upiId = upiId,
             transactionType = transactionType,
             recipientName = recipientName,
-            phoneNumber = phoneNumber
+            phoneNumber = phoneNumber,
+            bankRef = bankRef
         )
+    }
+
+    internal enum class QrPayeeCheck { NOT_QR, NAMED, NOT_NAMED }
+
+    /** Whether a debit names the payee scanned from the QR, if there was one. */
+    internal fun checkQrPayee(body: String, expectedPayeeVpa: String?): QrPayeeCheck = when {
+        expectedPayeeVpa.isNullOrBlank() -> QrPayeeCheck.NOT_QR
+        body.contains(expectedPayeeVpa.trim(), ignoreCase = true) -> QrPayeeCheck.NAMED
+        else -> QrPayeeCheck.NOT_NAMED
     }
 
     /**
@@ -458,33 +499,45 @@ object SmsTransactionParser {
         return (nonBalance.ifEmpty { candidates }).first().second
     }
 
-    internal fun extractTransactionId(body: String, clock: () -> Long): String? {
-        val patterns = listOf(
-            // The \b are load-bearing. Without them "id" matched inside
-            // "pa|id| to SHARMA STORE" and captured the following word, so a
-            // receipt for the most common template read "Transaction ID
-            // to_1785952502285" instead of the bank's reference (seen on a
-            // real device, 2026-08-05). The reference is the one field a user
-            // needs to match this payment against their bank statement.
-            "\\b(?:ref|txn|transaction|id)\\b\\s*(?:no|number|id)?\\s*[:.#]?\\s*([A-Z0-9]+)",
-            "([A-Z0-9]{10,})" // Generic pattern for long alphanumeric
-        )
+    /**
+     * A reference introduced by a keyword: "UPI Ref No 512233440091",
+     * "Refno 512233440091", "Txn ID: HDFC00123456", "UTR 512233440091".
+     *
+     * The word boundaries are load-bearing. Without them "id" matched inside
+     * "pa|id| to SHARMA STORE" and captured the following word (seen on a real
+     * device, 2026-08-05). The value must be at least 6 characters, so a
+     * keyword followed by an ordinary word ("txn of Rs 500") finds nothing,
+     * and [isPlausibleReference] rejects the rest.
+     */
+    private val KEYWORD_REFERENCE = Regex(
+        "\\b(?:utr|rrn|ref(?:no)?|reference|txn|transaction|id)\\b[\\s:.#-]*" +
+            "(?:(?:no|number|id)\\b[\\s:.#-]*)?([A-Z0-9]{6,})(?![A-Z0-9@])",
+        RegexOption.IGNORE_CASE
+    )
 
-        for (pattern in patterns) {
-            val regex = Regex(pattern, RegexOption.IGNORE_CASE)
-            val match = regex.find(body)
+    /**
+     * A bare 12-digit run, the length of a UPI RRN. Deliberately the only
+     * keyword-free form: the old "any 10+ alphanumeric run" fallback returned
+     * words ("successfully"), 11-digit helpline numbers and masked account
+     * numbers ("XXXXXX1234").
+     */
+    private val BARE_RRN = Regex("(?<![A-Za-z0-9])(\\d{12})(?![A-Za-z0-9])")
 
-            if (match != null && match.groups.size > 1) {
-                val baseId = match.groups[1]?.value
-                if (!baseId.isNullOrEmpty()) {
-                    // Add a timestamp to make it unique even if ref number repeats
-                    return "${baseId}_${clock()}"
-                }
-            }
-        }
+    // Masked account or card numbers such as "XXXXXX1234".
+    private val MASKED_NUMBER = Regex("^[Xx*]+\\d+$")
 
-        return null
-    }
+    private fun isPlausibleReference(value: String): Boolean =
+        value.any(Char::isDigit) && !MASKED_NUMBER.matches(value)
+
+    /**
+     * The bank's reference as written in the SMS, or null. A missing reference
+     * is visible to the user; a wrong one is not, so anything doubtful is null.
+     */
+    internal fun extractBankReference(body: String): String? =
+        KEYWORD_REFERENCE.findAll(body)
+            .map { it.groupValues[1] }
+            .firstOrNull(::isPlausibleReference)
+            ?: BARE_RRN.find(body)?.groupValues?.get(1)
 
     internal fun extractUPIId(body: String): String? {
         val patterns = listOf(

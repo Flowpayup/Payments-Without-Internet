@@ -27,9 +27,7 @@ class TransactionRepository private constructor(context: Context) :
 
         fun getInstance(context: Context): TransactionRepository {
             return INSTANCE ?: synchronized(this) {
-                val instance = TransactionRepository(context.applicationContext)
-                INSTANCE = instance
-                instance
+                INSTANCE ?: TransactionRepository(context.applicationContext).also { INSTANCE = it }
             }
         }
     }
@@ -173,7 +171,7 @@ class TransactionRepository private constructor(context: Context) :
         return transactionDao.confirmTransaction(
             transactionId = transactionId,
             status = status,
-            bankRef = parsed.transactionId,
+            bankRef = parsed.bankRef,
             bankName = parsed.bankName,
             smsExcerpt = parsed.smsExcerpt,
             upiId = parsed.upiId,

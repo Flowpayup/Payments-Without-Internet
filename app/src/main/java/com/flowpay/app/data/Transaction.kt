@@ -43,6 +43,13 @@ data class Transaction(
     val verifiedAt: Long? = null
 ) {
     /**
+     * [bankRef] as the user should see and copy it. Rows written before the
+     * reference was stored raw carry the row key's `_<epoch millis>` suffix;
+     * a bank reference never contains `_`, so stripping it is safe.
+     */
+    fun displayBankRef(): String? = bankRef?.replace(LEGACY_REF_SUFFIX, "")?.ifBlank { null }
+
+    /**
      * Convert to PaymentDetails for UI compatibility
      */
     fun toPaymentDetails(): PaymentDetails {
@@ -68,6 +75,8 @@ data class Transaction(
      * Convert from SimpleTransaction
      */
     companion object {
+        private val LEGACY_REF_SUFFIX = Regex("_\\d+$")
+
         fun fromSimpleTransaction(simpleTransaction: com.flowpay.app.payment.sms.SimpleTransaction): Transaction {
             return Transaction(
                 transactionId = simpleTransaction.transactionId,
@@ -80,7 +89,7 @@ data class Transaction(
                 transactionType = simpleTransaction.transactionType,
                 recipientName = simpleTransaction.recipientName,
                 phoneNumber = simpleTransaction.phoneNumber,
-                bankRef = simpleTransaction.transactionId,
+                bankRef = simpleTransaction.bankRef,
                 source = TransactionSource.SMS
             )
         }

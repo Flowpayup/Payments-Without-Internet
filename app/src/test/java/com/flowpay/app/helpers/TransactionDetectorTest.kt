@@ -126,6 +126,30 @@ class TransactionDetectorTest {
     }
 
     @Test
+    fun `a new operation does not inherit fields from an expired one`() {
+        // A window that times out while nothing checks it is never cleared.
+        // A QR payment started afterwards passes no phone number, so without
+        // a reset the result screen would name the previous payee.
+        detector.startOperation("UPI_123", expectedAmount = "500", phoneNumber = "9876543210", sessionTxnId = "old")
+        detector.startOperation("QR_SCAN", expectedAmount = "", sessionTxnId = "new")
+
+        assertNull(detector.getPhoneNumber())
+        assertEquals("new", detector.getSessionTxnId())
+    }
+
+    @Test
+    fun `a QR window passes the scanned payee to the parser`() {
+        detector.startOperation("QR_SCAN", expectedAmount = "", expectedPayeeVpa = "shop@okaxis")
+
+        val unrelated = detector.processSMS(
+            "VM-HDFCBK",
+            "Rs.2,350.00 debited from HDFC Bank A/c **1234 for EMI ref 998877665544"
+        )
+
+        assertEquals(TransactionStatus.NEEDS_REVIEW, unrelated!!.status)
+    }
+
+    @Test
     fun `same SMS body is claimed exactly once`() {
         // The claim key is body-only, not sender-qualified, so a redelivered
         // SMS_RECEIVED broadcast (or a repeat debug injection) for the exact
