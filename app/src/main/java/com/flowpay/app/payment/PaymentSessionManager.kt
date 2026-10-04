@@ -229,7 +229,7 @@ class PaymentSessionManager(
      * active (e.g. the QR flow), letting callers fall back to their own
      * persistence.
      */
-    fun onSmsConfirmed(parsed: SimpleTransaction): String? {
+    suspend fun onSmsConfirmed(parsed: SimpleTransaction): String? {
         // Direction check: a manual session is always an outgoing DEBIT
         // (begin() inserts transactionType = "DEBIT"), so an incoming CREDIT
         // SMS can never confirm it. Returning null lets the caller fall back
@@ -286,18 +286,17 @@ class PaymentSessionManager(
             cleanupLocked()
         }
 
-        scope.launch {
-            pendingInsertJob?.join()
-            val updated = store.confirmTransaction(
-                transactionId = txnId,
-                status = newStatus,
-                parsed = parsed,
-                verifiedAt = verifiedAt
-            )
-            Log.d(TAG, "Session row confirmed as $newStatus (rows=$updated)")
-        }
+        pendingInsertJob?.join()
+        val updated = store.confirmTransaction(
+            transactionId = txnId,
+            status = newStatus,
+            parsed = parsed,
+            verifiedAt = verifiedAt
+        )
+        Log.d(TAG, "Session row confirmed as $newStatus (rows=$updated)")
         return txnId
     }
+
 
     /** UI acknowledges a terminal result and returns the session to Idle. */
     fun acknowledgeResult() {
