@@ -127,9 +127,10 @@ class PaymentResultActivity : AppCompatActivity() {
         val recipientName = intent.getStringExtra("recipient_name") // NEW
         val phoneNumber = intent.getStringExtra("phone_number") // NEW
 
-        // Get operation type from detector
+        // Get operation type from intent (passed from ingestion pipeline before window was consumed) or detector
         val detector = TransactionDetector.getInstance(this)
-        val operationType = detector.getOperationType() ?: ""
+        val operationType = intent.getStringExtra("operation_type") ?: detector.getOperationType() ?: ""
+
 
         // Render the outcome the bank actually reported — this screen is
         // launched for every parsed confirmation, not only successes. Every
