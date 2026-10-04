@@ -29,8 +29,10 @@ object SmsIngestionPipeline {
 
     suspend fun ingest(context: Context, detector: TransactionDetector, sender: String, body: String) {
         // Captured BEFORE processSMS: a consuming match clears the operation
-        // window (including this id).
+        // window (including this id, phone number, and operation type).
         val windowTxnId = detector.getSessionTxnId()
+        val windowPhoneNumber = detector.getPhoneNumber()
+        val windowOperationType = detector.getOperationType()
 
         val transaction = detector.processSMS(sender, body)
         if (transaction == null) {
@@ -89,7 +91,8 @@ object SmsIngestionPipeline {
                 putExtra("upi_id", transaction.upiId)
                 putExtra("transaction_type", transaction.transactionType)
                 putExtra("recipient_name", transaction.recipientName)
-                putExtra("phone_number", transaction.phoneNumber)
+                putExtra("phone_number", transaction.phoneNumber ?: windowPhoneNumber)
+                putExtra("operation_type", windowOperationType)
             }
             // Notification first (also serves as a receipt), then the direct
             // launch — which can be silently blocked without the overlay

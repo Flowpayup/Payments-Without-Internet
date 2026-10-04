@@ -213,4 +213,25 @@ class TransactionDetectorTest {
         assertEquals(TransactionStatus.SUCCESS, real!!.status)
         assertFalse("the real confirmation consumes the window", detector.shouldProcessSMS())
     }
+
+    @Test
+    fun `processSMS consuming window clears phone number and operation type`() {
+        detector.startOperation(
+            operationType = "UPI_123",
+            expectedAmount = "500",
+            phoneNumber = "9876543210",
+            sessionTxnId = "txn-123"
+        )
+        assertEquals("9876543210", detector.getPhoneNumber())
+        assertEquals("UPI_123", detector.getOperationType())
+
+        val sender = "VM-HDFCBK"
+        val body = "Rs 500 sent to JOHN via UPI Ref 998877665544 -HDFC Bank"
+        val txn = detector.processSMS(sender, body)
+
+        assertNotNull(txn)
+        assertFalse(detector.shouldProcessSMS())
+        assertNull("phone_number must be cleared after consumption", detector.getPhoneNumber())
+        assertNull("operation_type must be cleared after consumption", detector.getOperationType())
+    }
 }
