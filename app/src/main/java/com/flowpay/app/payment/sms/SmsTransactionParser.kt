@@ -466,7 +466,7 @@ object SmsTransactionParser {
 
     internal fun extractBankReference(body: String): String? {
         val pattern = Regex(
-            "\\b(?:ref(?:\\s*(?:no|number))?|rrn|utr|(?:txn|transaction)\\s+id)" +
+            "\\b(?:ref(?:\\s*(?:no|number))?|rrn|utr|(?:txn|transaction)(?:\\s+(?:no|number|id))?)" +
                 "\\b\\s*[:.#]?\\s*([A-Z0-9]+)\\b",
             RegexOption.IGNORE_CASE
         )

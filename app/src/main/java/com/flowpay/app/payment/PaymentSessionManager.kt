@@ -12,6 +12,7 @@ import com.flowpay.app.states.PaymentState
 import com.flowpay.app.states.TimeoutType
 import com.flowpay.app.telephony.CallSessionEvent
 import com.flowpay.app.telephony.CallStateSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -161,8 +162,7 @@ class PaymentSessionManager(
             // confirmation that landed on it a moment earlier is never erased.
             if (supersededTxnId != null) {
                 val previousInsert = pendingInsertJob
-                scope.launch {
-                    previousInsert?.join()
+                launchCleanupAfterInsert(previousInsert) {
                     store.deletePending(supersededTxnId)
                 }
             }
@@ -327,11 +327,18 @@ class PaymentSessionManager(
     }
 
     /** Discards PENDING rows whose deadline passed while we weren't running. */
+    @Suppress("TooGenericExceptionCaught") // Retryable storage must not crash application-scoped maintenance.
     fun reconcileStalePending() {
         scope.launch {
-            val discarded = runCatching { store.deleteStalePending(clock()) }.getOrDefault(0)
-            if (discarded > 0) {
-                Log.d(TAG, "Discarded $discarded unconfirmed stale PENDING transaction(s)")
+            try {
+                val discarded = store.deleteStalePending(clock())
+                if (discarded > 0) {
+                    Log.d(TAG, "Discarded $discarded unconfirmed stale PENDING transaction(s)")
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                Log.e(TAG, "Pending transaction maintenance unavailable; retaining history for retry", failure)
             }
         }
     }
@@ -414,8 +421,7 @@ class PaymentSessionManager(
             id to pendingInsertJob
         }
 
-        scope.launch {
-            txnId.second?.join()
+        launchCleanupAfterInsert(txnId.second) {
             store.deletePending(txnId.first)
         }
         Log.w(TAG, "No bank SMS before deadline - unconfirmed session discarded")
@@ -447,9 +453,23 @@ class PaymentSessionManager(
             id to pendingInsertJob
         }
 
-        scope.launch {
-            txnId.second?.join()
+        launchCleanupAfterInsert(txnId.second) {
             store.transitionStatus(txnId.first, TransactionStatus.PENDING, rowStatus)
+        }
+    }
+
+    /** A failed insertion has no row to clean up; storage failure must stay retryable. */
+    @Suppress("TooGenericExceptionCaught") // Background cleanup cannot turn a handled storage error into an app crash.
+    private fun launchCleanupAfterInsert(insert: Deferred<Unit>?, cleanup: suspend () -> Unit) {
+        scope.launch {
+            try {
+                insert?.await()
+                cleanup()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                Log.e(TAG, "Payment cleanup unavailable; retaining stored history for retry", failure)
+            }
         }
     }
 

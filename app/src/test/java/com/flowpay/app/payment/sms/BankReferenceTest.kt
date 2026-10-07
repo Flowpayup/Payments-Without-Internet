@@ -25,7 +25,12 @@ class BankReferenceTest {
     fun `explicit references retain leading zeroes and do not match ordinary txn prose`() {
         assertEquals("001233440091", SmsTransactionParser.extractBankReference("UPI Refno 001233440091."))
         assertEquals("HDFC123456", SmsTransactionParser.extractBankReference("Txn ID: HDFC123456"))
+        assertEquals("512233440091", SmsTransactionParser.extractBankReference("UPI txn 512233440091 -SBI"))
+        assertEquals("512233440091", SmsTransactionParser.extractBankReference("Transaction no. 512233440091"))
+        assertEquals("512233440091", SmsTransactionParser.extractBankReference("Txn number 512233440091"))
         assertNull(SmsTransactionParser.extractBankReference("Your txn of Rs 500. Call 18002586161"))
+        assertNull(SmsTransactionParser.extractBankReference("Your transaction of Rs 500. Call 18002586161"))
         assertNull(SmsTransactionParser.extractBankReference("Merchant ID 123456, mobile 9876543210"))
+        assertNull(SmsTransactionParser.extractBankReference("UPI payment successful. 512233440091"))
     }
 }
