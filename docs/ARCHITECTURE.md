@@ -146,10 +146,14 @@ most careful area.
 [`CallStateCoordinator`](../app/src/main/java/com/flowpay/app/telephony/CallStateCoordinator.kt)
 is the single app-wide call-state listener; `PaymentSessionManager` consumes
 its events. [`CallManager`](../app/src/main/java/com/flowpay/app/managers/CallManager.kt)
-places the actual `ACTION_CALL` dial (the DTMF 123Pay string is built and
-validated by the pure, tested
-[`Upi123CallStringBuilder`](../app/src/main/java/com/flowpay/app/payment/Upi123CallStringBuilder.kt))
-and manages call audio.
+places the manual 123Pay call directly through `TelecomManager.placeCall` and
+manages call audio. The recipient and amount are handed to the system call
+service, with the same DTMF URI and no outgoing-account override. Android
+documents this as equivalent to `ACTION_CALL` through system Telecom
+([API reference](https://developer.android.com/reference/android/telecom/TelecomManager#placeCall(android.net.Uri,%20android.os.Bundle))).
+The pure, tested
+[`Upi123CallStringBuilder`](../app/src/main/java/com/flowpay/app/payment/Upi123CallStringBuilder.kt)
+builds and validates that URI.
 [`CallOverlayService`](../app/src/main/java/com/flowpay/app/services/CallOverlayService.kt)
 draws a `TYPE_APPLICATION_OVERLAY` window during the call so the user has a UI
 anchor, and mirrors `PaymentState` into result dialogs. Its overlay watchdog

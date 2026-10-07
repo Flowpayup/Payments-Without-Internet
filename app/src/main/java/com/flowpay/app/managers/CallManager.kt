@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Bundle
 import android.telecom.TelecomManager
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
@@ -340,11 +341,10 @@ class CallManager(private val context: Context) {
             // Call-state tracking and outcome interpretation are owned by
             // CallStateCoordinator / PaymentSessionManager — no per-call
             // PhoneStateListener is registered here.
-            val intent = Intent(Intent.ACTION_CALL).apply {
-                data = Uri.parse(callString)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
+            // Send recipient and amount only to the system call service.
+            // Keep the same URI and let Telecom choose the outgoing account.
+            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+            telecomManager.placeCall(Uri.parse(callString), Bundle())
             Log.d(TAG, "UPI123 call started")
             true
         } catch (e: SecurityException) {

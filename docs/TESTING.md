@@ -33,6 +33,9 @@ Pure logic, no Android framework, no device. Runs in seconds via
   once (the scenario `CallOverlayService`'s exception-handling paths rely on).
 - **`Upi123CallStringBuilderTest`** — the DTMF dial-string builder, golden
   strings plus injection-neutralization cases.
+- **`Upi123CallHandoffTest`** — Robolectric checks on API 29 and 35 that the
+  validated IVR URI reaches system Telecom with empty extras and no implicit
+  activity launch. Denied call permission prevents the handoff.
 - **`QRCodeParserTest`** + **`QRCodeAnalyzerDecodeTest`** — UPI QR URI
   parsing, and (since the ML Kit → ZXing swap) a decode corpus that encodes
   those same URIs into real QR bitmaps and decodes them back through the
