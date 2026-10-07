@@ -127,7 +127,7 @@
             android:src="@drawable/ic_close"
             android:scaleType="centerInside"
             android:padding="10dp"
-            android:contentDescription="@null"
+            android:contentDescription="@string/qr_close"
             app:tint="@color/white" />
 
     </FrameLayout>

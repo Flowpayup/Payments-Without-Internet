@@ -27,7 +27,6 @@ import androidx.core.content.ContextCompat
 import com.flowpay.app.MainActivity
 import com.flowpay.app.R
 import com.flowpay.app.data.TransactionStatus
-import com.flowpay.app.helpers.TransactionDetector
 import com.flowpay.app.utils.CurrencyFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -117,7 +116,7 @@ class PaymentResultActivity : AppCompatActivity() {
     }
 
     private fun loadTransactionData() {
-        val transactionId = intent.getStringExtra("transaction_id") ?: "N/A"
+        val bankReference = com.flowpay.app.payment.sms.BankReference.display(intent.getStringExtra("bank_ref"))
         val amount = intent.getStringExtra("amount") ?: "0"
         val status = intent.getStringExtra("status") ?: "UNKNOWN"
         val bankName = intent.getStringExtra("bank_name") ?: "Bank"
@@ -126,10 +125,6 @@ class PaymentResultActivity : AppCompatActivity() {
         val transactionType = intent.getStringExtra("transaction_type") ?: "DEBIT"
         val recipientName = intent.getStringExtra("recipient_name") // NEW
         val phoneNumber = intent.getStringExtra("phone_number") // NEW
-
-        // Get operation type from detector
-        val detector = TransactionDetector.getInstance(this)
-        val operationType = detector.getOperationType() ?: ""
 
         // Render the outcome the bank actually reported — this screen is
         // launched for every parsed confirmation, not only successes. Every
@@ -190,11 +185,6 @@ class PaymentResultActivity : AppCompatActivity() {
                 )
                 recipientText.text = phoneNumber
             }
-            operationType == "UPI_123" && detector.getPhoneNumber() != null -> {
-                recipientLayout.visibility = View.VISIBLE
-                recipientLabel.text = getString(R.string.recipient_to)
-                recipientText.text = detector.getPhoneNumber()
-            }
             else -> {
                 recipientLayout.visibility = View.GONE
             }
@@ -203,7 +193,7 @@ class PaymentResultActivity : AppCompatActivity() {
         // Bank name - show if different from recipient
         bankNameText.text = bankName
 
-        transactionIdText.text = bankReferenceOf(transactionId)
+        transactionIdText.text = bankReference ?: getString(R.string.bank_reference_unavailable)
         dateTimeText.text = formatDateTime(timestamp)
 
         // Show UPI ID if available
@@ -258,19 +248,6 @@ class PaymentResultActivity : AppCompatActivity() {
             else -> R.string.recipient_paid_to
         }
     }
-
-    /**
-     * The part of a stored transaction id a user can actually act on.
-     *
-     * Ids are stored as `<bank reference>_<timestamp>` — the timestamp keeps
-     * rows unique when a bank reuses a reference, and is meaningless to the
-     * reader. Shown whole it produced "125012501250…85952823651", ellipsised
-     * through the middle, which is precisely the half a user needs to match
-     * this payment against their bank statement. Generated ids (`TXN…`, no
-     * separator) are shown as-is.
-     */
-    private fun bankReferenceOf(transactionId: String): String =
-        transactionId.substringBeforeLast('_').ifBlank { transactionId }
 
     private fun formatDateTime(timestamp: Long): String {
         val formatter = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())

@@ -82,28 +82,36 @@ class CallOverlayService : Service() {
         fun showOverlay(context: Context, phoneNumber: String, amount: String) {
             try {
                 Log.d(TAG, "=== Starting call overlay ===")
+                val owner = FlowpayApplication.from(context)?.paymentSessionManager
+                    ?.paymentState?.value?.getTransactionIdValue()
 
                 // Stop any existing service first
                 if (serviceInstance != null) {
                     Log.d(TAG, "Stopping existing service before starting new one")
                     context.stopService(Intent(context, CallOverlayService::class.java))
                     Handler(Looper.getMainLooper()).postDelayed({
-                        startNewService(context, phoneNumber, amount)
+                        startNewService(context, phoneNumber, amount, owner)
                     }, 500)
                 } else {
-                    startNewService(context, phoneNumber, amount)
+                    startNewService(context, phoneNumber, amount, owner)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to start call overlay service: ${e.message}")
             }
         }
 
-        private fun startNewService(context: Context, phoneNumber: String, amount: String) {
+        private fun startNewService(context: Context, phoneNumber: String, amount: String, owner: String?) {
+            if (owner == null || FlowpayApplication.from(context)?.paymentSessionManager
+                    ?.paymentState?.value?.getTransactionIdValue() != owner
+            ) {
+                return
+            }
             try {
                 val intent = Intent(context, CallOverlayService::class.java).apply {
                     putExtra("action", ACTION_START_OVERLAY)
                     putExtra("phone_number", phoneNumber)
                     putExtra("amount", amount)
+                    putExtra("transaction_id", owner)
                 }
                 context.startService(intent)
 
@@ -238,13 +246,15 @@ class CallOverlayService : Service() {
 
             serviceScope.launch {
                 app.paymentSessionManager.paymentState.collectLatest { state ->
-                    onPaymentStateChanged(state)
+                    if (state.getTransactionIdValue() == ownedTxnId) onPaymentStateChanged(state)
                 }
             }
         }
 
         Log.d(TAG, "CallOverlayService initialization complete")
     }
+
+    private var ownedTxnId: String? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "CallOverlayService started with action: ${intent?.getStringExtra("action")}")
@@ -253,6 +263,7 @@ class CallOverlayService : Service() {
             ACTION_START_OVERLAY -> {
                 val phoneNumber = intent.getStringExtra("phone_number") ?: ""
                 val amount = intent.getStringExtra("amount") ?: ""
+                ownedTxnId = intent.getStringExtra("transaction_id")
                 showOverlayInternal(phoneNumber, amount)
             }
             ACTION_STOP_OVERLAY -> {
@@ -593,7 +604,7 @@ class CallOverlayService : Service() {
             if (shouldGiveUp) {
                 // The dial never produced an active call; close the session
                 // honestly instead of leaving it to the 10-minute deadline.
-                sessionManager?.onCallNeverStarted()
+                ownedTxnId?.let { sessionManager?.onCallNeverStarted(it) }
                 hideOverlayInternal()
                 stopSelf()
             }
@@ -894,12 +905,9 @@ class CallOverlayService : Service() {
     private fun handleTerminateCall() {
         Log.d(TAG, "=== HANDLING TERMINATE CALL REQUEST ===")
 
-        // Mark the session cancelled first and unconditionally — the
-        // payment-state collector hides the overlay and shows the
-        // cancellation dialog exactly once. This must run outside the try
-        // below: audio/telecom cleanup is best-effort UI polish and must
-        // never be able to prevent the session from being marked cancelled.
-        sessionManager?.onUserCancelled()
+        // Ending the call after handoff leaves bank verification active.
+        // Capture the owner so an old overlay cannot cancel a newer payment.
+        ownedTxnId?.let { sessionManager?.onUserCancelled(it) }
 
         try {
             callManager?.restoreCallVolume()
@@ -909,17 +917,13 @@ class CallOverlayService : Service() {
                 Log.w(TAG, "Failed to terminate call programmatically")
                 Toast.makeText(
                     this,
-                    "Unable to end the call automatically. Please hang up manually.",
+                    getString(R.string.error_end_call_manually),
                     Toast.LENGTH_LONG
                 ).show()
             }
 
-            // If no session was active (defensive), still wind down cleanly.
-            if (sessionManager == null) {
-                hideOverlayInternal()
-                dialogManager?.showTransactionCancelledByUser()
-                Handler(Looper.getMainLooper()).postDelayed({ stopSelf() }, 1000)
-            }
+            hideOverlayInternal()
+            Handler(Looper.getMainLooper()).postDelayed({ stopSelf() }, 1000)
         } catch (e: Exception) {
             Log.e(TAG, "Error handling terminate call: ${e.message}", e)
             hideOverlayInternal()

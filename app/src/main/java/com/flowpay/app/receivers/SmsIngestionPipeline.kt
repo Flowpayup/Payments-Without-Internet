@@ -13,6 +13,8 @@ import com.flowpay.app.payment.sms.SimpleTransaction
 import com.flowpay.app.repository.TransactionRepository
 import com.flowpay.app.ui.activities.PaymentResultActivity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -27,10 +29,25 @@ object SmsIngestionPipeline {
 
     private const val TAG = "SmsIngestionPipeline"
 
+    private val ingestionLock = Mutex()
+
+    @Suppress("TooGenericExceptionCaught") // Release the claim for every failed persistence attempt, then rethrow.
     suspend fun ingest(context: Context, detector: TransactionDetector, sender: String, body: String) {
-        // Captured BEFORE processSMS: a consuming match clears the operation
-        // window (including this id).
+        ingestionLock.withLock {
+            try {
+                ingestClaimed(context, detector, sender, body)
+            } catch (failure: Exception) {
+                detector.releaseSmsClaim(body)
+                throw failure
+            }
+        }
+    }
+
+    @Suppress("ReturnCount") // Unrelated receipts and stale owners must produce no result.
+    private suspend fun ingestClaimed(context: Context, detector: TransactionDetector, sender: String, body: String) {
+        // Retain recipient and owner context before successful persistence consumes the window.
         val windowTxnId = detector.getSessionTxnId()
+        val phoneNumber = detector.getPhoneNumber()
 
         val transaction = detector.processSMS(sender, body)
         if (transaction == null) {
@@ -47,7 +64,8 @@ object SmsIngestionPipeline {
         // after the deadline discarded that row finds nothing to adopt and
         // is saved standalone — the payment still surfaces.
         val sessionManager = FlowpayApplication.from(context)?.paymentSessionManager
-        val sessionTxnId = sessionManager?.onSmsConfirmed(transaction)
+        if (windowTxnId != detector.getSessionTxnId()) return
+        val sessionTxnId = if (windowTxnId != null) sessionManager?.onSmsConfirmed(transaction, windowTxnId) else null
         val recordTxnId = resolveOwnerTxnId(
             sessionTxnId = sessionTxnId,
             windowTxnId = windowTxnId,
@@ -67,10 +85,14 @@ object SmsIngestionPipeline {
         }
 
         if (recordTxnId == null) {
-            TransactionRepository.getInstance(context).saveTransaction(transaction)
+            val repository = TransactionRepository.getInstance(context)
+            // Do not create a second receipt for a settled or genuinely cancelled owner.
+            if (windowTxnId != null && repository.getTransactionById(windowTxnId) != null) return
+            repository.saveTransaction(transaction)
             Log.d(TAG, "Transaction saved (no session, no adoptable row)")
         }
 
+        detector.completeOperation(windowTxnId)
         withContext(Dispatchers.Main) {
             // Dismiss the USSD overlay (QR flow) and notify listening screens.
             LocalBroadcastManager.getInstance(context)
@@ -81,6 +103,7 @@ object SmsIngestionPipeline {
             val successIntent = Intent(context, PaymentResultActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 putExtra("transaction_id", recordTxnId ?: transaction.transactionId)
+                putExtra("bank_ref", transaction.bankReference)
                 putExtra("amount", transaction.amount)
                 putExtra("status", transaction.status)
                 putExtra("bank_name", transaction.bankName)
@@ -89,7 +112,7 @@ object SmsIngestionPipeline {
                 putExtra("upi_id", transaction.upiId)
                 putExtra("transaction_type", transaction.transactionType)
                 putExtra("recipient_name", transaction.recipientName)
-                putExtra("phone_number", transaction.phoneNumber)
+                putExtra("phone_number", transaction.phoneNumber ?: phoneNumber)
             }
             // Notification first (also serves as a receipt), then the direct
             // launch — which can be silently blocked without the overlay
@@ -119,9 +142,7 @@ object SmsIngestionPipeline {
         sessionTxnId != null -> sessionTxnId
         windowTxnId == null || parsed.transactionType == "CREDIT" -> null
         else -> {
-            val updated = runCatching { adopt(windowTxnId) }
-                .onFailure { Log.e(TAG, "Adopting orphaned row failed", it) }
-                .getOrDefault(0)
+            val updated = adopt(windowTxnId)
             if (updated > 0) {
                 Log.d(TAG, "Confirmation reattached to orphaned session row")
                 windowTxnId

@@ -142,6 +142,9 @@ class QRScannerActivity : ComponentActivity() {
 
     // Whether this flow put a payee VPA on the clipboard (wiped in onDestroy).
     private var didCopyVpa = false
+    private var copiedVpa: String? = null
+    private var clipToken: String? = null
+    private var ownedTxnId: String? = null
 
     // Permission launcher for runtime permissions
     private val permissionLauncher = registerForActivityResult(
@@ -499,6 +502,10 @@ class QRScannerActivity : ComponentActivity() {
     }
 
     private fun proceedWithPayment(upiData: UPIData) {
+        lifecycleScope.launch { proceedWithPaymentReady(upiData) }
+    }
+
+    private suspend fun proceedWithPaymentReady(upiData: UPIData) {
         try {
             Log.d("QRScanner", "=== STARTING SIMPLE QR PAYMENT PROCESS ===")
 
@@ -536,6 +543,8 @@ class QRScannerActivity : ComponentActivity() {
                     showError(getString(R.string.error_ussd_call_failed))
                 }
             }, 1000) // 1 second delay to ensure overlay is ready
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             Log.e("QRScanner", "Unexpected error in proceedWithPayment: ${e.message}", e)
             showError(getString(R.string.error_unexpected))
@@ -549,29 +558,36 @@ class QRScannerActivity : ComponentActivity() {
      * not proceed. The QR flow used to bypass the session manager entirely,
      * so an unconfirmed QR payment left no trace at all.
      */
-    private fun beginQrPaymentSession(upiData: UPIData): Boolean {
+    private suspend fun beginQrPaymentSession(upiData: UPIData): Boolean {
         val sessionManager = FlowpayApplication.from(this)?.paymentSessionManager
-        val sessionTxnId = sessionManager?.begin(
-            phoneNumber = "",
-            amount = upiData.amount ?: "",
-            upiId = upiData.vpa,
-            source = TransactionSource.QR
-        )
-        // No "already in progress" refusal: begin() supersedes any session
-        // still in flight, so a scan is never blocked by a previous payment
-        // the bank never confirmed.
+        var sessionTxnId: String? = null
         return try {
+            sessionTxnId = sessionManager?.begin(
+                phoneNumber = "",
+                amount = upiData.amount ?: "",
+                upiId = upiData.vpa,
+                source = TransactionSource.QR
+            )
+            // No "already in progress" refusal: begin() supersedes any session
+            // still in flight, so a scan is never blocked by a previous payment
+            // the bank never confirmed.
+            ownedTxnId = sessionTxnId
+            if (sessionTxnId == null || sessionManager?.awaitPending(sessionTxnId) != true) return false
             TransactionDetector.getInstance(this).startOperation(
                 operationType = "QR_SCAN",
                 expectedAmount = upiData.amount,
-                sessionTxnId = sessionTxnId
+                sessionTxnId = sessionTxnId,
+                vpa = upiData.vpa
             )
             Log.d("QRScanner", "SMS monitoring started for QR payment")
             true
-        } catch (e: IllegalStateException) {
-            Log.e("QRScanner", "Failed to start SMS monitoring: ${e.message}")
-            sessionManager?.onDialFailed("Could not start SMS monitoring")
-            showError(getString(R.string.error_payment_init_failed))
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            sessionTxnId?.let { sessionManager?.onUserCancelled(it) }
+            throw cancelled
+        } catch (e: Exception) {
+            Log.e("QRScanner", "Failed to start SMS monitoring", e)
+            sessionTxnId?.let { sessionManager?.onDialFailed("Payment storage unavailable", it) }
+            showError(getString(R.string.error_storage_unavailable))
             false
         }
     }
@@ -584,13 +600,16 @@ class QRScannerActivity : ComponentActivity() {
     private fun copyVpaToClipboard(vpa: String) {
         try {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = ClipData.newPlainText("VPA", vpa)
+            val token = java.util.UUID.randomUUID().toString()
+            val clip = ClipData.newPlainText("Flowpay VPA $token", vpa)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 clip.description.extras = PersistableBundle().apply {
                     putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
                 }
             }
             clipboard.setPrimaryClip(clip)
+            copiedVpa = vpa
+            clipToken = token
             didCopyVpa = true
             Log.d("QRScanner", "VPA copied to clipboard successfully")
             // No status update here: the system already shows its own
@@ -615,10 +634,13 @@ class QRScannerActivity : ComponentActivity() {
      * is not a copy, so nothing is announced, and it genuinely empties the
      * clipboard instead of parking an empty string on it.
      */
+    @Suppress("ReturnCount") // Never clear an absent or unowned clip.
     private fun clearVpaClipboard() {
         if (!didCopyVpa) return
         try {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = clipboard.primaryClip ?: return
+            if (!com.flowpay.app.payment.ownsVpaClip(clip, copiedVpa, clipToken)) return
             clipboard.clearPrimaryClip()
             didCopyVpa = false
             Log.d("QRScanner", "VPA cleared from clipboard")
@@ -629,6 +651,7 @@ class QRScannerActivity : ComponentActivity() {
         }
     }
 
+    @Suppress("ReturnCount") // Permission and current-owner checks prevent an obsolete screen from dialling.
     private fun dialUSSD() {
         val ussdCode = "*99*1*3#"
         val encodedHash = Uri.encode("#")
@@ -653,6 +676,8 @@ class QRScannerActivity : ComponentActivity() {
         try {
             Log.d("QRScanner", "Starting USSD call activity")
             updateBlackScreenStatus(R.string.qr_status_call_initiated)
+            val owner = ownedTxnId ?: return
+            if (FlowpayApplication.from(this)?.paymentSessionManager?.markHandoff(owner) != true) return
             startActivity(intent)
             Log.d("QRScanner", "USSD call initiated successfully")
 
@@ -664,7 +689,7 @@ class QRScannerActivity : ComponentActivity() {
             // window keeps listening for a payment that never happened and
             // could adopt an unrelated confirmation.
             FlowpayApplication.from(this)?.paymentSessionManager
-                ?.onDialFailed("Could not start the payment call")
+                ?.onDialFailed("Could not start the payment call", ownedTxnId)
             showError(getString(R.string.error_ussd_call_failed))
         }
     }
@@ -778,17 +803,7 @@ class QRScannerActivity : ComponentActivity() {
 
             // Hide USSD overlay
 
-            // Stop SMS monitoring
-            try {
-                TransactionDetector.getInstance(this).stopOperation()
-                Log.d("QRScanner", "SMS monitoring stopped")
-            } catch (e: Exception) {
-                Log.e("QRScanner", "Failed to stop SMS monitoring: ${e.message}")
-            }
-
-            // The user explicitly aborted: mark the session row CANCELLED so
-            // it doesn't linger PENDING waiting for a payment nobody made.
-            FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
+            ownedTxnId?.let { FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled(it) }
 
             // Show termination message briefly
             runOnUiThread {
@@ -1168,7 +1183,7 @@ class QRScannerActivity : ComponentActivity() {
             // timer giving the screen back on its own timeout while the
             // payment is still legitimately in flight.
             if (isFinishing && !finishedByWaitingScreenTimeout) {
-                FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled()
+                ownedTxnId?.let { FlowpayApplication.from(this)?.paymentSessionManager?.onUserCancelled(it) }
             }
 
             // Wipe the payee VPA from the clipboard now the flow is over.

@@ -99,14 +99,14 @@ class SmsIngestionPipelineTest {
     }
 
     @Test
-    fun `adoption failure is contained and falls back to standalone insert`() = runTest {
-        val owner = SmsIngestionPipeline.resolveOwnerTxnId(
-            sessionTxnId = null,
-            windowTxnId = "window-1",
-            parsed = parsed()
-        ) { error("db unavailable") }
-
-        assertNull(owner)
+    fun `adoption storage failure propagates instead of fabricating a standalone success`() = runTest {
+        var failure: Exception? = null
+        try {
+            SmsIngestionPipeline.resolveOwnerTxnId(null, "window-1", parsed()) { error("db unavailable") }
+        } catch (expected: IllegalStateException) {
+            failure = expected
+        }
+        assertEquals("db unavailable", failure?.message)
     }
 
     // An unrelated incoming credit (salary, refund, someone paying you) can

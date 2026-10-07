@@ -20,7 +20,8 @@ data class SimpleTransaction(
     val upiId: String? = null,
     val transactionType: String = "DEBIT",
     val recipientName: String? = null, // who money was sent to
-    val phoneNumber: String? = null // phone number if available
+    val phoneNumber: String? = null, // phone number if available
+    val bankReference: String? = null
 ) : Parcelable
 
 /**
@@ -65,7 +66,7 @@ object SmsTransactionParser {
      * most common Indian debit template.
      */
     private const val NAME_TERMINATOR =
-        "(?:\\s+(?:via|@|on|dated|for|from|to|UPI|Ref)\\b|\\s+(?:$NAME_STOP_WORDS)\\b|\\.|,|;|$)"
+        "(?:\\s+(?:via|@|on|dated|for|from|to|UPI|Refno|Ref)\\b|\\s+(?:$NAME_STOP_WORDS)\\b|\\.|,|;|$)"
 
     // Name extraction patterns - CASE-INSENSITIVE
     private val RECIPIENT_PATTERNS = listOf(
@@ -212,6 +213,7 @@ object SmsTransactionParser {
 
     // Amount patterns - multiple formats
     private val AMOUNT_PATTERNS = listOf(
+        "(?:debited|credited)\\s+(?:by|for|with)\\s+(?:Rs\\.?|INR|₹)?\\s*([0-9,]+(?:\\.[0-9]{1,2})?)",
         "(?:Rs\\.?|INR|₹)\\s*([0-9,]+(?:\\.[0-9]{1,2})?)",
         "amount\\s*(?:of)?\\s*(?:Rs\\.?|INR|₹)?\\s*([0-9,]+(?:\\.[0-9]{1,2})?)",
         "([0-9,]+(?:\\.[0-9]{1,2})?)\\s*(?:Rs\\.?|INR|₹)"
@@ -271,7 +273,8 @@ object SmsTransactionParser {
             upiId = upiId,
             transactionType = transactionType,
             recipientName = recipientName,
-            phoneNumber = phoneNumber
+            phoneNumber = phoneNumber,
+            bankReference = extractBankReference(body)
         )
     }
 
@@ -458,33 +461,24 @@ object SmsTransactionParser {
         return (nonBalance.ifEmpty { candidates }).first().second
     }
 
-    internal fun extractTransactionId(body: String, clock: () -> Long): String? {
-        val patterns = listOf(
-            // The \b are load-bearing. Without them "id" matched inside
-            // "pa|id| to SHARMA STORE" and captured the following word, so a
-            // receipt for the most common template read "Transaction ID
-            // to_1785952502285" instead of the bank's reference (seen on a
-            // real device, 2026-08-05). The reference is the one field a user
-            // needs to match this payment against their bank statement.
-            "\\b(?:ref|txn|transaction|id)\\b\\s*(?:no|number|id)?\\s*[:.#]?\\s*([A-Z0-9]+)",
-            "([A-Z0-9]{10,})" // Generic pattern for long alphanumeric
+    internal fun extractTransactionId(body: String, clock: () -> Long): String? =
+        extractBankReference(body)?.let { "${it}_${clock()}" }
+
+    internal fun extractBankReference(body: String): String? {
+        val pattern = Regex(
+            "\\b(?:ref(?:\\s*(?:no|number))?|rrn|utr|(?:txn|transaction)\\s+id)" +
+                "\\b\\s*[:.#]?\\s*([A-Z0-9]+)\\b",
+            RegexOption.IGNORE_CASE
         )
-
-        for (pattern in patterns) {
-            val regex = Regex(pattern, RegexOption.IGNORE_CASE)
-            val match = regex.find(body)
-
-            if (match != null && match.groups.size > 1) {
-                val baseId = match.groups[1]?.value
-                if (!baseId.isNullOrEmpty()) {
-                    // Add a timestamp to make it unique even if ref number repeats
-                    return "${baseId}_${clock()}"
-                }
-            }
-        }
-
-        return null
+        return pattern.findAll(body).map { it.groupValues[1] }
+            .firstOrNull { BankReference.display(it) != null }
     }
+
+    internal fun matchesQr(transaction: SimpleTransaction, body: String, expectedVpa: String?): Boolean =
+        transaction.transactionType == "DEBIT" && !expectedVpa.isNullOrBlank() &&
+            expectedVpa.equals(transaction.upiId, ignoreCase = true) &&
+            Regex("\\bUPI\\b", RegexOption.IGNORE_CASE).containsMatchIn(body) &&
+            !Regex("\\b(?:EMI|card|ATM)\\b", RegexOption.IGNORE_CASE).containsMatchIn(body)
 
     internal fun extractUPIId(body: String): String? {
         val patterns = listOf(

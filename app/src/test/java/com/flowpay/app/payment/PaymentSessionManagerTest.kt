@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Flowpay
 
+@file:Suppress("MagicNumber") // Explicit fixture values and timings make regressions readable.
+
 package com.flowpay.app.payment
 
 import com.flowpay.app.data.Transaction
@@ -56,6 +58,7 @@ class PaymentSessionManagerTest {
     }
 
     private class FakeStore : PaymentTransactionStore {
+
         // synchronizedMap: the concurrency test below drives this store from
         // real JVM threads on a real dispatcher (not the single-threaded
         // TestDispatcher every other test uses), so it needs actual
@@ -97,14 +100,18 @@ class PaymentSessionManagerTest {
                 ?: return 0
             rows[transactionId] = row.copy(
                 status = status,
-                bankRef = parsed.transactionId,
+                bankRef = parsed.bankReference,
                 bankName = parsed.bankName,
                 smsExcerpt = parsed.smsExcerpt,
                 // Mirrors the DAO: sparser SMS data never erases known values;
                 // amount fills only when the row started without one (QR flow).
                 upiId = parsed.upiId ?: row.upiId,
                 recipientName = parsed.recipientName ?: row.recipientName,
-                amount = row.amount.ifEmpty { parsed.amount },
+                amount = if (row.source == TransactionSource.QR) {
+                    parsed.amount
+                } else {
+                    row.amount.ifEmpty { parsed.amount }
+                },
                 verifiedAt = verifiedAt
             )
             return 1
@@ -151,7 +158,8 @@ class PaymentSessionManagerTest {
         bankName = "HDFC Bank",
         smsExcerpt = "₹$amount debited — HDFC Bank · Ref HDFC123456",
         timestamp = 0L,
-        transactionType = transactionType
+        transactionType = transactionType,
+        bankReference = "HDFC123456"
     )
 
     @Test
@@ -446,7 +454,7 @@ class PaymentSessionManagerTest {
         fun race(sms: SimpleTransaction) = Thread {
             try {
                 startGate.await()
-                results.add(manager.onSmsConfirmed(sms))
+                results.add(runBlocking { manager.onSmsConfirmed(sms) })
             } catch (t: Throwable) {
                 failures.add(t)
             } finally {
@@ -789,7 +797,7 @@ class PaymentSessionManagerTest {
                 val barrier = java.util.concurrent.CyclicBarrier(2)
                 val smsThread = Thread {
                     barrier.await()
-                    manager.onSmsConfirmed(bankSms(amount = "500"))
+                    runBlocking { manager.onSmsConfirmed(bankSms(amount = "500")) }
                 }
                 val cancelThread = Thread {
                     barrier.await()

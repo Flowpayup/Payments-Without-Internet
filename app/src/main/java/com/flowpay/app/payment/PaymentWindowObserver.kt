@@ -22,12 +22,10 @@ import kotlinx.coroutines.launch
  * through another app, say) was adopted onto the cancelled row and flipped
  * it to SUCCESS.
  *
- * Every cancel route — the overlay's terminate button, the never-connected
- * watchdog, a call that ended before the IVR flow could finish, a failed
- * dial — funnels into [PaymentSessionManager.finishSession] and emits
- * [PaymentState.Cancelled], so observing that one state closes them all;
- * [PaymentSessionManager] keeps its deliberate independence from
- * [TransactionDetector].
+ * Predial cancellation and dial-launch failure emit [PaymentState.Cancelled],
+ * so observing that state closes their matching window. End call/Close after
+ * handoff emits WaitingForVerification and leaves SMS verification active.
+ * The expected owner is checked atomically when clearing the window.
  *
  * Deliberately *not* triggered by [PaymentState.Timeout]: the window
  * outlives the verification deadline by 30 seconds on purpose, so a
@@ -41,12 +39,12 @@ class PaymentWindowObserver(
     private val appContext: Context,
     private val paymentState: StateFlow<PaymentState>,
     private val scope: CoroutineScope,
-    private val onDisarm: () -> Unit = { defaultDisarm(appContext) }
+    private val onDisarm: (String?) -> Unit = { defaultDisarm(appContext, it) }
 ) {
     fun start() {
         scope.launch {
             paymentState.collect { state ->
-                if (state.shouldDisarmSmsWindow()) onDisarm()
+                if (state.shouldDisarmSmsWindow()) onDisarm(state.getTransactionIdValue())
             }
         }
     }
@@ -54,8 +52,8 @@ class PaymentWindowObserver(
     companion object {
         private const val TAG = "PaymentWindowObserver"
 
-        private fun defaultDisarm(context: Context) {
-            TransactionDetector.getInstance(context).stopOperation()
+        private fun defaultDisarm(context: Context, expectedTxnId: String?) {
+            TransactionDetector.getInstance(context).completeOperation(expectedTxnId)
             Log.d(TAG, "Payment cancelled - SMS operation window closed")
         }
     }

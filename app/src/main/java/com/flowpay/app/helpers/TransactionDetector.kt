@@ -30,6 +30,7 @@ class TransactionDetector private constructor(context: Context) {
         private const val KEY_EXPECTED_AMOUNT = "expected_amount"
         private const val KEY_PHONE_NUMBER = "phone_number"
         private const val KEY_SESSION_TXN_ID = "session_txn_id"
+        private const val KEY_VPA = "vpa"
 
         /**
          * How long after a payment starts an incoming SMS is still eligible.
@@ -87,26 +88,31 @@ class TransactionDetector private constructor(context: Context) {
      * in-memory session is gone — can still be matched back to its row
      * instead of inserting a duplicate.
      */
+    @Synchronized
     fun startOperation(
         operationType: String,
         expectedAmount: String? = null,
         phoneNumber: String? = null,
-        sessionTxnId: String? = null
+        sessionTxnId: String? = null,
+        vpa: String? = null
     ) {
         Log.d(TAG, "Starting operation: $operationType")
 
         prefs.edit().apply {
+            clear()
             putBoolean(KEY_ACTIVE, true)
             putLong(KEY_START_TIME, System.currentTimeMillis())
             putString(KEY_OPERATION_TYPE, operationType)
             expectedAmount?.let { putString(KEY_EXPECTED_AMOUNT, it) }
             phoneNumber?.let { putString(KEY_PHONE_NUMBER, it) }
             sessionTxnId?.let { putString(KEY_SESSION_TXN_ID, it) }
+            vpa?.let { putString(KEY_VPA, it) }
             apply()
         }
     }
 
     // Stop monitoring
+    @Synchronized
     fun stopOperation() {
         Log.d(TAG, "Stopping operation")
 
@@ -117,6 +123,8 @@ class TransactionDetector private constructor(context: Context) {
     }
 
     // Check if we should process SMS
+    @Suppress("ReturnCount") // Each invalid window must be rejected before parsing.
+    @Synchronized
     fun shouldProcessSMS(): Boolean {
         val isActive = prefs.getBoolean(KEY_ACTIVE, false)
         if (!isActive) {
@@ -148,14 +156,22 @@ class TransactionDetector private constructor(context: Context) {
 
     /**
      * The session transaction id recorded at [startOperation], or null. Read
-     * BEFORE [processSMS] (which clears the window on a consuming match) by
+     * BEFORE [processSMS] by
      * callers that need to reattach an orphaned confirmation to its row.
      */
     fun getSessionTxnId(): String? = prefs.getString(KEY_SESSION_TXN_ID, null)
 
-    // Synchronized so that when both ingestion pipelines race past
-    // shouldProcessSMS(), only the first one inside consumes the active
-    // operation — the second sees it stopped and bails.
+    @Synchronized
+    fun completeOperation(expectedTxnId: String?) {
+        if (getSessionTxnId() == expectedTxnId) stopOperation()
+    }
+
+    @Synchronized
+    fun releaseSmsClaim(body: String) {
+        recentSmsClaims.remove(SmsTransactionParser.claimKey(body).hashCode().toString())
+    }
+
+    // Parse against one consistent operation context. Persistence consumes it later.
     @Synchronized
     fun processSMS(sender: String, body: String): SimpleTransaction? {
         Log.d(TAG, "Processing SMS")
@@ -168,20 +184,18 @@ class TransactionDetector private constructor(context: Context) {
         }
 
         val expectedAmount = prefs.getString(KEY_EXPECTED_AMOUNT, null)
-        val transaction = SmsTransactionParser.parse(sender, body, expectedAmount)
+        val isQr = getOperationType() == "QR_SCAN"
+        val transaction = SmsTransactionParser.parse(sender, body, if (isQr) null else expectedAmount)
         if (transaction == null) {
             Log.d(TAG, "SMS did not match a bank transaction")
             return null
         }
         Log.d(TAG, "Matched ${transaction.bankName} transaction: ${transaction.status}")
 
-        // Mark operation complete — unless this was an incoming CREDIT. A
-        // stray credit must not consume the operation window the real
-        // outgoing-debit confirmation may still need.
-        if (transaction.transactionType != "CREDIT") {
-            stopOperation()
+        if (isQr && !SmsTransactionParser.matchesQr(transaction, body, prefs.getString(KEY_VPA, null))) {
+            return null
         }
-
+        // The caller consumes only after persistence succeeds.
         return transaction
     }
 }

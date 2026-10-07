@@ -20,6 +20,9 @@ import com.flowpay.app.payment.Upi123CallStringBuilder
 import com.flowpay.app.payment.messageFor
 import com.flowpay.app.services.CallOverlayService
 import com.flowpay.app.states.PaymentState
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Helper class containing all business logic for MainActivity
@@ -171,6 +174,8 @@ class MainActivityHelper(
         return true
     }
 
+    // UI boundary: abort on any storage or dial failure; cancellation is rethrown.
+    @Suppress("CyclomaticComplexMethod", "TooGenericExceptionCaught", "ReturnCount")
     fun initiateTransfer(phoneNumber: String, amount: String) {
         Log.d(TAG, "Initiating transfer")
 
@@ -198,29 +203,35 @@ class MainActivityHelper(
             return
         }
 
-        // PENDING row is written before anything is dialled. begin() always
-        // succeeds — a new payment supersedes any session still in flight
-        // rather than being refused.
-        val transactionId = sessionManager.begin(phoneNumber, amount)
-
-        // Gate SMS detection to this operation window. The session txnId is
-        // persisted so a confirmation arriving after a process death can be
-        // reattached to this payment's row instead of inserting a duplicate.
-        TransactionDetector.getInstance(context).startOperation(
-            operationType = "UPI_123",
-            expectedAmount = amount,
-            phoneNumber = phoneNumber,
-            sessionTxnId = transactionId
-        )
-
-        val success = callManager?.initiateUPI123Call(phoneNumber, amount) ?: false
-        if (success) {
-            // Overlay service shows once the coordinator reports the call OFFHOOK
-            CallOverlayService.showOverlay(context, phoneNumber, amount)
-        } else {
-            Log.e(TAG, "Failed to initiate UPI123 call")
-            sessionManager.onDialFailed("Could not start the payment call")
-            TransactionDetector.getInstance(context).stopOperation()
+        FlowpayApplication.from(context)?.appScope?.launch(Dispatchers.Main) {
+            var transactionId: String? = null
+            try {
+                transactionId = sessionManager.begin(phoneNumber, amount)
+                if (!sessionManager.awaitPending(transactionId)) return@launch
+                if ((context as? Activity)?.let { it.isFinishing || it.isDestroyed } == true) {
+                    sessionManager.onUserCancelled(transactionId)
+                    return@launch
+                }
+                val detector = TransactionDetector.getInstance(context)
+                detector.startOperation("UPI_123", amount, phoneNumber, transactionId)
+                if (!sessionManager.markHandoff(transactionId)) {
+                    detector.completeOperation(transactionId)
+                    return@launch
+                }
+                val success = callManager?.initiateUPI123Call(phoneNumber, amount) ?: false
+                if (success) {
+                    CallOverlayService.showOverlay(context, phoneNumber, amount)
+                } else {
+                    sessionManager.onDialFailed("Could not start the payment call", transactionId)
+                    detector.completeOperation(transactionId)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                Log.e(TAG, "Payment could not be started", failure)
+                transactionId?.let { sessionManager.onDialFailed("Payment storage unavailable", it) }
+                uiCallback.showToast(context.getString(R.string.error_storage_unavailable))
+            }
         }
     }
 

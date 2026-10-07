@@ -130,8 +130,8 @@ interface TransactionDao {
      * Fill in bank-confirmed details on a session row once the confirming SMS
      * arrives. Values the session already knows are never erased by a sparser
      * SMS: upiId/recipientName keep their existing value when the parse found
-     * none (COALESCE), and amount is filled only when the row started without
-     * one (the QR flow can begin before the user has entered an amount).
+     * none (COALESCE). QR amount is the amount reported by the bank, because
+     * the QR suggestion can differ from what was entered in USSD.
      *
      * [expectedStatus] guards which rows a confirmation may land on — callers
      * pass PENDING, so an SMS arriving after the payment was cancelled can
@@ -141,7 +141,7 @@ interface TransactionDao {
         "UPDATE transactions SET status = :status, bankRef = :bankRef, bankName = :bankName, " +
             "smsExcerpt = :smsExcerpt, upiId = COALESCE(:upiId, upiId), " +
             "recipientName = COALESCE(:recipientName, recipientName), " +
-            "amount = CASE WHEN amount = '' THEN :amount ELSE amount END, " +
+            "amount = CASE WHEN source = 'QR' OR amount = '' THEN :amount ELSE amount END, " +
             "verifiedAt = :verifiedAt " +
             "WHERE transactionId = :transactionId AND status = :expectedStatus"
     )
