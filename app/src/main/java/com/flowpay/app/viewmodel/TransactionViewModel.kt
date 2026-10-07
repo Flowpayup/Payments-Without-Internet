@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -50,6 +51,12 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     private fun <T> repositoryFlow(block: (TransactionRepository) -> Flow<T>): Flow<T> =
         flow { emitAll(block(TransactionRepository.getInstance(getApplication()))) }
             .flowOn(Dispatchers.IO)
+            .catch { failure ->
+                if (failure is CancellationException) throw failure
+                Log.e(TAG, "Transaction storage unavailable", failure)
+                _error.value = app.getString(R.string.error_storage_unavailable)
+                _isLoading.value = false
+            }
 
     // UI State
     private val _recentTransactions = MutableStateFlow<List<PaymentDetails>>(emptyList())
@@ -101,7 +108,7 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                 throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load transactions", e)
-                _error.value = app.getString(R.string.error_load_transactions)
+                _error.value = app.getString(R.string.error_storage_unavailable)
                 _isLoading.value = false
             }
         }

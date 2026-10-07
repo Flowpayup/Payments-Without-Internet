@@ -7,152 +7,181 @@ import android.content.Context
 import android.util.Log
 import net.zetetic.database.sqlcipher.SQLiteDatabase
 import java.io.File
+import java.io.IOException
 
-/**
- * One-time plaintext → SQLCipher migration, plus key-loss recovery.
- *
- * Existing installs have an unencrypted Room database on disk. On the first
- * launch after the SQLCipher upgrade this exports it into an encrypted copy
- * (sqlcipher_export), swaps the files, and records completion. If the
- * encrypted database later becomes unreadable (Keystore key invalidated —
- * e.g. some device restores), the file is set aside and the app starts with
- * an empty history rather than crash-looping: history is convenience data,
- * the bank remains the source of truth.
- */
+/** A retryable storage failure. Never replace preserved history with an empty database. */
+internal class DatabaseMigrationException(cause: Exception) : IOException("Database encryption must be retried", cause)
+
+/** Export first, retain the original during replacement, and verify before deleting it. */
+@Suppress("TooGenericExceptionCaught") // File swaps must preserve the original on any failed export/install.
 internal object DatabaseEncryptionMigrator {
-
     private const val TAG = "DbEncryptionMigrator"
     private const val PREF_MIGRATED = "db_encrypted"
+    private const val BACKUP_SUFFIX = ".migration-backup"
 
-    /** Must run before Room opens the database. Caller loads the sqlcipher lib. */
-    fun ensureEncrypted(context: Context, dbName: String, passphrase: String) {
+    @Synchronized
+    fun ensureEncrypted(
+        context: Context,
+        dbName: String,
+        passphrase: String,
+        move: (File, File) -> Boolean = { from, to -> from.renameTo(to) },
+        export: (SQLiteDatabase) -> Unit = { database ->
+            database.rawQuery("SELECT sqlcipher_export('encrypted')", emptyArray()).use { check(it.moveToFirst()) }
+        }
+    ) {
         val prefs = context.getSharedPreferences(DatabaseKeyManager.PREFS_NAME, Context.MODE_PRIVATE)
         val dbFile = context.getDatabasePath(dbName)
-
-        if (!dbFile.exists()) {
-            // Fresh install — Room will create the encrypted DB directly.
-            prefs.edit().putBoolean(PREF_MIGRATED, true).apply()
-            return
-        }
-
-        if (prefs.getBoolean(PREF_MIGRATED, false)) {
-            recoverIfUnreadable(dbFile, passphrase)
-            return
-        }
-
+        val backup = File(dbFile.parentFile, dbFile.name + BACKUP_SUFFIX)
         try {
-            migratePlaintext(dbFile, passphrase)
-            prefs.edit().putBoolean(PREF_MIGRATED, true).apply()
-            Log.i(TAG, "Transaction database encrypted in place")
-        } catch (e: Exception) {
-            // Most likely cause: the file is already encrypted but the
-            // migrated flag was lost (cleared app data restored the DB, or a
-            // partial previous run). If it opens with our key we're done;
-            // otherwise set it aside and start fresh.
-            Log.w(TAG, "Plaintext migration failed - checking whether DB is already encrypted", e)
-            prefs.edit().putBoolean(PREF_MIGRATED, true).apply()
-            recoverIfUnreadable(dbFile, passphrase)
+            restoreInterruptedSwap(dbFile, backup, passphrase, move)
+            if (dbFile.exists() && isPlaintextSqlite(dbFile)) {
+                prefs.edit().putBoolean(PREF_MIGRATED, false).commit()
+                migratePlaintext(dbFile, backup, passphrase, move, export)
+            } else if (dbFile.exists()) {
+                recoverEncryptedIfUnreadable(dbFile, passphrase)
+            }
+            prefs.edit().putBoolean(PREF_MIGRATED, true).commit()
+        } catch (failure: Exception) {
+            prefs.edit().putBoolean(PREF_MIGRATED, false).commit()
+            throw DatabaseMigrationException(failure)
         }
     }
 
-    private fun migratePlaintext(dbFile: File, passphrase: String) {
-        val encryptedFile = File(dbFile.parentFile, "${dbFile.name}.encrypting")
-        if (encryptedFile.exists()) encryptedFile.delete()
+    private fun restoreInterruptedSwap(
+        dbFile: File,
+        backup: File,
+        key: String,
+        move: (File, File) -> Boolean
+    ) {
+        if (!backup.exists()) return
+        if (dbFile.exists() && !isPlaintextSqlite(dbFile) && runCatching { verify(dbFile, key) }.isSuccess) {
+            backup.delete() // An unsuccessful cleanup can be retried next launch.
+            return
+        }
+        check(isPlaintextSqlite(backup)) { "Migration backup cannot be classified safely" }
+        // The original is checkpointed before it is moved; prove it is readable before restoring.
+        verify(backup, "")
+        if (dbFile.exists()) {
+            check(!isPlaintextSqlite(dbFile)) { "Two plaintext originals require recovery" }
+            check(
+                android.database.sqlite.SQLiteDatabase.deleteDatabase(dbFile)
+            ) { "Cannot remove incomplete replacement" }
+        }
+        check(move(backup, dbFile)) { "Cannot restore migration backup" }
+    }
 
-        // Empty key = plaintext database opened through SQLCipher.
-        val plain = SQLiteDatabase.openDatabase(
-            dbFile.absolutePath,
-            "",
-            null,
-            SQLiteDatabase.OPEN_READWRITE,
-            null,
-            null
-        )
-        val version = plain.version
+    private fun migratePlaintext(
+        dbFile: File,
+        backup: File,
+        key: String,
+        move: (File, File) -> Boolean,
+        export: (SQLiteDatabase) -> Unit
+    ) {
+        val temp = File(dbFile.parentFile, "${dbFile.name}.encrypting")
+        if (temp.exists()) check(android.database.sqlite.SQLiteDatabase.deleteDatabase(temp))
+        val plain = open(dbFile, "", SQLiteDatabase.OPEN_READWRITE or SQLiteDatabase.CREATE_IF_NECESSARY)
+        val version: Int
+        val counts: Map<String, Long>
         try {
-            // Passphrase is Base64 (no quotes) — safe inside a '...' literal.
-            plain.rawExecSQL(
-                "ATTACH DATABASE '${encryptedFile.absolutePath}' AS encrypted KEY '$passphrase'"
-            )
-            plain.rawExecSQL("SELECT sqlcipher_export('encrypted')")
-            plain.rawExecSQL("DETACH DATABASE encrypted")
+            version = plain.version
+            counts = tableCounts(plain)
+            plain.execSQL("ATTACH DATABASE ? AS encrypted KEY ?", arrayOf(temp.absolutePath, key))
+            export(plain)
+            plain.execSQL("DETACH DATABASE encrypted")
+            // Flush the source's committed WAL before moving its main file.
+            plain.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", emptyArray()).use { cursor ->
+                if (cursor.moveToFirst()) check(cursor.getInt(0) == 0) { "Source database is busy" }
+            }
+            plain.rawQuery("PRAGMA journal_mode=DELETE", emptyArray()).use { cursor ->
+                check(cursor.moveToFirst() && cursor.getString(0).equals("delete", true)) { "Source journal is busy" }
+            }
         } finally {
             plain.close()
         }
+        open(temp, key, SQLiteDatabase.OPEN_READWRITE).use { it.version = version }
+        check(verify(temp, key) == counts) { "Encrypted export did not preserve all tables" }
+        check(!backup.exists()) { "Previous migration backup still exists" }
+        check(move(dbFile, backup)) { "Cannot preserve original database" }
+        try {
+            check(move(temp, dbFile)) { "Cannot install encrypted export" }
+            check(verify(dbFile, key) == counts) { "Installed export did not preserve all tables" }
+        } catch (failure: Exception) {
+            // Retain the backup if restore itself fails; startup retries the same recovery.
+            if (dbFile.exists()) android.database.sqlite.SQLiteDatabase.deleteDatabase(dbFile)
+            if (!dbFile.exists()) move(backup, dbFile)
+            throw failure
+        }
+        backup.delete()
+    }
 
-        // Carry the schema version so Room doesn't re-run migrations.
-        val encrypted = SQLiteDatabase.openDatabase(
-            encryptedFile.absolutePath,
-            passphrase,
+    private fun verify(file: File, key: String): Map<String, Long> =
+        open(file, key, SQLiteDatabase.OPEN_READONLY).use { database ->
+            database.rawQuery("PRAGMA integrity_check", emptyArray()).use { cursor ->
+                check(cursor.moveToFirst() && cursor.getString(0) == "ok") { "Database integrity check failed" }
+            }
+            tableCounts(database)
+        }
+
+    private fun tableCounts(database: SQLiteDatabase): Map<String, Long> {
+        val tables = mutableListOf<String>()
+        database.rawQuery(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+            emptyArray()
+        )
+            .use { cursor -> while (cursor.moveToNext()) tables.add(cursor.getString(0)) }
+        return tables.associateWith { name ->
+            val quoted = name.replace("\"", "\"\"")
+            database.rawQuery("SELECT count(*) FROM \"$quoted\"", emptyArray()).use { cursor ->
+                check(cursor.moveToFirst())
+                cursor.getLong(0)
+            }
+        }
+    }
+
+    private fun open(file: File, key: String, flags: Int): SQLiteDatabase =
+        SQLiteDatabase.openDatabase(
+            file.absolutePath,
+            key,
             null,
-            SQLiteDatabase.OPEN_READWRITE,
-            null,
+            flags,
+            net.zetetic.database.DatabaseErrorHandler {
+                Log.e(TAG, "Database integrity failure; retaining the file for recovery")
+            },
             null
         )
-        try {
-            encrypted.version = version
-        } finally {
-            encrypted.close()
-        }
 
-        // Remove the plaintext DB (and -shm/-wal sidecars), move encrypted in.
-        android.database.sqlite.SQLiteDatabase.deleteDatabase(dbFile)
-        if (!encryptedFile.renameTo(dbFile)) {
-            throw IllegalStateException("Could not move encrypted database into place")
+    private fun recoverEncryptedIfUnreadable(file: File, key: String) {
+        try {
+            verify(file, key)
+        } catch (failure: android.database.sqlite.SQLiteDatabaseCorruptException) {
+            preserveUnreadable(file, failure)
+        } catch (failure: android.database.sqlite.SQLiteException) {
+            // Busy, full, or inaccessible storage is retryable; it is not evidence of key loss.
+            val invalidKey = failure.message?.contains("file is not a database", ignoreCase = true) == true ||
+                failure.message?.contains("file is encrypted", ignoreCase = true) == true
+            if (!invalidKey) throw failure
+            preserveUnreadable(file, failure)
         }
     }
 
-    private fun recoverIfUnreadable(dbFile: File, passphrase: String) {
-        try {
-            SQLiteDatabase.openDatabase(
-                dbFile.absolutePath,
-                passphrase,
-                null,
-                SQLiteDatabase.OPEN_READONLY,
-                null,
-                null
-            ).close()
-        } catch (e: Exception) {
-            Log.w(TAG, "Encrypted DB unreadable with current key - starting fresh (history lost)", e)
-            if (isPlaintextSqlite(dbFile)) {
-                // A failed plaintext -> SQLCipher migration can leave the
-                // ORIGINAL UNENCRYPTED database here. Never retain plaintext on
-                // disk (it would also escape the backup exclusion by filename) —
-                // delete it outright. The bank remains the source of truth.
-                Log.w(TAG, "Set-aside database is plaintext - deleting rather than retaining")
-                dbFile.delete()
-            } else {
-                // Encrypted but unreadable (Keystore key lost). Keep it set
-                // aside for diagnostics; it stays out of backups by filename
-                // (see backup_rules.xml / data_extraction_rules.xml).
-                val setAside = File(dbFile.parentFile, "${dbFile.name}.unreadable")
-                if (setAside.exists()) setAside.delete()
-                if (!dbFile.renameTo(setAside)) dbFile.delete()
-            }
-            File(dbFile.parentFile, "${dbFile.name}-shm").delete()
-            File(dbFile.parentFile, "${dbFile.name}-wal").delete()
+    private fun preserveUnreadable(file: File, failure: Exception) {
+        // Preserve existing key-loss recovery, but never discard a plaintext migration original.
+        check(!isPlaintextSqlite(file)) { "Plaintext migration requires retry" }
+        Log.w(TAG, "Encrypted history unreadable; preserving it for recovery", failure)
+        val setAside = File(file.parentFile, "${file.name}.unreadable")
+        check(!setAside.exists()) { "Previous unreadable history must be preserved" }
+        check(file.renameTo(setAside)) { "Cannot preserve unreadable history" }
+        listOf("-wal", "-shm", "-journal").forEach { suffix ->
+            val companion = File(file.parentFile, file.name + suffix)
+            if (companion.exists()) check(companion.renameTo(File(file.parentFile, setAside.name + suffix)))
         }
     }
 
-    /**
-     * True when the file begins with the ASCII "SQLite format 3" magic —
-     * i.e. an UNENCRYPTED SQLite database. A SQLCipher-encrypted file has a
-     * random-looking header and returns false, so this cleanly separates a
-     * plaintext leftover (must be deleted) from an encrypted-but-unreadable one.
-     */
     private fun isPlaintextSqlite(file: File): Boolean {
-        return try {
-            file.inputStream().use { stream ->
-                val header = ByteArray(SQLITE_MAGIC_PREFIX.size)
-                stream.read(header) == SQLITE_MAGIC_PREFIX.size && header.contentEquals(SQLITE_MAGIC_PREFIX)
-            }
-        } catch (e: Exception) {
-            // Can't read the header — treat as not-plaintext so the caller
-            // keeps (rather than deletes) the file; err on the safe side.
-            Log.w(TAG, "Could not read DB header to classify plaintext vs encrypted", e)
-            false
+        val magic = "SQLite format 3".toByteArray(Charsets.US_ASCII)
+        return file.inputStream().use { stream ->
+            val header = ByteArray(magic.size)
+            stream.read(header) == magic.size && header.contentEquals(magic)
         }
     }
-
-    private val SQLITE_MAGIC_PREFIX = "SQLite format 3".toByteArray(Charsets.US_ASCII)
 }

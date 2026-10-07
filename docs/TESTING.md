@@ -38,21 +38,29 @@ Pure logic, no Android framework, no device. Runs in seconds via
   those same URIs into real QR bitmaps and decodes them back through the
   live analyzer pipeline.
 
-## Layer 2 — Instrumented tests (none at present)
+## Layer 2 — Instrumented tests (device or emulator)
 
-There are currently **no instrumented tests**, and no emulator job in CI.
+`./gradlew connectedDebugAndroidTest` runs real SQLCipher and Room checks and
+receipt-screen checks. Run this suite on API 29 and 35 before release. These
+tests were validated locally on API 35; the existing CI workflow runs the JVM
+suite and build checks but does not run an emulator.
 
-The only one that ever existed was `MigrationTest`, covering Room migrations
-`1→2` and `2→3`. Those were removed: the first commit of this codebase already
-declared schema `version = 3`, so no v1 or v2 database has ever existed on any
-device, the migrations could never execute, and the v1/v2 schema JSON they were
-validated against had been written by hand rather than emitted by the Room
-compiler. Keeping an emulator matrix in the release path to guard unreachable
-code was cost without coverage.
+- `DatabaseEncryptionMigratorTest`: every fixture field and schema version
+  survives export, repeat launch, replacement failure, interrupted swap, and
+  a full encrypted destination. Failed attempts retain the original and retry.
+- `TransactionReceiptTest`: the real Room query saves the actual QR amount,
+  preserves a known payee and manual amount, and cannot rewrite settled or
+  cancelled rows.
+- `SmsReceiptPipelineTest`: a synthetic delayed bank receipt after QR close
+  updates the existing pending row once through the live ingestion pipeline.
+- `PaymentResultActivityTest`: bank reference and recipient render separately
+  from the internal UUID; an older intent without a reference shows unavailable.
 
-This layer comes back with the next schema change, which must land together
-with its migration, the compiler-generated schema JSON, a `MigrationTest`, and
-the emulator workflow to run it. All four are recoverable from git history.
+JVM regressions additionally cover strict mobile normalization, SBI text,
+false-reference rejection, exact QR payee matching, delayed receipts after
+handoff, stale owners, storage-write failure, canonical bank preferences, and
+clipboard ownership. These checks do not establish bank or telco behavior;
+the physical-device checks below remain necessary.
 
 ## Layer 3 — Debug SMS injection (any emulator, on demand)
 
