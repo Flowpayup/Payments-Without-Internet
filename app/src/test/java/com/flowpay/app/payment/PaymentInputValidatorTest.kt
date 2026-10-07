@@ -16,7 +16,7 @@ class PaymentInputValidatorTest {
     @Test
     fun `valid 10-digit numbers are accepted`() {
         assertTrue(PaymentInputValidator.isValidPhoneNumber("9876543210"))
-        assertTrue(PaymentInputValidator.isValidPhoneNumber("1234567890"))
+        assertFalse(PaymentInputValidator.isValidPhoneNumber("1234567890"))
     }
 
     @Test

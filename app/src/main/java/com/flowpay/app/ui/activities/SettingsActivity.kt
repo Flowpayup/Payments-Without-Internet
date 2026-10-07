@@ -91,6 +91,7 @@ class SettingsActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        (application as? FlowpayApplication)?.settingsRepository?.refresh()
         refreshTrigger.intValue++
     }
 }
@@ -176,7 +177,7 @@ class SettingsViewModel : androidx.lifecycle.ViewModel() {
 
     fun loadFromRepository(settingsRepository: SettingsRepository) {
         val saved = settingsRepository.settingsFlow.value
-        val bank = banks.find { it.id == saved.bankId } ?: banks.first()
+        val bank = banks.find { it.id == saved.bankId } ?: Bank("", "")
         state = state.copy(
             selectedBank = bank,
             ussdTimeout = saved.ussdTimeout,
@@ -214,6 +215,7 @@ fun SettingsScreen(
     // Refresh permissions when trigger changes
     val trigger by refreshTrigger
     LaunchedEffect(trigger) {
+        settingsRepository?.let { viewModel.loadFromRepository(it) }
         viewModel.refreshPermissions(context)
     }
 
@@ -280,7 +282,7 @@ fun SettingsScreen(
                         SettingsRow(
                             icon = Icons.Default.AccountBalance,
                             title = "Bank",
-                            value = state.selectedBank.name,
+                            value = state.selectedBank.name.ifBlank { stringResource(R.string.settings_not_set) },
                             onClick = { showBankPicker = true }
                         )
                         GroupDivider()
@@ -395,9 +397,6 @@ fun SettingsScreen(
                 settingsRepository?.saveSettings(
                     settingsRepository.settingsFlow.value.copy(bankId = bank.id)
                 )
-                // Also sync to FlowpayPrefs so the main screen picks it up
-                context.getSharedPreferences("FlowpayPrefs", Context.MODE_PRIVATE)
-                    .edit().putString("selected_bank", bank.id).apply()
                 showBankPicker = false
             },
             onDismiss = { showBankPicker = false }

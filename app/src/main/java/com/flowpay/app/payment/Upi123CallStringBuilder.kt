@@ -49,13 +49,13 @@ object Upi123CallStringBuilder {
 
     fun build(serviceNumber: String, phoneNumber: String, amount: String): Result {
         val service = serviceNumber.filter(Char::isDigit)
-        val phone = phoneNumber.filter(Char::isDigit)
+        val phone = IndianMobileNumber.normalize(phoneNumber)
         val rupees = amount.trim()
 
         if (!SERVICE_NUMBER_REGEX.matches(service)) {
             return Result.Invalid(Reason.SERVICE_NUMBER)
         }
-        if (!PHONE_REGEX.matches(phone)) {
+        if (phone == null || !PHONE_REGEX.matches(phone)) {
             return Result.Invalid(Reason.RECIPIENT_NUMBER)
         }
         // The IVR consumes whole-rupee DTMF digits; decimals cannot be dialled.

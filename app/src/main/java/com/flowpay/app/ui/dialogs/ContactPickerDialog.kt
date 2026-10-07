@@ -302,12 +302,8 @@ suspend fun loadContacts(contentResolver: ContentResolver): List<Contact> = with
             val name = it.getString(nameColumn) ?: "Unknown"
             val number = it.getString(numberColumn) ?: ""
 
-            // Clean the phone number (remove spaces, dashes, brackets, etc.)
-            val cleanedNumber = number.replace(Regex("[^0-9+]"), "")
-                .replace("+91", "") // Remove country code
-                .takeLast(10) // Get last 10 digits for Indian numbers
-
-            if (cleanedNumber.length == 10) {
+            val cleanedNumber = com.flowpay.app.payment.IndianMobileNumber.normalize(number)
+            if (cleanedNumber != null) {
                 contactsList.add(Contact(id, name, cleanedNumber))
             }
         }

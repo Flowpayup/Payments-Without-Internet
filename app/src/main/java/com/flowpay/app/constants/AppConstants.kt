@@ -37,5 +37,5 @@ object AppConstants {
     const val KEY_NOTIFICATIONS_ASKED = "notifications_permission_asked"
 
     // Regex patterns
-    const val PHONE_NUMBER_PATTERN = "^[1-9][0-9]{9}$"
+    const val PHONE_NUMBER_PATTERN = "^[6-9][0-9]{9}$"
 }
