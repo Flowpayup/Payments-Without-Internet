@@ -157,6 +157,7 @@ class TransactionDetectorTest {
         assertEquals("DEBIT", txn!!.transactionType)
         assertEquals(TransactionStatus.SUCCESS, txn.status)
 
+        detector.completeOperation(null)
         // The window is one-shot for debits: a second bank SMS must not be
         // able to confirm the same payment twice.
         assertNull("consumed window must not process again", detector.processSMS("VK-HDFCBK", body))
@@ -185,6 +186,7 @@ class TransactionDetectorTest {
         )
         assertNotNull("the awaited debit must still be processable", debit)
         assertEquals("DEBIT", debit!!.transactionType)
+        detector.completeOperation(null)
         assertFalse("the debit, not the credit, consumes the window", detector.shouldProcessSMS())
     }
 
@@ -211,6 +213,58 @@ class TransactionDetectorTest {
         )
         assertNotNull("the genuine confirmation must still land", real)
         assertEquals(TransactionStatus.SUCCESS, real!!.status)
+        detector.completeOperation(null)
         assertFalse("the real confirmation consumes the window", detector.shouldProcessSMS())
+    }
+
+    @Test
+    fun `static QR ignores EMI and missing or wrong VPA but accepts its actual debit amount`() {
+        detector.startOperation("QR_SCAN", "", sessionTxnId = "qr-1", vpa = "shop@okaxis")
+        listOf(
+            "Rs 2350 debited from HDFC Bank A/c **1234 for EMI ref 998877665544",
+            "Rs 500 sent to OTHER via UPI ref 998877665544 -HDFC Bank",
+            "Rs 500 debited to other@okaxis via UPI ref 998877665544 -HDFC Bank"
+        ).forEach { assertNull(detector.processSMS("VM-HDFCBK", it)) }
+        assertTrue(detector.shouldProcessSMS())
+        val receipt = detector.processSMS(
+            "VM-HDFCBK",
+            "Rs 700 debited to VPA shop@okaxis via UPI ref 112233445566 -HDFC Bank"
+        )
+        assertNotNull(receipt)
+        assertEquals("700", receipt!!.amount)
+        assertTrue("parsing alone must not consume a payment", detector.shouldProcessSMS())
+        detector.completeOperation("qr-1")
+        assertFalse(detector.shouldProcessSMS())
+    }
+
+    @Test
+    fun `QR suggested amount does not discard receipt for a different USSD amount`() {
+        detector.startOperation("QR_SCAN", "500", sessionTxnId = "qr-2", vpa = "shop@okaxis")
+        assertNotNull(
+            detector.processSMS(
+                "VM-HDFCBK",
+                "Rs 700 sent to shop@okaxis via UPI ref 112233445566 -HDFC Bank"
+            )
+        )
+    }
+
+    @Test
+    fun `new operation clears old optional fields and old completion cannot clear new window`() {
+        detector.startOperation("QR_SCAN", "500", "9876543210", "old", "shop@okaxis")
+        detector.startOperation("UPI_123", sessionTxnId = "new")
+        assertNull(detector.getPhoneNumber())
+        assertFalse(prefs.contains("vpa"))
+        assertFalse(prefs.contains("expected_amount"))
+        detector.completeOperation("old")
+        assertEquals("new", detector.getSessionTxnId())
+        assertTrue(detector.shouldProcessSMS())
+    }
+
+    @Test
+    fun `failed persistence can release a receipt claim for retry`() {
+        val body = "Rs 500 sent via UPI ref 112233445566"
+        assertTrue(detector.tryClaimSms(body))
+        detector.releaseSmsClaim(body)
+        assertTrue(detector.tryClaimSms(body))
     }
 }

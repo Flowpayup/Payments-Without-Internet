@@ -33,26 +33,44 @@ Pure logic, no Android framework, no device. Runs in seconds via
   once (the scenario `CallOverlayService`'s exception-handling paths rely on).
 - **`Upi123CallStringBuilderTest`** — the DTMF dial-string builder, golden
   strings plus injection-neutralization cases.
+- **`Upi123CallHandoffTest`** — Robolectric checks on API 29 and 35 that the
+  validated IVR URI reaches system Telecom with empty extras and no implicit
+  activity launch. Denied call permission prevents the handoff.
+- **`QRReceiptOwnershipTest`** — the real QR broadcast receivers on API 29 and
+  35 ignore old or missing payment owners; a matching receipt closes its own
+  active screen with the existing result.
 - **`QRCodeParserTest`** + **`QRCodeAnalyzerDecodeTest`** — UPI QR URI
   parsing, and (since the ML Kit → ZXing swap) a decode corpus that encodes
   those same URIs into real QR bitmaps and decodes them back through the
   live analyzer pipeline.
 
-## Layer 2 — Instrumented tests (none at present)
+## Layer 2 — Instrumented tests (device or emulator)
 
-There are currently **no instrumented tests**, and no emulator job in CI.
+`./gradlew connectedDebugAndroidTest` runs real SQLCipher and Room checks and
+receipt-screen checks. Run this suite on API 29 and 35 before release. These
+tests were validated locally on API 29/35 and a physical Samsung M05 on API 36;
+the existing CI workflow runs the JVM suite and build checks but does not run
+an emulator.
 
-The only one that ever existed was `MigrationTest`, covering Room migrations
-`1→2` and `2→3`. Those were removed: the first commit of this codebase already
-declared schema `version = 3`, so no v1 or v2 database has ever existed on any
-device, the migrations could never execute, and the v1/v2 schema JSON they were
-validated against had been written by hand rather than emitted by the Room
-compiler. Keeping an emulator matrix in the release path to guard unreachable
-code was cost without coverage.
+- `DatabaseEncryptionMigratorTest`: every fixture field and schema version
+  survives export, repeat launch, replacement failure, interrupted swap, and
+  a full encrypted destination. Failed attempts retain the original and retry.
+- `TransactionReceiptTest`: the real Room query saves the actual QR amount,
+  preserves a known payee and manual amount, and cannot rewrite settled or
+  cancelled rows.
+- `SmsReceiptPipelineTest`: a synthetic delayed bank receipt after QR close
+  updates the existing pending row once through the live ingestion pipeline,
+  and both screen broadcasts retain that payment's owner ID. The test starts
+  its payment on the main thread, matching both real payment screens and the
+  legacy API 29/30 phone-state listener's Looper requirement.
+- `PaymentResultActivityTest`: bank reference and recipient render separately
+  from the internal UUID; an older intent without a reference shows unavailable.
 
-This layer comes back with the next schema change, which must land together
-with its migration, the compiler-generated schema JSON, a `MigrationTest`, and
-the emulator workflow to run it. All four are recoverable from git history.
+JVM regressions additionally cover strict mobile normalization, SBI text,
+false-reference rejection, exact QR payee matching, delayed receipts after
+handoff, stale owners, storage-write failure, canonical bank preferences, and
+clipboard ownership. These checks do not establish bank or telco behavior;
+the physical-device checks below remain necessary.
 
 ## Layer 3 — Debug SMS injection (any emulator, on demand)
 

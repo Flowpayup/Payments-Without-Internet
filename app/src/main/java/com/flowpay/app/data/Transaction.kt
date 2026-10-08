@@ -80,7 +80,7 @@ data class Transaction(
                 transactionType = simpleTransaction.transactionType,
                 recipientName = simpleTransaction.recipientName,
                 phoneNumber = simpleTransaction.phoneNumber,
-                bankRef = simpleTransaction.transactionId,
+                bankRef = simpleTransaction.bankReference,
                 source = TransactionSource.SMS
             )
         }

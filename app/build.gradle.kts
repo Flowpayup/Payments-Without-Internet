@@ -45,6 +45,7 @@ android {
         // this only ever goes up even though the public name restarts at 1.0.0.
         versionCode = 6
         versionName = "1.0.1"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -245,4 +246,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     // Real android.net.Uri etc. in JVM tests (QRCodeParser)
     testImplementation(libs.robolectric)
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:core:1.6.1")
 }

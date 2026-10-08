@@ -372,6 +372,7 @@ class SmsTransactionParserTest {
 
         assertNotNull(result)
         assertEquals("2000", result!!.amount)
+        assertEquals("512233440091", result.bankReference)
     }
 
     @Test

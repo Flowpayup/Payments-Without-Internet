@@ -166,11 +166,12 @@ fun TransactionDetailDialog(
                         // the one a user would actually quote back to their
                         // bank in a dispute. Shown first and only when the
                         // bank supplied one (a PENDING row has none yet).
-                        if (!transaction.bankRef.isNullOrEmpty()) {
+                        val bankReference = com.flowpay.app.payment.sms.BankReference.display(transaction.bankRef)
+                        if (bankReference != null) {
                             DetailRow(
                                 label = stringResource(R.string.label_bank_reference),
-                                value = transaction.bankRef,
-                                onCopy = { clipboardManager.setText(AnnotatedString(transaction.bankRef)) }
+                                value = bankReference,
+                                onCopy = { clipboardManager.setText(AnnotatedString(bankReference)) }
                             )
                             DetailDivider()
                         }

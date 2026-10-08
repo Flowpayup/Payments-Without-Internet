@@ -12,7 +12,7 @@ known simplifications are deliberate.
 **A payment is only ever marked SUCCESS by a confirming bank SMS — never by
 call state or call duration.** Everything below serves this. A dialed call
 that connects and ends "normally" proves nothing; only the bank's own
-confirmation SMS, matched to the amount that was sent, promotes a payment to
+confirmation SMS, matched to the manual amount or the exact scanned QR payee, promotes a payment to
 SUCCESS. When no SMS arrives before the deadline, the attempt is discarded
 and nothing is shown — an outcome the bank never confirmed is not one this
 app can report on, and it is never silently assumed either way.
@@ -55,7 +55,7 @@ begin(phone, amount)          [QR: begin("", amount?, upiId, source=QR)]
    │  mid-call still leaves a record of the attempt
    ▼
 Initiating ──OFFHOOK──▶ InProgress ──call ends──▶ WaitingForVerification
-   │                        │  (short call <5s ⇒ Cancelled, never SUCCESS)     │
+   │                        │  (End call/Close after handoff stays waiting)   │
    │                        │                                                   │
    └── dial failed /        └───────────── confirming bank SMS ────────────────┤
        call never started              (onSmsConfirmed)                         │
@@ -74,7 +74,7 @@ Initiating ──OFFHOOK──▶ InProgress ──call ends──▶ WaitingFor
                     no row to adopt it is saved as a standalone transaction.
 ```
 
-Every terminal transition `join()`s the pending-insert coroutine first, so
+Dialling and receipt confirmation `await()` the pending insert, so
 the PENDING row always exists before it's updated. Stale PENDING rows left by
 a killed process are discarded lazily (`reconcileStalePending` on app start).
 If the process died mid-payment and the confirming SMS arrives after restart,
@@ -82,7 +82,11 @@ the ingestion pipeline *reattaches* it: the session txnId is persisted in the
 operation window at `begin()`, and a no-live-session confirmation updates that
 still-PENDING row instead of inserting a duplicate. Adoption is guarded to
 PENDING rows in SQL, so a confirmation can never rewrite a row the user
-already cancelled. The QR flow runs through the same session lifecycle — it
+cancelled before handoff. Ending an IVR call or leaving the QR screen after
+handoff cannot revoke the bank request and keeps verification active.
+QR confirmations require an outgoing UPI receipt naming the exact scanned VPA;
+missing or different payees stay waiting. A QR amount is a suggestion; history
+records the bank amount. The QR flow runs through the same session lifecycle — it
 used to bypass it entirely. The `PaymentState` sealed hierarchy carries
 exactly the states the machine emits — dead QR/retry variants were removed so
 the type reflects reality.
@@ -142,10 +146,14 @@ most careful area.
 [`CallStateCoordinator`](../app/src/main/java/com/flowpay/app/telephony/CallStateCoordinator.kt)
 is the single app-wide call-state listener; `PaymentSessionManager` consumes
 its events. [`CallManager`](../app/src/main/java/com/flowpay/app/managers/CallManager.kt)
-places the actual `ACTION_CALL` dial (the DTMF 123Pay string is built and
-validated by the pure, tested
-[`Upi123CallStringBuilder`](../app/src/main/java/com/flowpay/app/payment/Upi123CallStringBuilder.kt))
-and manages call audio.
+places the manual 123Pay call directly through `TelecomManager.placeCall` and
+manages call audio. The recipient and amount are handed to the system call
+service, with the same DTMF URI and no outgoing-account override. Android
+documents this as equivalent to `ACTION_CALL` through system Telecom
+([API reference](https://developer.android.com/reference/android/telecom/TelecomManager#placeCall(android.net.Uri,%20android.os.Bundle))).
+The pure, tested
+[`Upi123CallStringBuilder`](../app/src/main/java/com/flowpay/app/payment/Upi123CallStringBuilder.kt)
+builds and validates that URI.
 [`CallOverlayService`](../app/src/main/java/com/flowpay/app/services/CallOverlayService.kt)
 draws a `TYPE_APPLICATION_OVERLAY` window during the call so the user has a UI
 anchor, and mirrors `PaymentState` into result dialogs. Its overlay watchdog
@@ -258,3 +266,17 @@ Honest about what isn't consolidated, and why:
   ("A/c XX556 debited for Rs 500; KIRANA STORE credited"), and taking such a
   body for an incoming credit would make the pipeline drop our own
   confirmation as unrelated.
+
+## Storage and receipt recovery
+
+Plaintext encryption exports into a temporary file, checks integrity and table
+counts, and keeps a checkpointed original until replacement is verified. Failed
+export or replacement leaves retryable history, and an interrupted swap restores
+the original on next launch. Temporary files and backups are excluded from
+Android backup and transfer. No schema or historical row values are changed.
+
+`SimpleTransaction.bankReference` carries the raw bank reference separately from
+`transactionId`. Receipts and history display/copy that reference, stripping only
+the known legacy epoch suffix. Missing references are unavailable rather than
+client-generated identifiers. Settings use `FlowpayPrefs.selected_bank`, and
+clipboard cleanup checks the VPA and its per-copy token before clearing it.

@@ -94,7 +94,7 @@
     <string name="qr_status_call_initiated">Call started</string>
     <string name="qr_status_complete_in_dialer">Complete the payment in the dialer, then wait for your bank\'s confirmation SMS. This can take a minute or two.</string>
     <string name="qr_status_ussd_completed">Waiting for your bank\'s confirmation SMS…</string>
-    <string name="qr_status_terminated">Cancelled. Returning to the main screen…</string>
+    <string name="qr_status_terminated">Closed. Bank confirmation may still arrive. Check before paying again.</string>
 
     <!-- Success Messages -->
 
@@ -161,7 +161,7 @@
     <string name="overlay_amount">Amount</string>
     <string name="overlay_to">To</string>
     <string name="overlay_audio_muted">Call volume lowered</string>
-    <string name="overlay_terminate">Cancel payment</string>
+    <string name="overlay_terminate">End call</string>
     <string name="overlay_connecting">Connecting to the UPI service…</string>
     <string name="overlay_sending_request">Sending your payment request…</string>
     <string name="overlay_pin_notice">Flowpay never asks for your UPI PIN. Your bank will call you — enter your PIN on that call.</string>
@@ -279,4 +279,8 @@
     <string name="upi123_dlg_yes">Yes</string>
     <string name="upi123_dlg_already_set_up">I\'ve already set up UPI 123</string>
 
+    <string name="bank_reference_unavailable">Not provided by bank</string>
+    <string name="qr_close">Close payment screen</string>
+    <string name="error_storage_unavailable">Payment history is temporarily unavailable. Free some space if storage is full, then reopen Flowpay to retry.</string>
+    <string name="error_end_call_manually">Unable to end the call automatically. Please hang up manually.</string>
 </resources>
