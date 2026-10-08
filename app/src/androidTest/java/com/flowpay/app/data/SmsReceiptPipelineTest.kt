@@ -15,7 +15,9 @@ import com.flowpay.app.helpers.TransactionDetector
 import com.flowpay.app.receivers.SmsIngestionPipeline
 import com.flowpay.app.repository.TransactionRepository
 import com.flowpay.app.states.PaymentState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -31,7 +33,10 @@ class SmsReceiptPipelineTest {
         val manager = FlowpayApplication.from(context)!!.paymentSessionManager
         val detector = TransactionDetector.getInstance(context)
         val repository = TransactionRepository.getInstance(context)
-        val id = manager.begin("", "500", "fixture@okaxis", TransactionSource.QR)
+        // Initiation runs on main, matching both real payment screens and the legacy telephony listener.
+        val id = withContext(Dispatchers.Main) {
+            manager.begin("", "500", "fixture@okaxis", TransactionSource.QR)
+        }
         val broadcasts = LocalBroadcastManager.getInstance(context)
         val eventOwners = ConcurrentHashMap<String, String>()
         val receiver = object : BroadcastReceiver() {

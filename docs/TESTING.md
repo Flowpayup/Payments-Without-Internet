@@ -48,7 +48,7 @@ Pure logic, no Android framework, no device. Runs in seconds via
 
 `./gradlew connectedDebugAndroidTest` runs real SQLCipher and Room checks and
 receipt-screen checks. Run this suite on API 29 and 35 before release. These
-tests were validated locally on API 35 and a physical Samsung M05 on API 36;
+tests were validated locally on API 29/35 and a physical Samsung M05 on API 36;
 the existing CI workflow runs the JVM suite and build checks but does not run
 an emulator.
 
@@ -60,7 +60,9 @@ an emulator.
   cancelled rows.
 - `SmsReceiptPipelineTest`: a synthetic delayed bank receipt after QR close
   updates the existing pending row once through the live ingestion pipeline,
-  and both screen broadcasts retain that payment's owner ID.
+  and both screen broadcasts retain that payment's owner ID. The test starts
+  its payment on the main thread, matching both real payment screens and the
+  legacy API 29/30 phone-state listener's Looper requirement.
 - `PaymentResultActivityTest`: bank reference and recipient render separately
   from the internal UUID; an older intent without a reference shows unavailable.
 
