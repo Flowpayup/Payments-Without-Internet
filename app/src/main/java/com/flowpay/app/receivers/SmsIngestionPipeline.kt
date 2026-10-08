@@ -93,12 +93,13 @@ object SmsIngestionPipeline {
         }
 
         detector.completeOperation(windowTxnId)
+        val ownerTxnId = windowTxnId ?: recordTxnId ?: transaction.transactionId
         withContext(Dispatchers.Main) {
             // Dismiss the USSD overlay (QR flow) and notify listening screens.
             LocalBroadcastManager.getInstance(context)
-                .sendBroadcast(Intent("DISMISS_OVERLAY"))
+                .sendBroadcast(Intent("DISMISS_OVERLAY").putExtra("transaction_id", ownerTxnId))
             LocalBroadcastManager.getInstance(context)
-                .sendBroadcast(Intent("com.flowpay.app.SMS_RECEIVED"))
+                .sendBroadcast(Intent("com.flowpay.app.SMS_RECEIVED").putExtra("transaction_id", ownerTxnId))
 
             val successIntent = Intent(context, PaymentResultActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP

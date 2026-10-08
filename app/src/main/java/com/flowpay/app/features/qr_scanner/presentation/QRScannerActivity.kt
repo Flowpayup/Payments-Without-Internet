@@ -220,7 +220,9 @@ class QRScannerActivity : ComponentActivity() {
     // Broadcast receiver for USSD overlay dismissal
     private val overlayDismissReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "DISMISS_OVERLAY") {
+            if (intent?.action == "DISMISS_OVERLAY" && ownedTxnId != null &&
+                intent.getStringExtra("transaction_id") == ownedTxnId
+            ) {
                 Log.d("QRScanner", "USSD overlay dismissed - continuing to wait for SMS")
                 if (isUSSDProcessActive) {
                     // Don't close immediately, wait for SMS
@@ -233,7 +235,9 @@ class QRScannerActivity : ComponentActivity() {
     // Broadcast receiver for SMS detection
     private val smsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.flowpay.app.SMS_RECEIVED") {
+            if (intent?.action == "com.flowpay.app.SMS_RECEIVED" && ownedTxnId != null &&
+                intent.getStringExtra("transaction_id") == ownedTxnId
+            ) {
                 Log.d("QRScanner", "SMS received - transaction successful!")
                 if (isUSSDProcessActive) {
                     handleSMSReceived(intent)

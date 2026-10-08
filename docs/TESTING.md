@@ -36,6 +36,9 @@ Pure logic, no Android framework, no device. Runs in seconds via
 - **`Upi123CallHandoffTest`** — Robolectric checks on API 29 and 35 that the
   validated IVR URI reaches system Telecom with empty extras and no implicit
   activity launch. Denied call permission prevents the handoff.
+- **`QRReceiptOwnershipTest`** — the real QR broadcast receivers on API 29 and
+  35 ignore old or missing payment owners; a matching receipt closes its own
+  active screen with the existing result.
 - **`QRCodeParserTest`** + **`QRCodeAnalyzerDecodeTest`** — UPI QR URI
   parsing, and (since the ML Kit → ZXing swap) a decode corpus that encodes
   those same URIs into real QR bitmaps and decodes them back through the
@@ -45,8 +48,9 @@ Pure logic, no Android framework, no device. Runs in seconds via
 
 `./gradlew connectedDebugAndroidTest` runs real SQLCipher and Room checks and
 receipt-screen checks. Run this suite on API 29 and 35 before release. These
-tests were validated locally on API 35; the existing CI workflow runs the JVM
-suite and build checks but does not run an emulator.
+tests were validated locally on API 35 and a physical Samsung M05 on API 36;
+the existing CI workflow runs the JVM suite and build checks but does not run
+an emulator.
 
 - `DatabaseEncryptionMigratorTest`: every fixture field and schema version
   survives export, repeat launch, replacement failure, interrupted swap, and
@@ -55,7 +59,8 @@ suite and build checks but does not run an emulator.
   preserves a known payee and manual amount, and cannot rewrite settled or
   cancelled rows.
 - `SmsReceiptPipelineTest`: a synthetic delayed bank receipt after QR close
-  updates the existing pending row once through the live ingestion pipeline.
+  updates the existing pending row once through the live ingestion pipeline,
+  and both screen broadcasts retain that payment's owner ID.
 - `PaymentResultActivityTest`: bank reference and recipient render separately
   from the internal UUID; an older intent without a reference shows unavailable.
 
