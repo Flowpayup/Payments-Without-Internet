@@ -32,8 +32,8 @@ android {
     namespace = "com.flowpay.app"
     compileSdk = 35
     // Pinned, not "whatever AGP resolves": aapt2 and zipalign differ between
-    // build-tools revisions, so leaving this floating makes the reproducible
-    // -build claim in docs/RELEASING.md impossible to honour.
+    // build-tools revisions, so leaving this floating makes release-candidate
+    // checks harder to reproduce.
     buildToolsVersion = "35.0.0"
 
     defaultConfig {

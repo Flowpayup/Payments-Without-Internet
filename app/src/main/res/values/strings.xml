@@ -50,9 +50,15 @@
     <string name="error_invalid_phone_number">Enter a valid 10-digit phone number.</string>
     <string name="error_invalid_amount">Enter a valid amount.</string>
     <string name="error_phone_permission_required">Flowpay needs phone permissions to place the payment call.</string>
+    <string name="error_sms_permission_required">SMS permission is required to detect payment confirmations.</string>
     <string name="error_payment_not_started">The payment could not be started. Please try again.</string>
     <string name="error_call_permission_required_ussd">Phone call permission is required to test USSD.</string>
     <string name="error_call_permission_required_payments">Phone call permission is required for USSD payments.</string>
+    <string name="error_call_permission_required_manual">Phone call permission is required for manual payments. Please grant permission in Settings.</string>
+    <string name="error_camera_permission_required">Camera permission is required for QR scanning.</string>
+    <string name="error_overlay_permission_required">Overlay permission is required for call protection. Please grant permission in Settings.</string>
+    <string name="error_overlay_show_failed">Could not show the call protection overlay. Please try again.</string>
+    <string name="error_end_call_unavailable">Unable to end the call automatically. Please hang up manually.</string>
     <string name="error_qr_processing">Could not read that QR code. Please try again.</string>
     <string name="error_qr_invalid_vpa">That is not a valid UPI QR code.</string>
     <string name="error_ussd_call_failed">Could not start the USSD call.</string>
@@ -203,6 +209,7 @@
 
     <!-- Contact picker -->
     <string name="contacts_search_hint">Search contacts…</string>
+    <string name="error_contacts_unavailable">Unable to open contacts from this screen.</string>
 
     <!-- Home screen -->
     <string name="home_field_mobile_label">Mobile Number</string>

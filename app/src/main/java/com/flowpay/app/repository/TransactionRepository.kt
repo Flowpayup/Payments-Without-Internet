@@ -27,9 +27,9 @@ class TransactionRepository private constructor(context: Context) :
 
         fun getInstance(context: Context): TransactionRepository {
             return INSTANCE ?: synchronized(this) {
-                val instance = TransactionRepository(context.applicationContext)
-                INSTANCE = instance
-                instance
+                INSTANCE ?: TransactionRepository(context.applicationContext).also {
+                    INSTANCE = it
+                }
             }
         }
     }

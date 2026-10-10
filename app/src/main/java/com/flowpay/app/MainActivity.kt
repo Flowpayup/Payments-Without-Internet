@@ -634,7 +634,7 @@ fun MainScreen(
         } else {
             Toast.makeText(
                 context,
-                "SMS permission is required to detect payment confirmations",
+                R.string.error_sms_permission_required,
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -1371,7 +1371,7 @@ fun PayContactDialog(
                             if (pm == null) {
                                 Toast.makeText(
                                     context.applicationContext,
-                                    "Unable to open contacts from this screen.",
+                                    R.string.error_contacts_unavailable,
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 return@IconButton

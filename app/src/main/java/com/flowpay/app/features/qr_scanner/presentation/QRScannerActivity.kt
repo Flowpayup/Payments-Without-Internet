@@ -360,7 +360,7 @@ class QRScannerActivity : ComponentActivity() {
             Log.w("QRScanner", "Camera permission denied")
             Toast.makeText(
                 this,
-                "Camera permission is required for QR scanning",
+                R.string.error_camera_permission_required,
                 Toast.LENGTH_LONG
             ).show()
             setResult(RESULT_ERROR)
